@@ -128,7 +128,7 @@ export default function JoudyAdventureGame() {
       )}
 
       {/* Active Screen State Machine (2D Arcade & Winding Map) */}
-      <div className="relative z-10 flex-1 flex items-center justify-center w-full">
+      <div className="relative z-10 flex-1 flex items-stretch justify-center w-full">
         {gameState === 'HOME' && (
           <JoudyHome
             animeImageSrc={animeImageSrc}

@@ -16,7 +16,6 @@ import {
   Trophy,
   Volume2,
   VolumeX,
-  Zap,
   KeyRound,
 } from 'lucide-react';
 import { soundEngine } from '@/lib/soundEffects';
@@ -196,7 +195,6 @@ export default function GameArena({
   const [activeControl, setActiveControl] = useState<'left' | 'right' | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [dashActive, setDashActive] = useState(false);
   const [jumpActive, setJumpActive] = useState(false);
 
   const isPausedRef = useRef(false);
@@ -214,7 +212,6 @@ export default function GameArena({
   const startTimeRef = useRef<number>(0);
   const shakeRef = useRef(0);
   const resetSignalRef = useRef(0);
-  const dashTimerRef = useRef(0);
   const jumpTimerRef = useRef(0);
   const reviveRequestRef = useRef(false);
   const reviveCountRef = useRef(worldSave.reviveCountsByLevel[levelConfig.level] ?? 0);
@@ -339,10 +336,8 @@ export default function GameArena({
     comboRef.current = 0;
     comboTimerRef.current = 0;
     magnetTimerRef.current = 0;
-    dashTimerRef.current = 0;
     jumpTimerRef.current = 0;
     reviveRequestRef.current = false;
-    setDashActive(false);
     victoryFiredRef.current = false;
     isGameOverRef.current = false;
     shakeRef.current = 0;
@@ -387,7 +382,7 @@ export default function GameArena({
     const player = {
       x: width / 2,
       vx: 0,
-      size: Math.min(138, Math.max(96, width * 0.145)),
+      size: Math.min(158, Math.max(108, width * 0.155)),
       bouncePhase: 0,
       catchBounce: 0,
       hurtShake: 0,
@@ -561,8 +556,7 @@ export default function GameArena({
 
       if (!isPausedRef.current && !victoryFiredRef.current && !isGameOverRef.current) {
         totalElapsed += dt;
-        const normalPlayerSize = Math.min(138, Math.max(96, width * 0.145));
-        if (dashTimerRef.current > 0) dashTimerRef.current = Math.max(0, dashTimerRef.current - dt);
+        const normalPlayerSize = Math.min(158, Math.max(108, width * 0.155));
         if (jumpTimerRef.current > 0) jumpTimerRef.current = Math.max(0, jumpTimerRef.current - dt);
         player.size = normalPlayerSize;
 
@@ -590,7 +584,7 @@ export default function GameArena({
         if (player.bubbleTimer > 0) player.bubbleTimer = Math.max(0, player.bubbleTimer - dt);
 
         // Smooth Horizontal Player Physics
-        const maxSpeed = (dashTimerRef.current > 0 ? 930 : 620) * characterSpeedBonus;
+        const maxSpeed = 620 * characterSpeedBonus;
         let moveDir = 0;
         if (keysRef.current.left) moveDir -= 1;
         if (keysRef.current.right) moveDir += 1;
@@ -867,9 +861,10 @@ export default function GameArena({
         ctx.translate(sx, sy);
       }
 
-      // 1. Anime Biome Backdrop with Parallax
+      // 1. Cinematic biome backdrop with restrained saturation and deeper contrast
       if (bgRef.current && bgRef.current.complete && bgRef.current.naturalWidth > 0) {
         const img = bgRef.current;
+        ctx.filter = 'saturate(0.78) contrast(1.12) brightness(0.86)';
         const scale = Math.max(width / img.width, height / img.height);
         const drawW = img.width * scale;
         const drawH = img.height * scale;
@@ -877,6 +872,13 @@ export default function GameArena({
         const drawX = (width - drawW) / 2 + parallaxX;
         const drawY = (height - drawH) / 2;
         ctx.drawImage(img, drawX, drawY, drawW, drawH);
+        ctx.filter = 'none';
+
+        const cinematicShade = ctx.createLinearGradient(0, 0, 0, height);
+        cinematicShade.addColorStop(0, 'rgba(10, 18, 30, 0.10)');
+        cinematicShade.addColorStop(1, 'rgba(10, 18, 30, 0.28)');
+        ctx.fillStyle = cinematicShade;
+        ctx.fillRect(0, 0, width, height);
 
         ctx.fillStyle = levelConfig.tintOverlay;
         ctx.fillRect(0, 0, width, height);
@@ -1239,13 +1241,6 @@ export default function GameArena({
     else setActiveControl(null);
   }, []);
 
-  const triggerDash = useCallback(() => {
-    if (isPausedRef.current || isGameOverRef.current || dashTimerRef.current > 0) return;
-    dashTimerRef.current = 0.65;
-    setDashActive(true);
-    window.setTimeout(() => setDashActive(false), 680);
-  }, []);
-
   const triggerJump = useCallback(() => {
     if (isPausedRef.current || isGameOverRef.current || jumpTimerRef.current > 0.1) return;
     jumpTimerRef.current = 0.68;
@@ -1265,7 +1260,7 @@ export default function GameArena({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="w-full max-w-none mx-auto px-1 sm:px-2 py-1 flex flex-col gap-2 h-[100dvh] max-h-none min-h-[520px]"
+      className="w-full max-w-none mx-auto px-0 sm:px-1 py-1 flex flex-col gap-1.5 h-[100dvh] max-h-none min-h-[520px]"
     >
       {/* Compact Top Arcade HUD */}
       <header className="bg-slate-950/75 backdrop-blur-xl border border-white/10 rounded-2xl px-3 sm:px-5 py-2.5 shadow-sm flex items-center justify-between gap-3 shrink-0">
@@ -1384,7 +1379,7 @@ export default function GameArena({
       {/* Main 2D Canvas Playfield + Circular Translucent Touch D-Pad */}
       <div
         ref={stageRef}
-        className={`relative flex-1 min-h-[360px] mb-5 rounded-none sm:rounded-2xl overflow-visible border-0 shadow-none sm:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.35)] select-none touch-none ${
+        className={`relative flex-1 min-h-0 mb-0 rounded-none overflow-hidden border-0 shadow-none select-none touch-none ${
           levelConfig.worldId === 2
             ? 'border-emerald-300/90 bg-emerald-50'
             : levelConfig.isNight
@@ -1406,23 +1401,20 @@ export default function GameArena({
           <WorldAtmosphereOverlay worldId={levelConfig.worldId} variant="arena" />
         )}
 
-        {/* Controls: user-selectable classic arrows or analog joystick */}
+        {/* Touch controls sit on the outer edges, leaving the central world unobstructed. */}
         {!isPaused && !isGameOver && (
           <>
             {controlMode === 'joystick' ? (
-              <div className="absolute bottom-[-22px] left-3 z-30">
+              <div className="absolute left-3 top-1/2 z-30 -translate-y-1/2">
                 <VirtualJoystick onChange={handleJoystickChange} disabled={isPaused || isGameOver} />
               </div>
             ) : (
               <>
-                <button type="button" aria-label="التحرك لليسار" onContextMenu={(e) => e.preventDefault()} onPointerDown={(e) => handleTouchPress('left', e)} onPointerUp={(e) => handleTouchRelease('left', e)} onPointerCancel={(e) => handleTouchRelease('left', e)} onLostPointerCapture={(e) => handleTouchRelease('left', e)} className={`absolute left-3 bottom-[-22px] z-30 flex h-14 w-14 items-center justify-center rounded-full border border-white/30 text-white backdrop-blur-md transition ${activeControl === 'left' ? 'scale-90 bg-cyan-400/80' : 'bg-slate-950/35 hover:bg-slate-950/55'}`}><ChevronLeft className="h-8 w-8" /></button>
-                <button type="button" aria-label="التحرك لليمين" onContextMenu={(e) => e.preventDefault()} onPointerDown={(e) => handleTouchPress('right', e)} onPointerUp={(e) => handleTouchRelease('right', e)} onPointerCancel={(e) => handleTouchRelease('right', e)} onLostPointerCapture={(e) => handleTouchRelease('right', e)} className={`absolute right-3 bottom-[-22px] z-30 flex h-14 w-14 items-center justify-center rounded-full border border-white/30 text-white backdrop-blur-md transition ${activeControl === 'right' ? 'scale-90 bg-cyan-400/80' : 'bg-slate-950/35 hover:bg-slate-950/55'}`}><ChevronRight className="h-8 w-8" /></button>
+                <button type="button" aria-label="التحرك لليسار" onContextMenu={(e) => e.preventDefault()} onPointerDown={(e) => handleTouchPress('left', e)} onPointerUp={(e) => handleTouchRelease('left', e)} onPointerCancel={(e) => handleTouchRelease('left', e)} onLostPointerCapture={(e) => handleTouchRelease('left', e)} className={`absolute left-3 top-1/2 z-30 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 text-white shadow-lg backdrop-blur-md transition ${activeControl === 'left' ? 'scale-90 bg-cyan-400/80' : 'bg-slate-950/45 hover:bg-slate-950/65'}`}><ChevronLeft className="h-8 w-8" /></button>
+                <button type="button" aria-label="التحرك لليمين" onContextMenu={(e) => e.preventDefault()} onPointerDown={(e) => handleTouchPress('right', e)} onPointerUp={(e) => handleTouchRelease('right', e)} onPointerCancel={(e) => handleTouchRelease('right', e)} onLostPointerCapture={(e) => handleTouchRelease('right', e)} className={`absolute right-3 top-1/2 z-30 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 text-white shadow-lg backdrop-blur-md transition ${activeControl === 'right' ? 'scale-90 bg-cyan-400/80' : 'bg-slate-950/45 hover:bg-slate-950/65'}`}><ChevronRight className="h-8 w-8" /></button>
               </>
             )}
-            <div className="absolute bottom-[-18px] left-1/2 z-30 flex -translate-x-1/2 gap-2">
-              <button type="button" onClick={triggerJump} disabled={jumpActive} title="قفزة لتفادي العقبات" className={`flex h-11 items-center gap-1.5 rounded-full border border-white/25 px-3 text-xs font-black text-white shadow-lg backdrop-blur ${jumpActive ? 'bg-amber-400/65' : 'bg-slate-950/45 hover:bg-amber-500/40'}`}><span aria-hidden="true">↟</span> قفز</button>
-              <button type="button" onClick={triggerDash} disabled={dashActive} title="اندفاع سريع" className={`flex h-11 items-center gap-1.5 rounded-full border border-white/25 px-3 text-xs font-black text-white shadow-lg backdrop-blur ${dashActive ? 'bg-cyan-400/65' : 'bg-slate-950/45 hover:bg-cyan-500/40'}`}><Zap className="h-4 w-4" /> اندفاع</button>
-            </div>
+            <button type="button" onClick={triggerJump} disabled={jumpActive} title="قفزة لتفادي العقبات" className={`absolute bottom-4 right-4 z-30 flex h-14 min-w-14 items-center justify-center gap-1 rounded-full border border-white/30 px-3 text-xs font-black text-white shadow-lg backdrop-blur-md ${jumpActive ? 'bg-amber-400/75' : 'bg-slate-950/50 hover:bg-amber-500/50'}`}><span aria-hidden="true">↟</span> قفز</button>
           </>
         )}
 
