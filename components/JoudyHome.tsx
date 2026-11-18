@@ -20,6 +20,7 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade }:
   const [wardrobeOpen, setWardrobeOpen] = useState(false);
   const selected = useMemo(() => SHOP_ITEMS.find((item) => item.id === selectedId) ?? SHOP_ITEMS[0], [selectedId]);
   const isOwned = save.owned.includes(selected.id);
+  const equipped = category === 'outfit' ? save.equippedOutfit : save.equippedShoes;
   const isEquipped = equipped === selected.id;
   const selectedFilter = selected.filter;
 
