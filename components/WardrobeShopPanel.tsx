@@ -86,6 +86,8 @@ export default function WardrobeShopPanel({ onClose }: Props) {
   }, [category, save.equippedOutfit, save.equippedShoes]);
   const isOwned = save.owned.includes(selected.id);
   const currentlyEquipped = category === 'outfit' ? save.equippedOutfit === selected.id : save.equippedShoes === selected.id;
+  const previewOutfit = category === 'outfit' ? selected : SHOP_ITEMS.find((item) => item.id === save.equippedOutfit);
+  const previewShoes = category === 'shoes' ? selected : SHOP_ITEMS.find((item) => item.id === save.equippedShoes);
 
   const selectCategory = (next: Category) => {
     setCategory(next);
@@ -127,7 +129,9 @@ export default function WardrobeShopPanel({ onClose }: Props) {
             <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[22%] bg-gradient-to-t from-[#735b46]/30 to-transparent" />
             <div className="relative mx-auto mt-1 min-h-[240px] flex-1 w-full max-w-[430px]">
               <div className="absolute inset-y-0 left-0 w-[64%]">
-                <Image src="/images/joudy-home.png" alt="جودي بشخصيتها الأصلية" fill priority sizes="(max-width: 1024px) 58vw, 280px" className="object-contain drop-shadow-[0_15px_15px_rgba(26,23,20,.24)]" />
+                <Image src="/images/joudy-original-transparent.png" alt="جودي بشخصيتها الأصلية" fill priority sizes="(max-width: 1024px) 58vw, 280px" className="object-contain drop-shadow-[0_15px_15px_rgba(26,23,20,.24)]" />
+                {previewOutfit?.overlaySrc && <Image src={previewOutfit.overlaySrc} alt="الملابس المختارة" fill sizes="(max-width: 1024px) 58vw, 280px" className="pointer-events-none object-contain" unoptimized />}
+                {previewShoes?.overlaySrc && <Image src={previewShoes.overlaySrc} alt="الحذاء المختار" fill sizes="(max-width: 1024px) 58vw, 280px" className="pointer-events-none object-contain" unoptimized />}
               </div>
               <div className="absolute right-0 top-[18%] z-20 w-[34%] rounded-2xl border border-white/60 bg-white/90 p-2 shadow-xl backdrop-blur sm:p-3">
                 <p className="text-[11px] font-black leading-snug text-slate-900 sm:text-sm">{selected.name}</p>

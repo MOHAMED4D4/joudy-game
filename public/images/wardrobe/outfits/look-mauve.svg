@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><defs><mask id="garmentMask"><rect width="1024" height="1024" fill="white"/>
+<!-- Original hijab/scarf and exposed hands stay untouched -->
+<path d="M356 386 C392 406 438 416 482 417 C537 416 584 423 622 447 L610 500 C568 482 526 482 478 482 C430 481 389 466 357 445 Z" fill="black"/>
+<path d="M580 414 C617 435 649 466 682 489 C727 520 779 548 840 582 L852 624 L832 668 C786 650 747 626 706 599 C669 575 643 546 612 524 L582 492 Z" fill="black"/>
+<path d="M311 625 C328 616 347 624 361 636 L378 649 L364 665 L335 652 L310 642 Z" fill="black"/>
+<path d="M679 625 C696 616 716 624 733 638 L748 653 L735 667 L704 652 L678 642 Z" fill="black"/>
+</mask></defs><g mask="url(#garmentMask)">
+<g fill="#86617f" stroke="#86617f" stroke-width="8" stroke-linejoin="round"><path d="M388 450 C365 452 346 466 331 490 L281 568 Q273 585 291 598 L319 613 L359 544 L388 561 Z M633 450 C656 452 675 466 690 490 L741 568 Q749 585 731 598 L703 613 L663 544 L634 561 Z"/><path d="M389 450 C426 445 466 456 510 461 C554 456 594 445 632 450 C651 468 654 501 646 534 L666 610 Q510 650 354 610 L374 534 C366 501 369 468 389 450 Z"/><path d="M374 590 Q510 634 646 590 L766 830 Q778 874 728 895 Q625 927 510 923 Q395 927 292 895 Q242 874 254 830 Z"/></g>
+<path d="M321 546 Q346 536 379 545 L369 600 Q343 610 315 592 Z M641 545 Q674 536 699 546 L706 592 Q678 610 652 600 Z" fill="#9b7495" stroke="#e0c7d4" stroke-width="5"/>
+<path d="M456 463 L510 491 L564 463 L604 900 Q510 925 416 900 Z" fill="#f0e4d7" stroke="#b89aa7" stroke-width="5"/>
+<path d="M390 477 L463 463 L444 550 L412 704 L348 854 Q316 879 282 850 L379 615Z" fill="#9b7495" stroke="#e0c7d4" stroke-width="5"/>
+<path d="M630 477 L557 463 L576 550 L608 704 L672 854 Q704 879 738 850 L641 615Z" fill="#9b7495" stroke="#e0c7d4" stroke-width="5"/>
+<path d="M306 799 Q510 872 716 799 L741 853 Q510 947 281 853Z" fill="#b18eaa" stroke="#6f5274" stroke-width="6"/>
+<path d="M319 830 Q510 900 703 830 M335 855 Q510 919 687 855" fill="none" stroke="#ead7c6" stroke-width="6"/>
+<path d="M460 480 L510 523 L560 480 M510 523V887" fill="none" stroke="#e8d7c2" stroke-width="5"/>
+<path d="M376 633 Q510 655 644 633 L654 663 Q510 691 366 663Z" fill="#66506b" stroke="#e2c08a" stroke-width="5"/>
+<circle cx="510" cy="650" r="13" fill="#e6c77e" stroke="#735b42" stroke-width="3"/>
+<g fill="#e7d2b1"><circle cx="453" cy="561" r="5"/><circle cx="567" cy="561" r="5"/><circle cx="453" cy="586" r="5"/><circle cx="567" cy="586" r="5"/></g>
+</g></svg>

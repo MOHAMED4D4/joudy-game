@@ -135,7 +135,9 @@ export default function JoudyAdventureGame() {
               levelConfig={activeLevelConfig}
               realImageSrc={realImageSrc}
               animeImageSrc={animeImageSrc}
-              characterSpriteSrc={animeImageSrc}
+              characterSpriteSrc="/images/joudy-original-transparent.png"
+              outfitSpriteSrc={equippedOutfit.overlaySrc}
+              shoeSpriteSrc={equippedShoes.overlaySrc}
               highScore={progress.highScore}
               soundEnabled={soundEnabled}
               onToggleSound={handleToggleSound}

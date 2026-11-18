@@ -24,7 +24,8 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
   const isOwned = save.owned.includes(selected.id);
   const equipped = category === 'outfit' ? save.equippedOutfit : save.equippedShoes;
   const isEquipped = equipped === selected.id;
-  const selectedFilter = selected.filter;
+  const previewOutfit = category === 'outfit' ? selected : SHOP_ITEMS.find((item) => item.id === save.equippedOutfit);
+  const previewShoes = category === 'shoes' ? selected : SHOP_ITEMS.find((item) => item.id === save.equippedShoes);
 
   const purchaseOrEquip = () => {
     if (isOwned) {
@@ -86,7 +87,9 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
             <div className="absolute bottom-0 h-[23%] w-full bg-gradient-to-t from-[#63452f]/35 via-[#79583f]/10 to-transparent" />
             <div className="absolute bottom-[4%] left-1/2 h-[4%] w-[25%] -translate-x-1/2 rounded-[50%] bg-[#38271d]/30 blur-xl" />
             <div className="relative mb-[2%] aspect-square w-[min(78vw,570px)]" style={{animation:'joudy-idle 4.2s ease-in-out infinite'}}>
-              <Image src="/images/joudy-home.png" alt="جودي" fill priority sizes="(max-width: 1024px) 76vw, 520px" className="object-contain drop-shadow-[0_18px_18px_rgba(25,20,16,.32)]" style={{filter:selectedFilter}} />
+              <Image src="/images/joudy-original-transparent.png" alt="جودي" fill priority sizes="(max-width: 1024px) 76vw, 520px" className="object-contain drop-shadow-[0_18px_18px_rgba(25,20,16,.32)]" />
+              {previewOutfit?.overlaySrc && <Image src={previewOutfit.overlaySrc} alt="ملابس جودي" fill sizes="(max-width: 1024px) 76vw, 520px" className="pointer-events-none object-contain" unoptimized />}
+              {previewShoes?.overlaySrc && <Image src={previewShoes.overlaySrc} alt="حذاء جودي" fill sizes="(max-width: 1024px) 76vw, 520px" className="pointer-events-none object-contain" unoptimized />}
               {/* Small animated pupils layered over the original eyes to give the character a living idle gaze. */}
               <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1024 1024" aria-hidden="true">
                 <g className="joudy-eye-blink">

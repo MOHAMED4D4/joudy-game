@@ -42,6 +42,7 @@ interface GameArenaProps {
   realImageSrc?: string;
   animeImageSrc: string;
   characterSpriteSrc?: string;
+  outfitSpriteSrc?: string;
   shoeSpriteSrc?: string;
   highScore: number;
   soundEnabled: boolean;
@@ -171,6 +172,7 @@ export default function GameArena({
   realImageSrc,
   animeImageSrc,
   characterSpriteSrc,
+  outfitSpriteSrc,
   shoeSpriteSrc,
   highScore,
   soundEnabled,
@@ -213,6 +215,7 @@ export default function GameArena({
   const reviveCountRef = useRef(worldSave.reviveCountsByLevel[levelConfig.level] ?? 0);
 
   const spriteRef = useRef<HTMLImageElement | null>(null);
+  const outfitSpriteRef = useRef<HTMLImageElement | null>(null);
   const shoeSpriteRef = useRef<HTMLImageElement | null>(null);
   const bgRef = useRef<HTMLImageElement | null>(null);
   const cartoonSpritesRef = useRef<CartoonSpriteMap>({});
@@ -249,6 +252,13 @@ export default function GameArena({
         if (active) spriteRef.current = rawFallback;
       });
 
+    outfitSpriteRef.current = null;
+    if (outfitSpriteSrc) {
+      const outfitImage = new window.Image();
+      outfitImage.onload = () => { if (active) outfitSpriteRef.current = outfitImage; };
+      outfitImage.src = outfitSpriteSrc;
+    }
+
     shoeSpriteRef.current = null;
     if (shoeSpriteSrc) {
       const shoeImage = new window.Image();
@@ -270,7 +280,7 @@ export default function GameArena({
       active = false;
       cancelSvgLoad();
     };
-  }, [animeImageSrc, characterSpriteSrc, shoeSpriteSrc, levelConfig.bgImage]);
+  }, [animeImageSrc, characterSpriteSrc, outfitSpriteSrc, shoeSpriteSrc, levelConfig.bgImage]);
 
   useEffect(() => {
     if (soundEnabled && !isPaused && !isGameOver) {
@@ -1022,6 +1032,10 @@ export default function GameArena({
           ctx.filter = characterFilter || 'none';
           ctx.drawImage(sImg, -drawW / 2, -drawH / 2, drawW, drawH);
           ctx.filter = 'none';
+          const outfit = outfitSpriteRef.current;
+          if (outfit && outfit.complete && outfit.naturalWidth > 0) {
+            ctx.drawImage(outfit, -drawW / 2, -drawH / 2, drawW, drawH);
+          }
           const shoes = shoeSpriteRef.current;
           if (shoes && shoes.complete && shoes.naturalWidth > 0) {
             ctx.drawImage(shoes, -drawW / 2, -drawH / 2, drawW, drawH);
