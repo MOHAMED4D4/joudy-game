@@ -1,6 +1,6 @@
 'use client';
 
-export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'blueKey';
+export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'blueKey' | 'coin';
 
 const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
   cat: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -98,6 +98,7 @@ const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
     <!-- Sparkles between poles -->
     <polygon points="50,15 53,23 61,26 53,29 50,37 47,29 39,26 47,23" fill="#FDE047" stroke="#D97706" stroke-width="1.5"/>
   </svg>`,
+  coin: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="coinGold"><stop stop-color="#fff7ad"/><stop offset=".62" stop-color="#facc15"/><stop offset="1" stop-color="#b45309"/></radialGradient></defs><circle cx="50" cy="50" r="39" fill="url(#coinGold)" stroke="#92400e" stroke-width="6"/><circle cx="50" cy="50" r="29" fill="none" stroke="#fef3c7" stroke-width="3"/><path d="M59 28 Q40 20 34 37 Q29 49 51 51 Q72 55 64 72 Q57 86 37 73 M50 20 V80" fill="none" stroke="#92400e" stroke-width="6" stroke-linecap="round"/></svg>`,
   blueKey: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
     <defs><radialGradient id="keyGlow"><stop stop-color="#dbeafe"/><stop offset="1" stop-color="#3b82f6"/></radialGradient></defs>
     <circle cx="39" cy="35" r="25" fill="url(#keyGlow)" stroke="#1d4ed8" stroke-width="8"/>

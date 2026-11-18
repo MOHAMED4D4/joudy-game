@@ -118,6 +118,7 @@ const ITEM_CONFIG: Record<
   chocolate: { points: 10, halo: 'rgba(217, 119, 6, 0.32)', fallbackColor: '#D97706' },
   magnet: { points: 0, halo: 'rgba(56, 189, 248, 0.42)', fallbackColor: '#38BDF8' },
   blueKey: { points: 0, halo: 'rgba(59, 130, 246, 0.55)', fallbackColor: '#3B82F6' },
+  coin: { points: 0, halo: 'rgba(250, 204, 21, 0.42)', fallbackColor: '#FACC15' },
   obstacle: { points: -15, halo: 'rgba(71, 85, 105, 0.48)', fallbackColor: '#475569' },
 };
 
@@ -402,7 +403,9 @@ export default function GameArena({
 
       const roll = Math.random();
       let kind: CartoonSpriteKind = 'chocolate';
-      if (roll < 0.012) {
+      if (roll < 0.085) {
+        kind = 'coin';
+      } else if (roll < 0.097) {
         kind = 'blueKey';
       } else if (roll < levelConfig.obstacleChance + 0.012) {
         kind = 'obstacle';
@@ -416,7 +419,7 @@ export default function GameArena({
       }
 
       const cfg = ITEM_CONFIG[kind];
-      const radius = (kind === 'obstacle' ? 30 : kind === 'magnet' ? 28 : kind === 'blueKey' ? 22 : 27) * 0.9;
+      const radius = (kind === 'obstacle' ? 30 : kind === 'magnet' ? 28 : kind === 'blueKey' ? 22 : kind === 'coin' ? 17 : 27) * 0.9;
       const baseSpeed =
         kind === 'cat'
           ? 245
@@ -428,7 +431,9 @@ export default function GameArena({
                 ? 190
                 : kind === 'blueKey'
                   ? 165
-                  : 270;
+                  : kind === 'coin'
+                    ? 175
+                    : 270;
 
       const x = radius + 16 + Math.random() * Math.max(40, width - (radius + 16) * 2);
       const hasZigzag = Math.random() < 0.45;
@@ -687,6 +692,14 @@ export default function GameArena({
                   continue;
                 }
               }
+            } else if (item.kind === 'coin') {
+              addWorldCoins(25);
+              player.catchBounce = 1;
+              player.happyTimer = 0.7;
+              player.bubbleText = '+25 عملة ذهبية';
+              player.bubbleTone = 'good';
+              player.bubbleTimer = 1;
+              popups.push({ x: item.x, y: item.y - 12, text: '+25 🪙', color: '#D97706', life: 0, maxLife: 1 });
             } else if (item.kind === 'blueKey') {
               saveWorld((current) => ({ ...current, blueKeys: current.blueKeys + 1 }));
               player.catchBounce = 1;
@@ -1211,7 +1224,7 @@ export default function GameArena({
       className="relative left-1/2 w-screen max-w-none -translate-x-1/2 px-0 py-0 flex flex-col gap-1.5 h-[100dvh] max-h-none min-h-[520px]"
     >
       {/* Compact Top Arcade HUD */}
-      <header className="absolute left-2 right-2 top-2 z-30 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-2xl px-2 sm:px-5 py-2 shadow-lg flex items-center justify-between gap-2">
+      <header className="absolute left-2 right-2 top-2 z-30 bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-2xl px-2 sm:px-5 py-2 shadow-[0_12px_35px_rgba(0,0,0,.35)] flex items-center justify-between gap-2">
         {realImageSrc && (
           <div className="hidden sm:block relative w-11 h-11 rounded-xl overflow-hidden border-2 border-amber-300 bg-rose-50 shrink-0 shadow-xs">
             <Image
@@ -1227,36 +1240,12 @@ export default function GameArena({
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs sm:text-sm mb-1.5">
             <div className="flex items-center gap-2 font-bold text-[#2D1824] whitespace-nowrap">
-              <span className="text-rose-700">المستوى {levelConfig.level}</span>
-              <span className="text-rose-300 hidden sm:inline" aria-hidden="true">
-                ·
-              </span>
               <span className="text-[#6A4558] text-xs hidden sm:inline truncate max-w-[130px]">
                 {levelConfig.worldName}
-              </span>
-              <span className="text-rose-300" aria-hidden="true">
-                ·
               </span>
               <span className="text-rose-600 text-sm sm:text-base font-extrabold tabular-nums">
                 {score} / {levelConfig.targetScore}
               </span>
-
-              {/* 3 Health Lives */}
-              <div
-                className="inline-flex items-center gap-0.5 mr-1"
-                aria-label={`قلوب الحياة: ${hearts} من ${MAX_HEARTS}`}
-              >
-                {[1, 2, 3].map((idx) => (
-                  <Heart
-                    key={idx}
-                    className={`w-4 h-4 transition-transform ${
-                      idx <= hearts
-                        ? 'fill-rose-500 text-rose-600 scale-100'
-                        : 'fill-slate-200 text-slate-300 scale-90'
-                    }`}
-                  />
-                ))}
-              </div>
 
               {combo >= 2 && (
                 <span className="inline-flex items-center gap-1 text-xs font-extrabold text-amber-700 tabular-nums">
@@ -1296,8 +1285,8 @@ export default function GameArena({
 
         {/* Action Controls */}
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className="inline-flex h-10 items-center gap-1 rounded-xl border border-amber-200/20 bg-amber-400/10 px-2 text-xs font-black text-amber-100" title="عملاتك">🪙 {worldSave.coins}</span>
-          <span className="inline-flex h-10 items-center gap-1 rounded-xl border border-blue-200/20 bg-blue-400/10 px-2 text-xs font-black text-blue-100" title="المفاتيح الزرقاء"><KeyRound className="h-4 w-4"/>{worldSave.blueKeys}</span>
+          <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-amber-300/25 bg-gradient-to-br from-amber-400/20 to-orange-700/20 px-3 text-xs font-black text-amber-100 shadow-inner" title="عملاتك"><span className="grid h-6 w-6 place-items-center rounded-lg bg-amber-300/15 text-base">🪙</span>{worldSave.coins.toLocaleString('ar-EG')}</span>
+          <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-sky-300/25 bg-gradient-to-br from-sky-400/20 to-blue-700/25 px-3 text-xs font-black text-sky-100 shadow-inner" title="المفاتيح الزرقاء"><span className="grid h-6 w-6 place-items-center rounded-lg bg-sky-300/15"><KeyRound className="h-4 w-4 text-sky-200 drop-shadow-[0_1px_3px_rgba(56,189,248,.7)]"/></span>{worldSave.blueKeys}</span>
           <button
             type="button"
             onClick={onToggleSound}
@@ -1336,6 +1325,29 @@ export default function GameArena({
               : 'border-rose-200/90 bg-pink-50'
         }`}
       >
+        {/* Detached in-game HUD: level and lives sit on the play screen, not in the top bar. */}
+        <div
+          className="pointer-events-none absolute left-3 top-[5.25rem] z-40 text-sm font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.95)] sm:left-5 sm:text-base"
+          aria-label={`المستوى ${levelConfig.level}`}
+        >
+          المستوى {levelConfig.level}
+        </div>
+        <div
+          className="pointer-events-none absolute right-3 top-[5.25rem] z-40 inline-flex items-center gap-1 sm:right-5"
+          aria-label={`قلوب الحياة: ${hearts} من ${MAX_HEARTS}`}
+        >
+          {[1, 2, 3].map((idx) => (
+            <Heart
+              key={idx}
+              className={`h-6 w-6 sm:h-7 sm:w-7 drop-shadow-[0_3px_5px_rgba(0,0,0,.65)] ${
+                idx <= hearts
+                  ? 'fill-[#ff315d] text-[#ffe4eb] [filter:drop-shadow(0_0_5px_rgba(244,63,94,.65))]'
+                  : 'fill-slate-500/70 text-slate-200/80'
+              }`}
+            />
+          ))}
+        </div>
+
         <canvas
           ref={canvasRef}
           onPointerDown={handleCanvasPointerDown}
@@ -1356,7 +1368,7 @@ export default function GameArena({
           <div className="absolute inset-0 z-30 bg-[#2D1824]/45 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl border border-rose-200 p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl space-y-4">
               <h3
-                className="text-2xl font-bold text-[#2D1824]"
+                className="relative text-2xl font-black tracking-tight text-white"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
                 استراحة سحرية — المستوى {levelConfig.level}
@@ -1396,36 +1408,38 @@ export default function GameArena({
 
         {/* Game Over (3 Hearts Depleted) Overlay */}
         {isGameOver && (
-          <div className="absolute inset-0 z-30 bg-[#1B1018]/65 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-md">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-white rounded-3xl border-2 border-rose-300 p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl space-y-4"
+              initial={{ y: 22, scale: 0.94, opacity: 0 }}
+              animate={{ y: 0, scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 240, damping: 22 }}
+              className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/15 bg-gradient-to-b from-slate-900 via-[#17243a] to-slate-950 p-6 text-center text-white shadow-[0_28px_90px_rgba(0,0,0,.65)] space-y-4"
             >
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-rose-100 text-rose-600 mx-auto">
-                <Heart className="w-7 h-7" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-rose-500/20 to-transparent" />
+              <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-rose-200/30 bg-rose-500/15 text-rose-300 shadow-[0_0_35px_rgba(244,63,94,.22)]">
+                <Heart className="h-10 w-10 fill-rose-500/20" />
               </div>
               <h3
-                className="text-2xl font-bold text-[#2D1824]"
+                className="relative text-2xl font-black tracking-tight text-white"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                انتهت قلوب الحياة! 💔
+                انتهت المحاولة
               </h3>
-              <p className="text-sm text-[#6A4558] leading-relaxed">
+              <p className="relative text-sm leading-7 text-slate-300">
                 الغيوم المشاكسة كانت أسرع في المستوى {levelConfig.level}! جمعتِ{' '}
                 <span className="font-bold text-rose-600 tabular-nums">{score}</span> نقطة من{' '}
                 <span className="font-bold tabular-nums">{levelConfig.targetScore}</span>. حاولي مرة أخرى!
               </p>
               <div className="flex flex-col gap-2.5 pt-1">
                 {worldSave.blueKeys >= 2 ** reviveCountRef.current && (
-                  <button type="button" onClick={handleRevive} className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3.5 font-black text-white shadow-lg transition hover:bg-blue-500">
+                  <button type="button" onClick={handleRevive} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-300/30 bg-gradient-to-l from-sky-500 to-blue-600 px-4 py-4 font-black text-white shadow-[0_10px_28px_rgba(37,99,235,.28)] transition hover:brightness-110">
                     <KeyRound className="h-4 w-4" /> استمر بمفتاح أزرق ({2 ** reviveCountRef.current})
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={resetRun}
-                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-l from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                  className="w-full rounded-2xl border border-rose-200/20 bg-gradient-to-l from-rose-500 to-pink-600 px-4 py-4 font-black text-white shadow-[0_10px_28px_rgba(225,29,72,.24)] transition hover:brightness-110 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span>إعادة المحاولة الآن</span>
@@ -1433,7 +1447,7 @@ export default function GameArena({
                 <button
                   type="button"
                   onClick={onExitToMap}
-                  className="w-full py-2.5 px-4 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-[#2D1824] text-sm font-semibold transition-colors cursor-pointer"
+                  className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/10 cursor-pointer"
                 >
                   العودة لخريطة المستويات
                 </button>

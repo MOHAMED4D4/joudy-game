@@ -16,6 +16,7 @@ export interface WorldSave {
   reviveCountsByLevel: Record<number, number>;
   petsOwned: string[];
   equippedPet: string;
+  coastalRegionUnlocked: boolean;
 }
 
 const KEY = 'joudy_world_save_v1';
@@ -33,6 +34,7 @@ const DEFAULT_SAVE: WorldSave = {
   reviveCountsByLevel: {},
   petsOwned: ['moon-cat'],
   equippedPet: 'moon-cat',
+  coastalRegionUnlocked: false,
 };
 
 export interface ShopItem {
@@ -112,6 +114,7 @@ function parse(raw: string | null): WorldSave {
       reviveCountsByLevel: value.reviveCountsByLevel && typeof value.reviveCountsByLevel === 'object' ? value.reviveCountsByLevel : {},
       petsOwned: Array.isArray(value.petsOwned) ? value.petsOwned : DEFAULT_SAVE.petsOwned,
       equippedPet: typeof value.equippedPet === 'string' ? value.equippedPet : DEFAULT_SAVE.equippedPet,
+      coastalRegionUnlocked: value.coastalRegionUnlocked === true,
     };
   } catch {
     return DEFAULT_SAVE;

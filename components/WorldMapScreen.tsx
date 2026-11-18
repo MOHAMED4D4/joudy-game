@@ -13,6 +13,7 @@ import {
 import { LEVELS, WORLD_THEMES } from '@/lib/levels';
 import type { JoudyGameProgress } from '@/lib/storage';
 import WorldAtmosphereOverlay from './WorldAtmosphereOverlay';
+import { saveWorld, useWorldSave } from '@/lib/joudyWorld';
 
 interface WorldMapScreenProps {
   progress: JoudyGameProgress;
@@ -24,6 +25,13 @@ export default function WorldMapScreen({
   onSelectLevel,
 }: WorldMapScreenProps) {
   const currentLevelRef = useRef<HTMLDivElement | null>(null);
+  const worldSave = useWorldSave();
+  const regionPrice = 10000;
+  const canUnlockCoast = progress.highestUnlockedLevel >= 16 && !worldSave.coastalRegionUnlocked && worldSave.coins >= regionPrice;
+  const unlockCoast = () => {
+    if (worldSave.coins < regionPrice || worldSave.coastalRegionUnlocked) return;
+    saveWorld((current) => ({ ...current, coins: current.coins - regionPrice, coastalRegionUnlocked: true }));
+  };
 
   // Restore the older map behavior: when STAGES opens, smoothly bring the
   // currently unlocked level into view; repeat this after progress advances.
@@ -110,13 +118,23 @@ export default function WorldMapScreen({
         <div className="rounded-xl border border-white/10 bg-[#101b2b]/80 p-3"><p className="text-[10px] text-slate-400">نظام التحدي</p><p className="mt-1 text-sm font-black text-amber-200">تقدم تدريجي</p></div>
       </div>
 
+      {!worldSave.coastalRegionUnlocked && progress.highestUnlockedLevel >= 16 && (
+        <div className="relative overflow-hidden rounded-3xl border border-amber-300/30 bg-gradient-to-br from-[#18263b] via-[#24364c] to-[#172033] p-5 shadow-xl">
+          <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-amber-400/10 blur-2xl" />
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div><p className="text-xs font-bold tracking-widest text-amber-300">منطقة جديدة · المستوى 16</p><h2 className="mt-1 text-xl font-black text-white">ساحل الجزر الذهبية</h2><p className="mt-1 text-sm text-slate-300">افتح الطريق إلى المستويات التالية مقابل 10,000 عملة ذهبية.</p><p className="mt-2 text-xs font-bold text-amber-200">رصيدك: {worldSave.coins.toLocaleString('ar-EG')} 🪙</p></div>
+            <button type="button" onClick={unlockCoast} disabled={!canUnlockCoast} className="shrink-0 rounded-2xl border border-amber-200/30 bg-gradient-to-l from-amber-400 to-yellow-500 px-6 py-3 font-black text-slate-950 shadow-lg transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">{worldSave.coins >= regionPrice ? 'شراء المنطقة · 10,000 🪙' : 'تحتاج 10,000 🪙'}</button>
+          </div>
+        </div>
+      )}
+
       {/* 6 Worlds Serpentine 2D Cartoon Path */}
       <div className="space-y-0 pb-8">
         {WORLD_THEMES.map((world, worldIdx) => {
           const worldLevels = LEVELS.filter((l) => l.worldId === world.id);
           const isEvenRow = worldIdx % 2 === 1;
           const orderedLevels = [...worldLevels].sort((a, b) => a.level - b.level);
-          const worldUnlocked = worldLevels.some((l) => l.level <= currentLevel);
+          const worldUnlocked = worldLevels.some((l) => l.level <= currentLevel) && (world.id < 4 || worldSave.coastalRegionUnlocked);
           const hasNextWorld = worldIdx < WORLD_THEMES.length - 1;
 
           return (
@@ -197,7 +215,7 @@ export default function WorldMapScreen({
                     {orderedLevels.map((lvl, idx) => {
                       const completed = progress.completedLevels[lvl.level];
                       const isCurrent = lvl.level === currentLevel;
-                      const isLocked = lvl.level > currentLevel;
+                      const isLocked = lvl.level > currentLevel || (lvl.level >= 16 && !worldSave.coastalRegionUnlocked);
                       const isFinalBoss = lvl.level === 30;
                       const waveClass = waveOffsets[idx % waveOffsets.length];
 
