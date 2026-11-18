@@ -44,17 +44,16 @@ export interface ShopItem {
   description: string;
   filter: string;
   bonus?: 'coins' | 'speed' | 'shield';
-  spriteSrc?: string;
   shoeSrc?: string;
   artId?: string;
 }
 
 export const SHOP_ITEMS: ShopItem[] = [
   // Four separate illustrated outfits. These replace the earlier colour-filter-only skins.
-  { id: 'look-forest', name: 'معطف الغابة', category: 'outfit', price: 0, rarity: 'عادي', description: 'معطف طويل داكن بتطريز نباتي وحزام أنيق', filter: 'none', spriteSrc: '/images/outfits/look-1.png', artId: 'coat' },
-  { id: 'look-explorer', name: 'إطلالة المستكشفة', category: 'outfit', price: 180, rarity: 'مميز', description: 'سترة عملية وبنطال واسع بجيوب جانبية', filter: 'none', spriteSrc: '/images/outfits/look-2.png', artId: 'utility', bonus: 'speed' },
-  { id: 'look-mauve', name: 'الفستان البنفسجي المطرز', category: 'outfit', price: 240, rarity: 'نادر', description: 'فستان متعدد الطبقات بتطريز ناعم', filter: 'none', spriteSrc: '/images/outfits/look-3.png', artId: 'layered', bonus: 'coins' },
-  { id: 'look-burgundy', name: 'معطف المساء', category: 'outfit', price: 320, rarity: 'أسطوري', description: 'معطف خمري طويل مع بنطال داكن', filter: 'none', spriteSrc: '/images/outfits/look-4.png', artId: 'longcoat', bonus: 'shield' },
+  { id: 'look-forest', name: 'معطف الغابة', category: 'outfit', price: 0, rarity: 'عادي', description: 'معطف طويل داكن بتطريز نباتي وحزام أنيق', filter: 'none', artId: 'coat' },
+  { id: 'look-explorer', name: 'إطلالة المستكشفة', category: 'outfit', price: 180, rarity: 'مميز', description: 'سترة عملية وبنطال واسع بجيوب جانبية', filter: 'none', artId: 'utility', bonus: 'speed' },
+  { id: 'look-mauve', name: 'الفستان البنفسجي المطرز', category: 'outfit', price: 240, rarity: 'نادر', description: 'فستان متعدد الطبقات بتطريز ناعم', filter: 'none', artId: 'layered', bonus: 'coins' },
+  { id: 'look-burgundy', name: 'معطف المساء', category: 'outfit', price: 320, rarity: 'أسطوري', description: 'معطف خمري طويل مع بنطال داكن', filter: 'none', artId: 'longcoat', bonus: 'shield' },
   // Shoes are independent overlays, so changing them keeps the selected outfit.
   { id: 'sneakers', name: 'حذاء رياضي كلاسيكي', category: 'shoes', price: 0, rarity: 'عادي', description: 'حذاء رياضي منخفض بنعل مريح', filter: 'none', shoeSrc: '/images/shoes/sneakers.svg', artId: 'sneakers' },
   { id: 'rose-boots', name: 'جزمة جلد وردية', category: 'shoes', price: 110, rarity: 'مميز', description: 'جزمة قصيرة بكعب منخفض وتفاصيل ناعمة', filter: 'none', shoeSrc: '/images/shoes/rose-boots.svg', artId: 'rose-boots', bonus: 'coins' },

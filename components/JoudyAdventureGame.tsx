@@ -135,12 +135,11 @@ export default function JoudyAdventureGame() {
               levelConfig={activeLevelConfig}
               realImageSrc={realImageSrc}
               animeImageSrc={animeImageSrc}
-              characterSpriteSrc={equippedOutfit.spriteSrc}
-              shoeSpriteSrc={equippedShoes.shoeSrc}
+              characterSpriteSrc={animeImageSrc}
               highScore={progress.highScore}
               soundEnabled={soundEnabled}
               onToggleSound={handleToggleSound}
-              characterFilter={equippedOutfit.filter}
+              characterFilter="none"
               characterSpeedBonus={characterSpeedBonus}
               characterShieldBonus={characterShieldBonus}
               onHighScoreUpdate={handleHighScoreUpdate}
