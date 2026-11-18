@@ -54,7 +54,7 @@ export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }
           <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px)', backgroundSize: '34px 34px' }} />
           <div className="absolute left-8 top-8 h-28 w-28 rounded-full bg-cyan-400/20 blur-3xl" />
           <div className="absolute bottom-8 right-8 h-32 w-32 rounded-full bg-violet-500/20 blur-3xl" />
-          <Image src="/images/joudy-original-transparent.png" alt="جودي" fill priority sizes="(max-width: 1024px) 100vw, 45vw" className="relative z-10 object-contain object-bottom drop-shadow-[0_20px_35px_rgba(0,0,0,.45)]" />
+          <Image src={realImageSrc} alt="صورة جودي الحقيقية" fill priority sizes="(max-width: 1024px) 100vw, 45vw" className="relative z-10 object-cover object-center drop-shadow-[0_20px_35px_rgba(0,0,0,.45)]" />
           <div className="absolute bottom-5 right-5 z-20 rounded-xl border border-white/10 bg-black/35 px-3 py-2 text-xs font-semibold text-white backdrop-blur">الشخصية الرئيسية</div>
         </div>
 

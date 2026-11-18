@@ -19,13 +19,11 @@ import { useWorldSave } from '@/lib/joudyWorld';
 
 interface WorldMapScreenProps {
   progress: JoudyGameProgress;
-  realImageSrc: string;
   onSelectLevel: (level: number) => void;
 }
 
 export default function WorldMapScreen({
   progress,
-  realImageSrc,
   onSelectLevel,
 }: WorldMapScreenProps) {
   const [wardrobeOpen, setWardrobeOpen] = useState(false);
@@ -76,16 +74,6 @@ export default function WorldMapScreen({
       {/* Map Header & Quick Launch */}
       <div className="bg-[#101b2b]/95 backdrop-blur-xl border border-white/10 rounded-3xl p-5 sm:p-6 shadow-[0_20px_55px_rgba(0,0,0,.32)] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-rose-300 shadow-sm shrink-0 bg-rose-50">
-            <Image
-              src={realImageSrc}
-              alt="صورة جودي"
-              fill
-              sizes="64px"
-              referrerPolicy="no-referrer"
-              className="object-cover object-center"
-            />
-          </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-slate-400">مغامرة التجميع السريعة</span>

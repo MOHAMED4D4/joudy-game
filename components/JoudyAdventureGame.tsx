@@ -134,7 +134,6 @@ export default function JoudyAdventureGame() {
             <WorldMapScreen
               key="world-map-2d"
               progress={progress}
-              realImageSrc={realImageSrc}
               onSelectLevel={handleStartLevel}
             />
           )}
