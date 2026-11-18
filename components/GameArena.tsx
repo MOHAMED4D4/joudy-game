@@ -1333,7 +1333,7 @@ export default function GameArena({
           المستوى {levelConfig.level}
         </div>
         <div
-          className="pointer-events-none absolute right-3 top-[5.25rem] z-40 inline-flex items-center gap-1 sm:right-5"
+          className="pointer-events-none absolute bottom-6 right-3 z-40 inline-flex items-center gap-1 bg-transparent sm:right-5"
           aria-label={`قلوب الحياة: ${hearts} من ${MAX_HEARTS}`}
         >
           {[1, 2, 3].map((idx) => (
