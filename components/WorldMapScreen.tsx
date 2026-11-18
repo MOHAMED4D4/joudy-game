@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import {
@@ -9,13 +9,10 @@ import {
   Play,
   Sparkles,
   Star,
-  Coins,
 } from 'lucide-react';
 import { LEVELS, WORLD_THEMES } from '@/lib/levels';
 import type { JoudyGameProgress } from '@/lib/storage';
 import WorldAtmosphereOverlay from './WorldAtmosphereOverlay';
-import WardrobeShopPanel from './WardrobeShopPanel';
-import { useWorldSave } from '@/lib/joudyWorld';
 
 interface WorldMapScreenProps {
   progress: JoudyGameProgress;
@@ -26,8 +23,6 @@ export default function WorldMapScreen({
   progress,
   onSelectLevel,
 }: WorldMapScreenProps) {
-  const [wardrobeOpen, setWardrobeOpen] = useState(false);
-  const worldSave = useWorldSave();
   const currentLevelRef = useRef<HTMLDivElement | null>(null);
 
   // Restore the older map behavior: when STAGES opens, smoothly bring the
@@ -105,13 +100,7 @@ export default function WorldMapScreen({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <div className="flex items-center gap-1.5 rounded-2xl border border-amber-300/20 bg-amber-400/10 px-4 py-3.5 text-sm font-black text-amber-200">
-            <Coins className="h-4 w-4" />
-            <span>{worldSave.coins}</span>
-          </div>
-          <button type="button" onClick={() => setWardrobeOpen(true)} className="rounded-2xl border border-amber-300/30 bg-amber-500/15 px-5 py-3.5 text-sm font-black text-amber-100 hover:bg-amber-500/25">👗 الملابس والأحذية</button>
-        </div>
+
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -332,7 +321,6 @@ export default function WorldMapScreen({
         <Sparkles className="h-4 w-4" />
       </motion.button>
     </div>
-    {wardrobeOpen && <WardrobeShopPanel onClose={() => setWardrobeOpen(false)} />}
     </>
   );
 }

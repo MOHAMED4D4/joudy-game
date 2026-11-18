@@ -3,7 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
-import { addWorldCoins, loadWorldSave, saveWorld, useWorldSave, SHOP_ITEMS } from '@/lib/joudyWorld';
+import { addWorldCoins, loadWorldSave, saveWorld } from '@/lib/joudyWorld';
 import CharacterSelectScreen from './CharacterSelectScreen';
 import WorldMapScreen from './WorldMapScreen';
 import GameArena, { type GameRunStats } from './GameArena';
@@ -26,12 +26,10 @@ export default function JoudyAdventureGame() {
 
   // Restore the original welcome page before the stages map.
   const [gameState, setGameState] = useState<GameState>('TITLE_MENU');
-  const worldSave = useWorldSave();
-  const equippedOutfit = SHOP_ITEMS.find((item) => item.id === worldSave.equippedOutfit) ?? SHOP_ITEMS[0];
-  const equippedShoes = SHOP_ITEMS.find((item) => item.id === worldSave.equippedShoes) ?? SHOP_ITEMS.find((item) => item.id === 'sneakers')!;
-  const characterSpeedBonus = equippedOutfit.bonus === 'speed' || equippedShoes.bonus === 'speed' ? 1.08 : 1;
-  const characterShieldBonus = equippedOutfit.bonus === 'shield' || equippedShoes.bonus === 'shield' ? 0.2 : 0;
-  const characterCoinBonus = equippedOutfit.bonus === 'coins' || equippedShoes.bonus === 'coins' ? 1.05 : 1;
+  // Keep Joudy's original V3 costume fixed; no wardrobe overlays or equipment bonuses.
+  const characterSpeedBonus = 1;
+  const characterShieldBonus = 0;
+  const characterCoinBonus = 1;
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [runId, setRunId] = useState(1);
@@ -145,8 +143,6 @@ export default function JoudyAdventureGame() {
               realImageSrc={realImageSrc}
               animeImageSrc={animeImageSrc}
               characterSpriteSrc="/images/joudy-original-transparent.png"
-              outfitSpriteSrc={equippedOutfit.overlaySrc}
-              shoeSpriteSrc={equippedShoes.overlaySrc}
               highScore={progress.highScore}
               soundEnabled={soundEnabled}
               onToggleSound={handleToggleSound}
