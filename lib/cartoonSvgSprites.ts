@@ -1,6 +1,6 @@
 'use client';
 
-export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'blueKey';
+export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'blueKey' | 'enemyCloud' | 'enemyShot';
 
 const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
   cat: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -99,12 +99,22 @@ const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
     <polygon points="50,15 53,23 61,26 53,29 50,37 47,29 39,26 47,23" fill="#FDE047" stroke="#D97706" stroke-width="1.5"/>
   </svg>`,
   blueKey: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-    <defs><radialGradient id="keyGlow"><stop stop-color="#dbeafe"/><stop offset="1" stop-color="#3b82f6"/></radialGradient></defs>
-    <circle cx="39" cy="35" r="25" fill="url(#keyGlow)" stroke="#1d4ed8" stroke-width="8"/>
-    <circle cx="39" cy="35" r="9" fill="#172554" stroke="#bfdbfe" stroke-width="3"/>
-    <path d="M55 51 L82 78 L72 88 L64 80 L56 88 L46 78 L55 69 L47 61 Z" fill="#60a5fa" stroke="#1d4ed8" stroke-width="5" stroke-linejoin="round"/>
-    <path d="M19 10 L22 20 L32 23 L22 26 L19 36 L16 26 L6 23 L16 20 Z" fill="#fff"/>
+    <defs>
+      <linearGradient id="keyMetal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eff6ff"/><stop offset=".32" stop-color="#93c5fd"/><stop offset=".72" stop-color="#3b82f6"/><stop offset="1" stop-color="#1e40af"/></linearGradient>
+      <linearGradient id="keyStem" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dbeafe"/><stop offset=".48" stop-color="#60a5fa"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient>
+      <filter id="keyShadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+    </defs>
+    <circle cx="37" cy="36" r="31" fill="#60a5fa" opacity=".2" filter="url(#keyShadow)"/>
+    <path d="M56 55L83 81L73 91L65 83L57 91L46 80L56 70L47 61Z" fill="url(#keyStem)" stroke="#1e40af" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M58 58L78 78" stroke="#eff6ff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+    <circle cx="36" cy="35" r="25" fill="url(#keyMetal)" stroke="#1e3a8a" stroke-width="5"/>
+    <circle cx="36" cy="35" r="10.5" fill="#172554" stroke="#dbeafe" stroke-width="3.5"/>
+    <path d="M20 18Q31 8 43 14" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".9"/>
+    <path d="M16 7L19 15L27 18L19 21L16 29L13 21L5 18L13 15Z" fill="#fff" opacity=".95"/>
+    <circle cx="82" cy="23" r="3" fill="#bfdbfe"/><circle cx="91" cy="33" r="1.8" fill="#fff"/>
   </svg>`,
+  enemyCloud: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M18 64C6 61 10 43 24 40C23 23 43 16 54 29C66 16 86 27 82 44C96 52 87 68 74 68H25Z" fill="#64748b" stroke="#1e293b" stroke-width="5"/><circle cx="38" cy="48" r="5" fill="white"/><circle cx="63" cy="48" r="5" fill="white"/><path d="M40 61Q50 54 60 61" fill="none" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/></svg>`,
+  enemyShot: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 5L61 36L94 50L61 62L50 95L38 62L6 50L38 36Z" fill="#f97316" stroke="#7c2d12" stroke-width="7"/><circle cx="50" cy="50" r="12" fill="#fef3c7"/></svg>`,
 
 };
 
