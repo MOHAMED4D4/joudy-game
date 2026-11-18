@@ -3,98 +3,68 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
-import { ArrowLeft, ArrowUpRight, Heart, Play, ShieldCheck, Star, Trophy, Zap } from 'lucide-react';
+import { Crown, Heart, Play, Sparkles, Star } from 'lucide-react';
 
 interface CharacterSelectScreenProps {
   realImageSrc: string;
   onStartAdventure: () => void;
-  onBackToHome: () => void;
 }
 
-const scoring = [
-  { icon: '🐈', name: 'جمع القطط', points: '+20 نقطة' },
-  { icon: '🌹', name: 'جمع الورود', points: '+15 نقطة' },
-  { icon: '🍫', name: 'جمع الشوكولاتة', points: '+10 نقاط' },
-  { icon: '🧲', name: 'المغناطيس', points: 'جذب العناصر' },
-  { icon: '⚡', name: 'تجنب العوائق', points: 'حافظ على القلوب' },
-];
-
-export default function CharacterSelectScreen({ realImageSrc, onStartAdventure, onBackToHome }: CharacterSelectScreenProps) {
+export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }: CharacterSelectScreenProps) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.45 }}
-      className="arcade-hub relative mx-auto w-full max-w-6xl px-4 py-7 sm:px-7 sm:py-10"
+      exit={{ opacity: 0, y: -14 }}
+      transition={{ duration: 0.4 }}
+      dir="rtl"
+      className="relative mx-auto flex min-h-[100dvh] w-full max-w-6xl items-center px-4 py-8 sm:px-7"
     >
-      <div className="absolute inset-0 -z-10 overflow-hidden rounded-[2rem]" aria-hidden="true">
-        <div className="hub-orb hub-orb-one" />
-        <div className="hub-orb hub-orb-two" />
-        <div className="hub-grid" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -right-24 top-8 h-72 w-72 rounded-full bg-rose-300/25 blur-3xl" />
+        <div className="absolute -left-20 bottom-0 h-80 w-80 rounded-full bg-amber-200/25 blur-3xl" />
+        <div className="absolute inset-0 opacity-[.16]" style={{ backgroundImage: 'radial-gradient(#9b6a70 1px, transparent 1px)', backgroundSize: '25px 25px' }} />
       </div>
 
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <button type="button" onClick={onBackToHome} className="mb-2 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.06] px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/10"><ArrowLeft className="h-4 w-4" /> العودة إلى عالم جودي</button>
-        <div>
-          <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[.22em] text-cyan-300">
-            <span className="h-px w-7 bg-cyan-300" /> ARCADE / 30 STAGES
-          </p>
-          <h1 className="text-3xl font-black tracking-tight text-white sm:text-5xl">مغامرة التجميع السريعة</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-            اجمع العناصر، تفادَ العوائق، وحقق أعلى نتيجة. افتح المراحل التالية واصنع سجلّك الخاص.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-4 py-2 text-sm text-slate-200 backdrop-blur">
-          <ShieldCheck className="h-4 w-4 text-emerald-300" /> تقدم محفوظ
-        </div>
-      </div>
-
-      <div className="grid overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#101b2b]/90 shadow-[0_30px_90px_rgba(0,0,0,.4)] lg:grid-cols-[.9fr_1.1fr]">
-        <div className="relative min-h-[280px] overflow-hidden bg-[radial-gradient(circle_at_50%_40%,#26445c_0%,#17283b_48%,#101a2a_100%)] sm:min-h-[390px]">
-          <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px)', backgroundSize: '34px 34px' }} />
-          <div className="absolute left-8 top-8 h-28 w-28 rounded-full bg-cyan-400/20 blur-3xl" />
-          <div className="absolute bottom-8 right-8 h-32 w-32 rounded-full bg-violet-500/20 blur-3xl" />
-          <Image src={realImageSrc} alt="جودي" fill priority sizes="(max-width: 1024px) 100vw, 45vw" className="relative z-10 object-contain object-bottom drop-shadow-[0_20px_35px_rgba(0,0,0,.45)]" />
-          <div className="absolute bottom-5 left-5 z-20 rounded-xl border border-white/10 bg-black/35 px-3 py-2 text-xs font-semibold text-white backdrop-blur">الشخصية الرئيسية</div>
-        </div>
-
-        <div className="p-5 sm:p-8 lg:p-9">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold tracking-widest text-cyan-300">نمط اللعب</p>
-              <h2 className="mt-1 text-2xl font-extrabold text-white sm:text-3xl">تحدي الأركيد</h2>
+      <div className="relative w-full overflow-hidden rounded-[2rem] border border-rose-200/80 bg-[#fffaf7]/95 shadow-[0_28px_90px_rgba(93,47,64,.18)] backdrop-blur">
+        <div className="grid min-h-[620px] lg:grid-cols-[1.05fr_.95fr]">
+          <div className="relative flex min-h-[360px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#f6e8e8] via-[#f9f1e8] to-[#e6eee7] p-6 sm:p-10">
+            <div className="absolute h-[78%] w-[78%] rounded-full border border-white/70 bg-white/25 shadow-[0_0_90px_rgba(255,255,255,.8)]" />
+            <div className="absolute bottom-8 h-8 w-48 rounded-full bg-[#72534a]/15 blur-xl" />
+            <div className="relative h-[min(76vw,520px)] w-full max-w-[490px]">
+              <Image src="/images/joudy-original-transparent.png" alt="جودي" fill priority sizes="(max-width: 1024px) 85vw, 490px" className="object-contain drop-shadow-[0_24px_24px_rgba(72,49,43,.2)]" />
             </div>
-            <div className="rounded-2xl bg-cyan-300/10 p-3 text-cyan-200"><Zap className="h-6 w-6" /></div>
+            <div className="absolute right-5 top-5 flex items-center gap-2 rounded-full border border-white/80 bg-white/75 px-4 py-2 text-xs font-black text-rose-800 shadow-sm">
+              <Crown className="h-4 w-4 text-amber-600" /> عالم جودي
+            </div>
+            <div className="absolute bottom-5 left-5 rounded-2xl border border-white/80 bg-white/75 p-3 shadow-md backdrop-blur">
+              <div className="flex items-center gap-2 text-sm font-black text-rose-900"><Heart className="h-4 w-4 fill-rose-400 text-rose-500" /> مغامرة مليئة بالمفاجآت</div>
+            </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-3 gap-2">
-            <div className="rounded-xl border border-white/10 bg-white/[.04] p-3"><p className="text-[11px] text-slate-400">المراحل</p><p className="mt-1 text-2xl font-black text-white">30</p></div>
-            <div className="rounded-xl border border-white/10 bg-white/[.04] p-3"><p className="text-[11px] text-slate-400">نظام اللعب</p><p className="mt-1 text-sm font-bold text-white">تحدي</p></div>
-            <div className="rounded-xl border border-white/10 bg-white/[.04] p-3"><p className="text-[11px] text-slate-400">التقدم</p><p className="mt-1 text-sm font-bold text-emerald-300">تدريجي</p></div>
-          </div>
-
-          <div className="mt-7">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">نظام النقاط والتحدي</h3>
-              <span className="text-[11px] text-slate-400">داخل كل مرحلة</span>
+          <div className="flex flex-col justify-center p-6 sm:p-10 lg:p-12">
+            <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-black text-rose-700">
+              <Sparkles className="h-4 w-4" /> أهلاً بكِ في عالم جودي
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {scoring.map((item) => (
-                <div key={item.name} className="rounded-xl border border-white/10 bg-[#0b1421]/70 p-3">
-                  <div className="flex items-center gap-2"><span className="text-xl">{item.icon}</span><span className="text-xs font-bold text-slate-200">{item.name}</span></div>
-                  <p className="mt-2 text-[11px] font-bold text-cyan-300">{item.points}</p>
+            <h1 className="text-4xl font-black leading-tight tracking-tight text-[#3d2532] sm:text-6xl" style={{ fontFamily: 'var(--font-display)' }}>
+              مغامرة جودي <span className="text-rose-600">السحرية</span>
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-8 text-[#765664] sm:text-lg">
+              انطلقي مع جودي في مغامرة مليئة بالتحديات والجوائز. اجمعي القطط والورود والشوكولاتة، وتجاوزي العوائق في ثلاثين مرحلة متدرجة.
+            </p>
+            <div className="mt-7 grid grid-cols-3 gap-2 sm:gap-3">
+              {[['30','مرحلة'],['🎁','مكافآت'],['⭐','تحديات']].map(([value,label]) => (
+                <div key={label} className="rounded-2xl border border-rose-100 bg-white/80 px-2 py-4 text-center shadow-sm">
+                  <div className="text-2xl font-black text-rose-700">{value}</div>
+                  <div className="mt-1 text-xs font-bold text-[#8c6a78]">{label}</div>
                 </div>
               ))}
             </div>
-            <p className="mt-3 flex items-center gap-2 text-xs leading-6 text-slate-400"><Heart className="h-3.5 w-3.5 shrink-0 text-rose-400" /> لديك عدد محدود من القلوب؛ الاصطدام بالعوائق يقلل فرصتك في إكمال المرحلة.</p>
+            <button type="button" onClick={onStartAdventure} className="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-l from-rose-600 to-fuchsia-700 px-6 py-4 text-lg font-black text-white shadow-[0_14px_30px_rgba(190,45,100,.25)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(190,45,100,.32)] active:translate-y-0">
+              <Play className="h-5 w-5 fill-current" /> ابدأ المغامرة
+            </button>
+            <div className="mt-4 flex items-center justify-center gap-2 text-xs font-semibold text-[#987d88]"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" /> تقدمك محفوظ ويمكنك متابعة اللعب لاحقاً</div>
           </div>
-
-          <motion.button type="button" whileHover={{ scale: 1.015, y: -2 }} whileTap={{ scale: .98 }} onClick={onStartAdventure} className="mt-7 flex w-full items-center justify-between rounded-2xl bg-gradient-to-l from-cyan-400 to-blue-500 px-5 py-4 text-right text-base font-black text-[#071321] shadow-[0_12px_35px_rgba(34,211,238,.2)] transition">
-            <span className="flex items-center gap-3"><Play className="h-5 w-5 fill-current" /> ابدأ اللعب</span>
-            <ArrowUpRight className="h-5 w-5" />
-          </motion.button>
-          <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-slate-500"><Trophy className="h-3.5 w-3.5" /><Star className="h-3 w-3" /> اجمع النقاط وارفع رقمك القياسي</div>
         </div>
       </div>
     </motion.section>

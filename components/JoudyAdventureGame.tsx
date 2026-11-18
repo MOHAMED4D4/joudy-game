@@ -4,6 +4,7 @@ import React, { useCallback, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { addWorldCoins, loadWorldSave, saveWorld, useWorldSave, SHOP_ITEMS } from '@/lib/joudyWorld';
+import CharacterSelectScreen from './CharacterSelectScreen';
 import WorldMapScreen from './WorldMapScreen';
 import GameArena, { type GameRunStats } from './GameArena';
 import VictoryScreen from './VictoryScreen';
@@ -15,7 +16,7 @@ import {
 } from '@/lib/storage';
 import { soundEngine } from '@/lib/soundEffects';
 
-type GameState = 'WORLD_MAP' | 'PLAYING' | 'VICTORY';
+type GameState = 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY';
 
 const REAL_IMAGE_SRC = '/images/joudy-real.png';
 const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
@@ -23,8 +24,8 @@ const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
 export default function JoudyAdventureGame() {
   const progress = useJoudyProgress();
 
-  // STAGES is the landing screen: open the world map immediately on site load.
-  const [gameState, setGameState] = useState<GameState>('WORLD_MAP');
+  // Restore the original welcome page before the stages map.
+  const [gameState, setGameState] = useState<GameState>('TITLE_MENU');
   const worldSave = useWorldSave();
   const equippedOutfit = SHOP_ITEMS.find((item) => item.id === worldSave.equippedOutfit) ?? SHOP_ITEMS[0];
   const equippedShoes = SHOP_ITEMS.find((item) => item.id === worldSave.equippedShoes) ?? SHOP_ITEMS.find((item) => item.id === 'sneakers')!;
@@ -121,6 +122,14 @@ export default function JoudyAdventureGame() {
       {/* Active Screen State Machine (2D Arcade & Winding Map) */}
       <div className="relative z-10 flex-1 flex items-stretch justify-center w-full">
         <AnimatePresence mode="wait">
+          {gameState === 'TITLE_MENU' && (
+            <CharacterSelectScreen
+              key="joudy-original-title"
+              realImageSrc={realImageSrc}
+              onStartAdventure={() => setGameState('WORLD_MAP')}
+            />
+          )}
+
           {gameState === 'WORLD_MAP' && (
             <WorldMapScreen
               key="world-map-2d"
