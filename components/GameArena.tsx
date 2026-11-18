@@ -15,8 +15,6 @@ import {
   Volume2,
   VolumeX,
   KeyRound,
-  Coins,
-  HeartCrack,
 } from 'lucide-react';
 import { soundEngine } from '@/lib/soundEffects';
 import { loadTransparentSprite } from '@/lib/spriteUtils';
@@ -72,8 +70,7 @@ interface FallingEntity {
   rotation: number;
   vr: number;
   points: number;
-  enemyVariant?: number;
-  shotCooldown?: number;
+  fireCooldown?: number;
 }
 
 interface Particle {
@@ -123,9 +120,28 @@ const ITEM_CONFIG: Record<
   magnet: { points: 0, halo: 'rgba(56, 189, 248, 0.42)', fallbackColor: '#38BDF8' },
   blueKey: { points: 0, halo: 'rgba(59, 130, 246, 0.55)', fallbackColor: '#3B82F6' },
   obstacle: { points: -15, halo: 'rgba(71, 85, 105, 0.48)', fallbackColor: '#475569' },
-  enemyCloud: { points: -15, halo: 'rgba(99, 102, 241, 0.34)', fallbackColor: '#6366F1' },
-  enemyShot: { points: -10, halo: 'rgba(249, 115, 22, 0.34)', fallbackColor: '#F97316' },
+  cloudBrute: { points: -20, halo: 'rgba(148, 163, 184, 0.52)', fallbackColor: '#94A3B8' },
+  cloudWisp: { points: -15, halo: 'rgba(56, 189, 248, 0.48)', fallbackColor: '#7DD3FC' },
+  cloudStarCaller: { points: -20, halo: 'rgba(192, 132, 252, 0.5)', fallbackColor: '#C084FC' },
+  fallingStar: { points: -10, halo: 'rgba(250, 204, 21, 0.58)', fallbackColor: '#FDE047' },
 };
+
+type CloudMonsterKind = 'cloudBrute' | 'cloudWisp' | 'cloudStarCaller';
+type HazardKind = 'obstacle' | 'fallingStar' | CloudMonsterKind;
+
+const CLOUD_MONSTER_KINDS: CloudMonsterKind[] = [
+  'cloudBrute',
+  'cloudWisp',
+  'cloudStarCaller',
+];
+
+function isCloudMonster(kind: CartoonSpriteKind): kind is CloudMonsterKind {
+  return CLOUD_MONSTER_KINDS.includes(kind as CloudMonsterKind);
+}
+
+function isHazardKind(kind: CartoonSpriteKind): kind is HazardKind {
+  return kind === 'obstacle' || kind === 'fallingStar' || isCloudMonster(kind);
+}
 
 function drawStarShape(
   ctx: CanvasRenderingContext2D,
@@ -169,110 +185,6 @@ function drawHeartShape(
   ctx.moveTo(0, size * 0.35);
   ctx.bezierCurveTo(-size * 0.55, -size * 0.15, -size * 0.5, -size * 0.7, 0, -size * 0.25);
   ctx.bezierCurveTo(size * 0.5, -size * 0.7, size * 0.55, -size * 0.15, 0, size * 0.35);
-  ctx.fill();
-  ctx.restore();
-}
-
-function drawEnemyCloud(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  radius: number,
-  variant: number,
-  rotation: number,
-  elapsed: number,
-) {
-  const palettes = [
-    { body: '#64748B', light: '#CBD5E1', dark: '#1E293B', eye: '#F8FAFC' },
-    { body: '#7C3AED', light: '#DDD6FE', dark: '#3B0764', eye: '#FFF7ED' },
-    { body: '#0F766E', light: '#99F6E4', dark: '#134E4A', eye: '#F0FDFA' },
-  ];
-  const palette = palettes[variant % palettes.length];
-  const pulse = 1 + Math.sin(elapsed * 5 + variant) * 0.035;
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(rotation * 0.18);
-  ctx.scale(pulse, 1 / pulse);
-  ctx.shadowColor = palette.dark;
-  ctx.shadowBlur = 13;
-  ctx.shadowOffsetY = 4;
-  const gradient = ctx.createLinearGradient(0, -radius, 0, radius);
-  gradient.addColorStop(0, palette.light);
-  gradient.addColorStop(0.48, palette.body);
-  gradient.addColorStop(1, palette.dark);
-  ctx.fillStyle = gradient;
-  ctx.strokeStyle = palette.dark;
-  ctx.lineWidth = Math.max(2.5, radius * 0.09);
-  ctx.beginPath();
-  ctx.moveTo(-radius * 0.76, radius * 0.34);
-  ctx.bezierCurveTo(-radius * 1.02, radius * 0.03, -radius * 0.78, -radius * 0.48, -radius * 0.38, -radius * 0.43);
-  ctx.bezierCurveTo(-radius * 0.20, -radius * 1.03, radius * 0.46, -radius * 0.91, radius * 0.53, -radius * 0.34);
-  ctx.bezierCurveTo(radius * 1.02, -radius * 0.31, radius * 1.02, radius * 0.36, radius * 0.58, radius * 0.47);
-  ctx.lineTo(-radius * 0.52, radius * 0.47);
-  ctx.bezierCurveTo(-radius * 0.72, radius * 0.48, -radius * 0.84, radius * 0.42, -radius * 0.76, radius * 0.34);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
-  if (variant === 1) {
-    ctx.fillStyle = '#C4B5FD';
-    ctx.beginPath();
-    ctx.moveTo(-radius * 0.44, -radius * 0.42);
-    ctx.lineTo(-radius * 0.58, -radius * 0.92);
-    ctx.lineTo(-radius * 0.12, -radius * 0.58);
-    ctx.closePath();
-    ctx.moveTo(radius * 0.22, -radius * 0.58);
-    ctx.lineTo(radius * 0.57, -radius * 0.92);
-    ctx.lineTo(radius * 0.54, -radius * 0.35);
-    ctx.closePath();
-    ctx.fill();
-  } else if (variant === 2) {
-    ctx.strokeStyle = '#FDE68A';
-    ctx.lineWidth = Math.max(2, radius * 0.07);
-    ctx.beginPath();
-    ctx.moveTo(0, -radius * 0.58);
-    ctx.lineTo(radius * 0.05, -radius * 0.94);
-    ctx.stroke();
-    ctx.fillStyle = '#FDE68A';
-    ctx.beginPath();
-    ctx.arc(radius * 0.05, -radius * 0.96, radius * 0.09, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.fillStyle = palette.eye;
-  ctx.beginPath();
-  ctx.ellipse(-radius * 0.23, radius * 0.02, radius * 0.105, radius * 0.15, -0.12, 0, Math.PI * 2);
-  ctx.ellipse(radius * 0.25, radius * 0.02, radius * 0.105, radius * 0.15, 0.12, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#0F172A';
-  ctx.beginPath();
-  ctx.arc(-radius * 0.20, radius * 0.045, radius * 0.055, 0, Math.PI * 2);
-  ctx.arc(radius * 0.28, radius * 0.045, radius * 0.055, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = palette.dark;
-  ctx.lineWidth = Math.max(2, radius * 0.065);
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(-radius * 0.39, -radius * 0.18);
-  ctx.lineTo(-radius * 0.12, -radius * 0.12);
-  ctx.moveTo(radius * 0.12, -radius * 0.12);
-  ctx.lineTo(radius * 0.4, -radius * 0.18);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(radius * 0.04, radius * 0.30, radius * 0.16, 0.12, Math.PI - 0.12);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawEnemyShot(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, rotation: number) {
-  ctx.save();
-  ctx.shadowColor = 'rgba(249, 115, 22, 0.85)';
-  ctx.shadowBlur = 15;
-  drawStarShape(ctx, x, y, radius * 1.15, '#F97316', 1, rotation);
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = '#FFF7ED';
-  ctx.beginPath();
-  ctx.arc(x, y, radius * 0.28, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -512,15 +424,12 @@ export default function GameArena({
 
       const roll = Math.random();
       let kind: CartoonSpriteKind = 'chocolate';
-      let enemyVariant: number | undefined;
-      const enemyAlreadyPresent = entities.some((entity) => entity.kind === 'enemyCloud');
-      // Rare cloud-monsters appear one at a time, so the field never becomes crowded.
-      if (totalElapsed > 7 && !enemyAlreadyPresent && Math.random() < 0.045) {
-        kind = 'enemyCloud';
-        enemyVariant = Math.floor(Math.random() * 3);
-      } else if (roll < 0.012) {
+      if (roll < 0.012) {
         kind = 'blueKey';
-      } else if (roll < levelConfig.obstacleChance + 0.012) {
+      } else if (levelConfig.level >= 6 && roll < 0.05) {
+        // Rare cloud creatures enter the game after the opening forest levels.
+        kind = CLOUD_MONSTER_KINDS[Math.floor(Math.random() * CLOUD_MONSTER_KINDS.length)];
+      } else if (roll < levelConfig.obstacleChance + (levelConfig.level >= 6 ? 0.05 : 0.012)) {
         kind = 'obstacle';
       } else if (!magnetAlreadyPresent && Math.random() < 0.08) {
         kind = 'magnet';
@@ -532,7 +441,14 @@ export default function GameArena({
       }
 
       const cfg = ITEM_CONFIG[kind];
-      const radius = (kind === 'obstacle' || kind === 'enemyCloud' ? 31 : kind === 'magnet' ? 28 : kind === 'blueKey' ? 22 : 27) * 0.9;
+      const radius = (
+        isCloudMonster(kind)
+          ? kind === 'cloudStarCaller' ? 34 : 32
+          : kind === 'obstacle' ? 30
+            : kind === 'magnet' ? 28
+              : kind === 'blueKey' ? 22
+                : 27
+      ) * 0.9;
       const baseSpeed =
         kind === 'cat'
           ? 245
@@ -544,12 +460,16 @@ export default function GameArena({
                 ? 190
                 : kind === 'blueKey'
                   ? 165
-                  : kind === 'enemyCloud'
-                    ? 185
-                    : 270;
+                  : kind === 'cloudWisp'
+                    ? 238
+                    : kind === 'cloudStarCaller'
+                      ? 218
+                      : kind === 'cloudBrute'
+                        ? 196
+                        : 270;
 
       const x = radius + 16 + Math.random() * Math.max(40, width - (radius + 16) * 2);
-      const hasZigzag = Math.random() < (kind === 'enemyCloud' ? 0.72 : 0.45);
+      const hasZigzag = Math.random() < 0.45;
 
       entities.push({
         id: nextEntityId++,
@@ -559,15 +479,14 @@ export default function GameArena({
         y: -radius - 12,
         vy: (baseSpeed + Math.random() * 55) * levelConfig.speedMultiplier,
         vx: (Math.random() - 0.5) * (30 + levelConfig.windStrength),
-        zigzagAmp: hasZigzag ? (kind === 'obstacle' || kind === 'enemyCloud' ? 34 : 58) + Math.random() * 24 : 0,
+        zigzagAmp: hasZigzag ? (kind === 'obstacle' ? 42 : 58) + Math.random() * 28 : 0,
         zigzagFreq: 2.2 + Math.random() * 1.6,
         zigzagPhase: Math.random() * Math.PI * 2,
         radius,
         rotation: 0,
         vr: (Math.random() - 0.5) * 2.1,
         points: cfg.points,
-        enemyVariant,
-        shotCooldown: enemyVariant === 2 ? 1.15 + Math.random() * 0.45 : undefined,
+        ...(kind === 'cloudStarCaller' ? { fireCooldown: 0.75 + Math.random() * 0.5 } : {}),
       });
     };
 
@@ -581,7 +500,13 @@ export default function GameArena({
               ? ['#D97706', '#FBBF24', '#F472B6']
               : kind === 'magnet'
                 ? ['#38BDF8', '#06B6D4', '#FDE047']
-                : ['#94A3B8', '#64748B', '#FACC15'];
+                : kind === 'fallingStar'
+                  ? ['#FDE047', '#FFFFFF', '#F59E0B']
+                  : kind === 'cloudWisp'
+                    ? ['#7DD3FC', '#E0F2FE', '#FFFFFF']
+                    : kind === 'cloudStarCaller'
+                      ? ['#C084FC', '#FDE68A', '#FFFFFF']
+                      : ['#94A3B8', '#64748B', '#FACC15'];
 
       for (let i = 0; i < 14; i++) {
         const angle = (Math.PI * 2 * i) / 14 + Math.random() * 0.25;
@@ -595,7 +520,7 @@ export default function GameArena({
           maxLife: 0.5 + Math.random() * 0.3,
           size: 5 + Math.random() * 5,
           color: palette[i % palette.length],
-          shape: kind === 'obstacle' ? 'circle' : i % 2 === 0 ? 'star' : 'heart',
+          shape: isHazardKind(kind) ? 'star' : i % 2 === 0 ? 'star' : 'heart',
           gravity: 210,
         });
       }
@@ -730,21 +655,6 @@ export default function GameArena({
           item.baseX += item.vx * dt;
           item.rotation += item.vr * dt;
 
-          // The teal cloud variant periodically releases a small falling star.
-          if (item.kind === 'enemyCloud' && item.enemyVariant === 2 && item.shotCooldown !== undefined) {
-            item.shotCooldown -= dt;
-            if (item.shotCooldown <= 0 && entities.filter((entity) => entity.kind === 'enemyShot').length + spawnedProjectiles.length < 2) {
-              const shotX = Math.max(16, Math.min(width - 16, item.x + (Math.random() - 0.5) * 20));
-              spawnedProjectiles.push({
-                id: nextEntityId++, kind: 'enemyShot', baseX: shotX, x: shotX, y: item.y + item.radius * 0.72,
-                vy: (310 + Math.random() * 42) * levelConfig.speedMultiplier,
-                vx: item.vx * 0.18, zigzagAmp: 0, zigzagFreq: 0, zigzagPhase: 0,
-                radius: 13, rotation: Math.random(), vr: (Math.random() - 0.5) * 3, points: -10,
-              });
-              item.shotCooldown = 1.45 + Math.random() * 0.5;
-            }
-          }
-
           if (item.baseX < item.radius + 10) {
             item.baseX = item.radius + 10;
             item.vx = Math.abs(item.vx);
@@ -753,8 +663,7 @@ export default function GameArena({
             item.vx = -Math.abs(item.vx);
           }
 
-          const isHazard = item.kind === 'obstacle' || item.kind === 'enemyCloud' || item.kind === 'enemyShot';
-          if (magnetActive && !isHazard && item.kind !== 'magnet') {
+          if (magnetActive && !isHazardKind(item.kind) && item.kind !== 'magnet') {
             const dxPull = player.x - item.x;
             const dyPull = playerCenterY - item.y;
             const dist = Math.hypot(dxPull, dyPull);
@@ -786,7 +695,7 @@ export default function GameArena({
           if (hitX && hitY) {
             spawnBurst(item.x, item.y, item.kind);
 
-            if (isHazard) {
+            if (isHazardKind(item.kind)) {
               if (player.invulnTimer <= 0) {
                 const nextScore = Math.max(0, scoreRef.current + item.points);
                 scoreRef.current = nextScore;
@@ -797,7 +706,7 @@ export default function GameArena({
                 player.invulnTimer = 1.15 + characterShieldBonus;
                 player.hurtShake = 1;
                 player.happyTimer = 0;
-                player.bubbleText = item.kind === 'enemyShot' ? 'نجمة مشاكسة! ✨' : item.kind === 'enemyCloud' ? 'سحابة مشاكسة! ☁️' : 'أوه لا! ⚡';
+                player.bubbleText = 'أوه لا! ⚡';
                 player.bubbleTone = 'bad';
                 player.bubbleTimer = 1.3;
                 shakeRef.current = 11;
@@ -851,7 +760,7 @@ export default function GameArena({
                 life: 0,
                 maxLife: 0.95,
               });
-            } else if (item.kind === 'cat' || item.kind === 'rose' || item.kind === 'chocolate') {
+            } else {
               comboRef.current += 1;
               comboTimerRef.current = COMBO_WINDOW_SEC;
               const multiplier = getComboMultiplier(comboRef.current);
@@ -861,9 +770,9 @@ export default function GameArena({
 
               if (item.kind === 'cat') countsRef.current.cats += 1;
               if (item.kind === 'rose') countsRef.current.roses += 1;
-              if (item.kind === 'chocolate') { countsRef.current.chocolates += 1; addWorldCoins(5); }
-              if (item.kind === 'rose') addWorldCoins(8);
-              if (item.kind === 'cat') addWorldCoins(12);
+              if (item.kind === 'chocolate') { countsRef.current.chocolates += 1; addWorldCoins(2); }
+              if (item.kind === 'rose') addWorldCoins(3);
+              if (item.kind === 'cat') addWorldCoins(5);
 
               player.catchBounce = 1;
               player.happyTimer = 0.85;
@@ -922,6 +831,45 @@ export default function GameArena({
             continue;
           }
 
+          // The star-calling cloud occasionally releases a falling star.
+          // Projectiles join the same entity list and reuse its collision path.
+          if (item.kind === 'cloudStarCaller') {
+            item.fireCooldown = (item.fireCooldown ?? 0.9) - dt;
+            if (item.fireCooldown <= 0 && item.y > 34 && item.y < height * 0.72) {
+              item.fireCooldown = 1.45 + Math.random() * 0.35;
+              spawnedProjectiles.push({
+                id: nextEntityId++,
+                kind: 'fallingStar',
+                baseX: item.x,
+                x: item.x,
+                y: item.y + item.radius * 0.55,
+                vy: (305 + Math.random() * 55) * levelConfig.speedMultiplier,
+                vx: (Math.random() - 0.5) * 24,
+                zigzagAmp: 7,
+                zigzagFreq: 3.5,
+                zigzagPhase: Math.random() * Math.PI * 2,
+                radius: 17,
+                rotation: Math.random() * Math.PI,
+                vr: (Math.random() - 0.5) * 2.8,
+                points: ITEM_CONFIG.fallingStar.points,
+              });
+              for (let i = 0; i < 3; i++) {
+                particles.push({
+                  x: item.x + (Math.random() - 0.5) * 18,
+                  y: item.y + item.radius * 0.45,
+                  vx: (Math.random() - 0.5) * 35,
+                  vy: 28 + Math.random() * 32,
+                  life: 0,
+                  maxLife: 0.32,
+                  size: 3 + Math.random() * 2,
+                  color: i % 2 === 0 ? '#FDE68A' : '#FFFFFF',
+                  shape: 'star',
+                  gravity: 20,
+                });
+              }
+            }
+          }
+
           if (item.y < height + 56) {
             surviving.push(item);
           }
@@ -964,8 +912,8 @@ export default function GameArena({
       ctx.scale(dpr, dpr);
 
       if (shakeRef.current > 0.2) {
-        const sx = (Math.random() - 0.5) * shakeRef.current * 1.8;
-        const sy = (Math.random() - 0.5) * shakeRef.current * 1.4;
+        const sx = Math.sin(totalElapsed * 38) * shakeRef.current * 0.55;
+        const sy = Math.cos(totalElapsed * 31) * shakeRef.current * 0.38;
         ctx.translate(sx, sy);
       }
 
@@ -1048,21 +996,6 @@ export default function GameArena({
         const cfg = ITEM_CONFIG[item.kind];
         const svgImg = cartoonSpritesRef.current[item.kind];
 
-        if (item.kind === 'enemyCloud') {
-          ctx.save();
-          ctx.fillStyle = cfg.halo;
-          ctx.beginPath();
-          ctx.arc(item.x, item.y, item.radius + 9, 0, Math.PI * 2);
-          ctx.fill();
-          drawEnemyCloud(ctx, item.x, item.y, item.radius * 1.15, item.enemyVariant ?? 0, item.rotation, totalElapsed);
-          ctx.restore();
-          continue;
-        }
-        if (item.kind === 'enemyShot') {
-          drawEnemyShot(ctx, item.x, item.y, item.radius, item.rotation);
-          continue;
-        }
-
         ctx.save();
         ctx.translate(item.x, item.y);
         ctx.rotate(item.rotation * 0.45);
@@ -1144,12 +1077,15 @@ export default function GameArena({
         ctx.restore();
       }
 
-      // Draw Joudy Anime Sprite (with invulnerability blink when recently hit)
-      const isVisible = player.invulnTimer <= 0 || Math.floor(player.invulnTimer * 16) % 2 === 0;
-      if (isVisible) {
-        ctx.save();
-        ctx.translate(drawPlayerX, drawPlayerY);
-        ctx.rotate(tilt);
+      // Keep Joudy visible during brief protection; a soft pulse replaces the
+      // old on/off flashing effect that could look like a white screen flicker.
+      const protectionAlpha = player.invulnTimer > 0
+        ? 0.78 + 0.22 * (0.5 + 0.5 * Math.sin(totalElapsed * 16))
+        : 1;
+      ctx.save();
+      ctx.globalAlpha = protectionAlpha;
+      ctx.translate(drawPlayerX, drawPlayerY);
+      ctx.rotate(tilt);
 
         // Breathing & Squash-Stretch
         const breathScaleY = isMoving
@@ -1227,8 +1163,7 @@ export default function GameArena({
           );
         }
 
-        ctx.restore();
-      }
+      ctx.restore();
 
       // Cute Cartoon Speech Bubble directly above Joudy's head
       if (player.bubbleTimer > 0 && player.bubbleText) {
@@ -1337,18 +1272,35 @@ export default function GameArena({
   };
 
   const handleRevive = useCallback(() => {
-    const price = 2 ** reviveCountRef.current;
-    const current = worldSave;
-    if (current.blueKeys < price) return;
-    saveWorld((latest) => ({ ...latest, blueKeys: Math.max(0, latest.blueKeys - price), reviveCountsByLevel: { ...latest.reviveCountsByLevel, [levelConfig.level]: reviveCountRef.current + 1 } }));
-    reviveCountRef.current += 1;
+    if (!isGameOverRef.current || reviveRequestRef.current) return;
+
+    let purchaseSucceeded = false;
+    let nextReviveCount = reviveCountRef.current;
+    saveWorld((latest) => {
+      const currentReviveCount = latest.reviveCountsByLevel[levelConfig.level] ?? 0;
+      const price = 2 ** currentReviveCount;
+      if (latest.blueKeys < price) return latest;
+
+      purchaseSucceeded = true;
+      nextReviveCount = currentReviveCount + 1;
+      return {
+        ...latest,
+        blueKeys: latest.blueKeys - price,
+        reviveCountsByLevel: {
+          ...latest.reviveCountsByLevel,
+          [levelConfig.level]: nextReviveCount,
+        },
+      };
+    });
+    if (!purchaseSucceeded) return;
+
+    reviveCountRef.current = nextReviveCount;
     heartsRef.current = 1;
     setHearts(1);
     reviveRequestRef.current = true;
     isGameOverRef.current = false;
     setIsGameOver(false);
-
-  }, [worldSave, levelConfig.level]);
+  }, [levelConfig.level]);
 
   const progressPct = Math.min(100, Math.round((score / levelConfig.targetScore) * 100));
   const displayedHighScore = Math.max(highScore, score);
@@ -1362,49 +1314,97 @@ export default function GameArena({
       transition={{ duration: 0.25 }}
       className="relative left-1/2 w-screen max-w-none -translate-x-1/2 px-0 py-0 flex flex-col gap-1.5 h-[100dvh] max-h-none min-h-[520px]"
     >
-      {/* Compact, responsive HUD: separate rows on phones prevent overlap. */}
-      <header className="absolute left-2 right-2 top-2 z-30 grid grid-cols-1 gap-2 rounded-2xl border border-white/10 bg-slate-950/85 px-2.5 py-2 shadow-[0_12px_32px_rgba(0,0,0,.35)] backdrop-blur-xl sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3 sm:px-4">
-        <div className="flex min-w-0 items-center gap-2.5">
-          {realImageSrc && (
-            <div className="relative hidden h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-amber-300/50 bg-slate-800 shadow sm:block">
-              <Image src={realImageSrc} alt="جودي" fill sizes="40px" referrerPolicy="no-referrer" className="object-cover object-center" />
+      {/* Compact Top Arcade HUD */}
+      <header className="absolute left-2 right-2 top-2 z-30 flex items-center justify-between gap-2 rounded-2xl border border-white/15 bg-slate-950/88 px-2 py-2 shadow-[0_10px_30px_rgba(2,6,23,.34)] backdrop-blur-xl sm:left-3 sm:right-3 sm:px-4">
+        {realImageSrc && (
+          <div className="hidden sm:block relative w-11 h-11 rounded-xl overflow-hidden border-2 border-amber-300 bg-rose-50 shrink-0 shadow-xs">
+            <Image
+              src={realImageSrc}
+              alt="جودي"
+              fill
+              sizes="44px"
+              referrerPolicy="no-referrer"
+              className="object-cover object-center"
+            />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs sm:text-sm">
+            <div className="flex items-center gap-2 whitespace-nowrap font-bold text-white">
+              <span className="hidden max-w-[130px] truncate text-xs text-slate-300 sm:inline">
+                {levelConfig.worldName}
+              </span>
+              <span className="text-sm font-extrabold tabular-nums text-rose-200 sm:text-base">
+                {score} / {levelConfig.targetScore}
+              </span>
+
+              {combo >= 2 && (
+                <span className="inline-flex items-center gap-1 text-xs font-extrabold tabular-nums text-amber-200">
+                  <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+                  <span>×{comboMultiplier}</span>
+                </span>
+              )}
+              {magnetSecondsLeft > 0 && (
+                <span className="inline-flex items-center gap-1 text-xs font-extrabold tabular-nums text-sky-200">
+                  <Magnet className="w-3.5 h-3.5 text-sky-500" />
+                  <span>{magnetSecondsLeft}ث</span>
+                </span>
+              )}
             </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="mb-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-              <div className="flex min-w-0 items-center gap-2 font-bold text-white">
-                <span className="hidden max-w-[110px] truncate text-[11px] text-slate-300 sm:inline">{levelConfig.worldName}</span>
-                <span className="whitespace-nowrap text-sm font-black tabular-nums text-rose-200 sm:text-base">{score} / {levelConfig.targetScore}</span>
-                {combo >= 2 && (
-                  <span className="inline-flex items-center gap-1 text-xs font-extrabold tabular-nums text-amber-200"><Flame className="h-3.5 w-3.5 fill-amber-400 text-amber-300" />×{comboMultiplier}</span>
-                )}
-                {magnetSecondsLeft > 0 && (
-                  <span className="inline-flex items-center gap-1 text-xs font-extrabold text-sky-200"><Magnet className="h-3.5 w-3.5" />{magnetSecondsLeft}ث</span>
-                )}
-              </div>
-              <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-bold text-slate-300 sm:text-xs"><Trophy className="h-3.5 w-3.5 text-amber-300" />{displayedHighScore}</span>
+
+            <div className="flex items-center gap-2.5 whitespace-nowrap text-xs font-semibold tabular-nums text-slate-300">
+              <span className="inline-flex items-center gap-1 font-bold text-amber-200">
+                <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                <span>الرقم القياسي: {displayedHighScore}</span>
+              </span>
+              <span className="hidden text-slate-500 lg:inline" aria-hidden="true">
+                ·
+              </span>
+              <span className="hidden lg:inline">
+                🐱 {counts.cats} · 🌹 {counts.roses} · 🍫 {counts.chocolates}
+              </span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full border border-white/10 bg-white/10">
-              <div className="h-full rounded-full bg-gradient-to-r from-amber-300 via-rose-400 to-pink-500 shadow-[0_0_10px_rgba(244,63,94,.35)] transition-all duration-200" style={{ width: `${progressPct}%` }} />
-            </div>
+          </div>
+
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/15">
+            <div
+              className="h-full rounded-full bg-gradient-to-l from-rose-500 via-pink-500 to-amber-400 transition-all duration-200"
+              style={{ width: `${progressPct}%` }}
+            />
           </div>
         </div>
 
-        <div className="flex min-w-0 items-center justify-between gap-1.5 sm:justify-end sm:gap-2">
-          <div className="inline-flex h-9 min-w-[64px] items-center justify-center gap-1 rounded-xl border border-amber-300/30 bg-gradient-to-b from-amber-300/20 to-amber-500/10 px-1.5 text-[11px] font-black tabular-nums text-amber-100 shadow-inner sm:min-w-[76px] sm:gap-1.5 sm:px-2 sm:text-xs" title="عملاتك الذهبية">
-            <Coins className="h-4 w-4 shrink-0 text-amber-300" />{worldSave.coins.toLocaleString('en-US')}
-          </div>
-          <div className="inline-flex h-9 min-w-[50px] items-center justify-center gap-1 rounded-xl border border-sky-300/30 bg-gradient-to-b from-sky-300/20 to-blue-500/10 px-1.5 text-[11px] font-black tabular-nums text-sky-100 shadow-inner sm:min-w-[58px] sm:gap-1.5 sm:px-2 sm:text-xs" title="المفاتيح الزرقاء">
-            <KeyRound className="h-4 w-4 shrink-0 text-sky-300" />{worldSave.blueKeys}
-          </div>
-          <button type="button" onClick={onToggleSound} aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-cyan-200/25 bg-cyan-400/10 text-cyan-100 shadow-sm transition hover:bg-cyan-300/20 sm:h-10 sm:w-10">
-            {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+        {/* Action Controls */}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+          <span className="inline-flex h-10 min-w-[62px] items-center justify-center gap-1.5 rounded-xl border border-amber-300/30 bg-gradient-to-b from-amber-300/20 to-amber-500/10 px-2 text-xs font-black tabular-nums text-amber-100 shadow-inner" title="عملاتك">
+            <span aria-hidden="true">🪙</span><span>{worldSave.coins}</span>
+          </span>
+          <span className="inline-flex h-10 min-w-[54px] items-center justify-center gap-1.5 rounded-xl border border-sky-300/30 bg-gradient-to-b from-sky-300/20 to-blue-500/10 px-2 text-xs font-black tabular-nums text-sky-100 shadow-inner" title="المفاتيح الزرقاء">
+            <KeyRound className="h-4 w-4 text-sky-200"/><span>{worldSave.blueKeys}</span>
+          </span>
+          <button
+            type="button"
+            onClick={onToggleSound}
+            aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'}
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-cyan-200/30 bg-cyan-500/15 text-cyan-100 transition-all hover:border-cyan-100/60 hover:bg-cyan-400/25 active:scale-95"
+          >
+            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
-          <button type="button" onClick={() => setIsPaused((p) => !p)} aria-label={isPaused ? 'استئناف اللعب' : 'إيقاف مؤقت'} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-200/25 bg-amber-400/10 text-amber-100 shadow-sm transition hover:bg-amber-300/20 sm:h-10 sm:w-10">
-            {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+          <button
+            type="button"
+            onClick={() => setIsPaused((p) => !p)}
+            aria-label={isPaused ? 'استئناف اللعب' : 'إيقاف مؤقت'}
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-amber-200/30 bg-amber-500/15 text-amber-100 transition-all hover:border-amber-100/60 hover:bg-amber-400/25 active:scale-95"
+          >
+            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </button>
-          <button type="button" onClick={onExitToMap} aria-label="العودة لخريطة المستويات" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-violet-200/25 bg-violet-400/10 text-violet-100 shadow-sm transition hover:bg-violet-300/20 sm:h-10 sm:w-10">
-            <MapIcon className="h-4 w-4" />
+          <button
+            type="button"
+            onClick={onExitToMap}
+            aria-label="العودة لخريطة المستويات"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-violet-200/30 bg-violet-500/15 text-violet-100 transition-all hover:border-violet-100/60 hover:bg-violet-400/25 active:scale-95"
+          >
+            <MapIcon className="w-4 h-4" />
           </button>
         </div>
       </header>
@@ -1422,21 +1422,27 @@ export default function GameArena({
       >
         {/* Detached in-game HUD: level and lives sit on the play screen, not in the top bar. */}
         <div
-          className="pointer-events-none absolute left-3 top-[6.9rem] z-40 text-sm font-black tracking-wide text-white drop-shadow-[0_2px_6px_rgba(0,0,0,1)] sm:left-5 sm:top-[5.25rem] sm:text-base"
+          className="pointer-events-none absolute left-3 top-[5.25rem] z-40 flex items-center gap-2 rounded-xl border border-cyan-100/35 bg-slate-950/75 px-3 py-2 text-sm font-black text-white shadow-lg backdrop-blur-md sm:left-5 sm:text-base"
           aria-label={`المستوى ${levelConfig.level}`}
         >
-          المستوى {levelConfig.level}
+          <span className="text-[10px] font-extrabold tracking-[.16em] text-cyan-200">LEVEL</span>
+          <span>المستوى {levelConfig.level}</span>
         </div>
         <div
-          className="pointer-events-none absolute right-3 top-[6.82rem] z-40 inline-flex items-center gap-1.5 sm:right-5 sm:top-[5.2rem]"
+          className="pointer-events-none absolute right-3 top-[5.25rem] z-40 inline-flex items-center gap-1.5 rounded-xl border border-rose-100/35 bg-slate-950/75 px-2.5 py-2 shadow-lg backdrop-blur-md sm:right-5"
           aria-label={`قلوب الحياة: ${hearts} من ${MAX_HEARTS}`}
         >
           {[1, 2, 3].map((idx) => (
-            <span key={idx} className="relative inline-flex h-6 w-6 items-center justify-center">
-              <Heart className={`h-[22px] w-[22px] drop-shadow-[0_2px_4px_rgba(0,0,0,.7)] ${idx <= hearts ? 'fill-rose-500 text-rose-50' : 'fill-slate-500/70 text-slate-100/80'}`} strokeWidth={2.4} />
-              {idx <= hearts && <span className="pointer-events-none absolute left-[7px] top-[5px] h-1.5 w-1.5 rounded-full bg-white/80 blur-[.2px]" />}
-            </span>
+            <Heart
+              key={idx}
+              className={`h-[21px] w-[21px] drop-shadow-[0_2px_5px_rgba(0,0,0,.5)] sm:h-6 sm:w-6 ${
+                idx <= hearts
+                  ? 'fill-rose-500 text-rose-100'
+                  : 'fill-slate-700/90 text-slate-300'
+              }`}
+            />
           ))}
+          <span className="ml-0.5 border-l border-white/20 pl-2 text-xs font-black tabular-nums text-rose-100">{hearts}/{MAX_HEARTS}</span>
         </div>
 
         <canvas
@@ -1497,47 +1503,50 @@ export default function GameArena({
           </div>
         )}
 
-        {/* Professional game-over panel with a clear revive / retry choice. */}
+        {/* Game Over (all hearts depleted) overlay */}
         {isGameOver && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-md">
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
             <motion.div
-              initial={{ scale: 0.94, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 250, damping: 22 }}
-              className="relative w-full max-w-sm overflow-hidden rounded-[28px] border border-white/15 bg-gradient-to-b from-[#18283d] via-[#111e31] to-[#0b1423] p-5 text-center shadow-[0_24px_80px_rgba(0,0,0,.6)] sm:p-6"
+              initial={{ scale: 0.94, y: 12, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+              className="w-full max-w-sm space-y-4 rounded-[1.75rem] border border-rose-200/80 bg-gradient-to-b from-white to-rose-50 p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,.45)] sm:p-8"
             >
-              <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-rose-300/80 to-transparent" />
-              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-rose-200/25 bg-gradient-to-br from-rose-500/25 to-pink-500/10 text-rose-200 shadow-[0_0_30px_rgba(244,63,94,.18)]">
-                <HeartCrack className="h-8 w-8" strokeWidth={1.8} />
+              <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-100 to-pink-200 text-rose-600 shadow-inner">
+                <Heart className="h-8 w-8 fill-rose-500 text-rose-700" />
               </div>
-              <p className="mb-1 text-[10px] font-black tracking-[.22em] text-rose-200/70">نهاية الجولة</p>
-              <h3 className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-display)' }}>نفدت قلوبكِ</h3>
-              <p className="mx-auto mt-2 max-w-[290px] text-sm leading-relaxed text-slate-300">انتهت محاولاتكِ في المستوى {levelConfig.level}. حافظي على تقدمكِ وجرّبي من جديد.</p>
-
-              <div className="my-4 grid grid-cols-2 gap-2">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2.5">
-                  <span className="block text-[10px] font-bold text-slate-400">النقاط</span>
-                  <strong className="mt-0.5 block text-xl font-black tabular-nums text-amber-200">{score.toLocaleString('en-US')}</strong>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2.5">
-                  <span className="block text-[10px] font-bold text-slate-400">الهدف</span>
-                  <strong className="mt-0.5 block text-xl font-black tabular-nums text-cyan-200">{levelConfig.targetScore.toLocaleString('en-US')}</strong>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2.5">
+              <h3
+                className="text-2xl font-black text-slate-900"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                نفدت قلوبك
+              </h3>
+              <p className="text-sm leading-7 text-slate-600">
+                انتهت محاولتك في المستوى {levelConfig.level}. حققتِ{' '}
+                <span className="font-black tabular-nums text-rose-600">{score}</span> من{' '}
+                <span className="font-black tabular-nums text-slate-800">{levelConfig.targetScore}</span> نقطة.
+                يمكنك المتابعة بمفتاح أزرق أو إعادة المستوى.
+              </p>
+              <div className="flex flex-col gap-2.5 pt-1">
                 {worldSave.blueKeys >= 2 ** reviveCountRef.current && (
-                  <button type="button" onClick={handleRevive} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-sky-200/30 bg-gradient-to-l from-sky-500 to-blue-600 px-4 py-3 font-black text-white shadow-[0_10px_24px_rgba(37,99,235,.28)] transition hover:brightness-110">
-                    <KeyRound className="h-5 w-5" />
-                    <span>استخدمي مفاتيح للمتابعة</span>
-                    <span className="rounded-lg bg-white/15 px-2 py-1 text-xs tabular-nums">{(2 ** reviveCountRef.current).toLocaleString('en-US')}</span>
+                  <button type="button" onClick={handleRevive} className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-gradient-to-l from-blue-700 to-sky-600 px-4 py-3.5 font-black text-white shadow-lg transition hover:from-blue-600 hover:to-sky-500 active:scale-[.99]">
+                    <KeyRound className="h-4 w-4" /> المتابعة باستخدام مفتاح أزرق ({2 ** reviveCountRef.current})
                   </button>
                 )}
-                <button type="button" onClick={resetRun} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-l from-rose-500 via-pink-500 to-fuchsia-600 px-4 py-3 font-black text-white shadow-[0_10px_24px_rgba(225,29,72,.25)] transition hover:brightness-110">
-                  <RotateCcw className="h-4 w-4" /> إعادة المحاولة
+                <button
+                  type="button"
+                  onClick={resetRun}
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-rose-600 to-pink-600 px-4 py-3.5 font-black text-white shadow-md transition hover:from-rose-700 hover:to-pink-700 active:scale-[.99]"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>إعادة المستوى</span>
                 </button>
-                <button type="button" onClick={onExitToMap} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm font-bold text-slate-200 transition hover:bg-white/10">
-                  <MapIcon className="h-4 w-4" /> العودة إلى خريطة المراحل
+                <button
+                  type="button"
+                  onClick={onExitToMap}
+                  className="w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  العودة إلى خريطة المراحل
                 </button>
               </div>
             </motion.div>

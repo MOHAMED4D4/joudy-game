@@ -1,6 +1,16 @@
 'use client';
 
-export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'blueKey' | 'enemyCloud' | 'enemyShot';
+export type CartoonSpriteKind =
+  | 'cat'
+  | 'rose'
+  | 'chocolate'
+  | 'magnet'
+  | 'obstacle'
+  | 'blueKey'
+  | 'cloudBrute'
+  | 'cloudWisp'
+  | 'cloudStarCaller'
+  | 'fallingStar';
 
 const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
   cat: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -99,22 +109,90 @@ const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
     <polygon points="50,15 53,23 61,26 53,29 50,37 47,29 39,26 47,23" fill="#FDE047" stroke="#D97706" stroke-width="1.5"/>
   </svg>`,
   blueKey: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-    <defs>
-      <linearGradient id="keyMetal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eff6ff"/><stop offset=".32" stop-color="#93c5fd"/><stop offset=".72" stop-color="#3b82f6"/><stop offset="1" stop-color="#1e40af"/></linearGradient>
-      <linearGradient id="keyStem" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dbeafe"/><stop offset=".48" stop-color="#60a5fa"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient>
-      <filter id="keyShadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
-    </defs>
-    <circle cx="37" cy="36" r="31" fill="#60a5fa" opacity=".2" filter="url(#keyShadow)"/>
-    <path d="M56 55L83 81L73 91L65 83L57 91L46 80L56 70L47 61Z" fill="url(#keyStem)" stroke="#1e40af" stroke-width="4.5" stroke-linejoin="round"/>
-    <path d="M58 58L78 78" stroke="#eff6ff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
-    <circle cx="36" cy="35" r="25" fill="url(#keyMetal)" stroke="#1e3a8a" stroke-width="5"/>
-    <circle cx="36" cy="35" r="10.5" fill="#172554" stroke="#dbeafe" stroke-width="3.5"/>
-    <path d="M20 18Q31 8 43 14" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".9"/>
-    <path d="M16 7L19 15L27 18L19 21L16 29L13 21L5 18L13 15Z" fill="#fff" opacity=".95"/>
-    <circle cx="82" cy="23" r="3" fill="#bfdbfe"/><circle cx="91" cy="33" r="1.8" fill="#fff"/>
+    <defs><radialGradient id="keyGlow"><stop stop-color="#dbeafe"/><stop offset="1" stop-color="#3b82f6"/></radialGradient></defs>
+    <circle cx="39" cy="35" r="25" fill="url(#keyGlow)" stroke="#1d4ed8" stroke-width="8"/>
+    <circle cx="39" cy="35" r="9" fill="#172554" stroke="#bfdbfe" stroke-width="3"/>
+    <path d="M55 51 L82 78 L72 88 L64 80 L56 88 L46 78 L55 69 L47 61 Z" fill="#60a5fa" stroke="#1d4ed8" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M19 10 L22 20 L32 23 L22 26 L19 36 L16 26 L6 23 L16 20 Z" fill="#fff"/>
   </svg>`,
-  enemyCloud: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M18 64C6 61 10 43 24 40C23 23 43 16 54 29C66 16 86 27 82 44C96 52 87 68 74 68H25Z" fill="#64748b" stroke="#1e293b" stroke-width="5"/><circle cx="38" cy="48" r="5" fill="white"/><circle cx="63" cy="48" r="5" fill="white"/><path d="M40 61Q50 54 60 61" fill="none" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/></svg>`,
-  enemyShot: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 5L61 36L94 50L61 62L50 95L38 62L6 50L38 36Z" fill="#f97316" stroke="#7c2d12" stroke-width="7"/><circle cx="50" cy="50" r="12" fill="#fef3c7"/></svg>`,
+
+  cloudBrute: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs>
+      <linearGradient id="cloudBruteBody" x1="0" y1="0" x2="0.9" y2="1">
+        <stop offset="0" stop-color="#E2E8F0"/>
+        <stop offset="0.58" stop-color="#94A3B8"/>
+        <stop offset="1" stop-color="#475569"/>
+      </linearGradient>
+      <linearGradient id="cloudBruteBolt" x1="0" y1="0" x2="1" y2="1">
+        <stop stop-color="#FEF08A"/><stop offset="1" stop-color="#F59E0B"/>
+      </linearGradient>
+    </defs>
+    <path d="M18 65 C7 61 9 44 21 39 C18 25 34 15 47 24 C58 9 81 20 79 37 C96 42 91 63 78 66 C71 79 29 82 18 65Z"
+      fill="url(#cloudBruteBody)" stroke="#334155" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M27 34 Q39 23 49 31 M57 27 Q70 20 77 34" fill="none" stroke="#F8FAFC" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+    <path d="M31 45 L43 49 M69 45 L57 49" stroke="#1E293B" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="38" cy="53" rx="3.8" ry="4.7" fill="#0F172A"/>
+    <ellipse cx="62" cy="53" rx="3.8" ry="4.7" fill="#0F172A"/>
+    <path d="M42 66 Q50 59 58 66" fill="none" stroke="#334155" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M53 68 L44 82 L52 82 L47 96 L66 76 L57 76 L63 68Z" fill="url(#cloudBruteBolt)" stroke="#B45309" stroke-width="2.5" stroke-linejoin="round"/>
+  </svg>`,
+
+  cloudWisp: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs>
+      <radialGradient id="cloudWispBody" cx="38%" cy="25%" r="82%">
+        <stop stop-color="#FFFFFF"/>
+        <stop offset=".55" stop-color="#BAE6FD"/>
+        <stop offset="1" stop-color="#38BDF8"/>
+      </radialGradient>
+    </defs>
+    <path d="M17 64 C8 57 13 43 25 41 C22 29 35 21 46 29 C55 16 76 23 76 39 C91 42 92 59 80 66 C77 79 57 82 47 74 C34 83 18 76 17 64Z"
+      fill="url(#cloudWispBody)" stroke="#0369A1" stroke-width="3.2" stroke-linejoin="round"/>
+    <path d="M28 35 Q35 27 43 34 M57 29 Q69 27 73 39" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".9"/>
+    <ellipse cx="38" cy="51" rx="4" ry="5.5" fill="#0C4A6E"/>
+    <ellipse cx="62" cy="51" rx="4" ry="5.5" fill="#0C4A6E"/>
+    <circle cx="36.5" cy="49" r="1.5" fill="#FFFFFF"/>
+    <circle cx="60.5" cy="49" r="1.5" fill="#FFFFFF"/>
+    <path d="M43 62 Q50 68 57 62" fill="none" stroke="#075985" stroke-width="2.7" stroke-linecap="round"/>
+    <path d="M17 72 Q8 81 15 89 M81 70 Q92 78 85 88" fill="none" stroke="#7DD3FC" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="19" cy="26" r="4" fill="#FDE68A" stroke="#D97706" stroke-width="1.5"/>
+  </svg>`,
+
+  cloudStarCaller: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs>
+      <linearGradient id="cloudStarBody" x1="0" y1="0" x2="0.85" y2="1">
+        <stop stop-color="#F5D0FE"/>
+        <stop offset=".55" stop-color="#C084FC"/>
+        <stop offset="1" stop-color="#7E22CE"/>
+      </linearGradient>
+      <linearGradient id="cloudStarCrown" x1="0" y1="0" x2="0" y2="1">
+        <stop stop-color="#FEF3C7"/><stop offset="1" stop-color="#F59E0B"/>
+      </linearGradient>
+    </defs>
+    <path d="M16 64 C7 56 13 40 27 39 C26 25 42 20 51 30 C62 17 81 25 78 42 C94 45 91 64 77 68 C68 82 32 82 16 64Z"
+      fill="url(#cloudStarBody)" stroke="#6B21A8" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M34 34 L27 16 L43 26 L51 10 L58 27 L75 17 L68 37Z" fill="url(#cloudStarCrown)" stroke="#92400E" stroke-width="2.4" stroke-linejoin="round"/>
+    <circle cx="34" cy="51" r="4" fill="#3B0764"/>
+    <circle cx="64" cy="51" r="4" fill="#3B0764"/>
+    <circle cx="32.5" cy="49.5" r="1.3" fill="#FFFFFF"/>
+    <circle cx="62.5" cy="49.5" r="1.3" fill="#FFFFFF"/>
+    <path d="M43 63 Q50 70 57 63" fill="none" stroke="#581C87" stroke-width="3" stroke-linecap="round"/>
+    <path d="M14 26 L17 34 L25 37 L17 40 L14 48 L11 40 L3 37 L11 34Z" fill="#FDE68A" stroke="#D97706" stroke-width="1.5"/>
+    <path d="M85 57 L88 64 L95 67 L88 70 L85 77 L82 70 L75 67 L82 64Z" fill="#FFFFFF" stroke="#A855F7" stroke-width="1.5"/>
+  </svg>`,
+
+  fallingStar: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs>
+      <linearGradient id="fallingStarFill" x1="0" y1="0" x2="1" y2="1">
+        <stop stop-color="#FFFFFF"/><stop offset=".42" stop-color="#FEF08A"/><stop offset="1" stop-color="#F59E0B"/>
+      </linearGradient>
+      <radialGradient id="fallingStarGlow"><stop stop-color="#FDE68A" stop-opacity=".85"/><stop offset="1" stop-color="#FDE68A" stop-opacity="0"/></radialGradient>
+    </defs>
+    <circle cx="50" cy="49" r="46" fill="url(#fallingStarGlow)"/>
+    <path d="M50 8 L60 36 L90 37 L67 56 L75 86 L50 69 L25 86 L33 56 L10 37 L40 36Z"
+      fill="url(#fallingStarFill)" stroke="#B45309" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M48 18 L53 39 L72 41 L57 54 L61 72 L49 61" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+    <path d="M18 14 L23 25 L35 29 L23 33 L18 45 L13 33 L2 29 L13 25Z" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1.5"/>
+  </svg>`,
 
 };
 

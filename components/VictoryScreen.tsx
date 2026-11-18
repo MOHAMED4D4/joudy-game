@@ -25,7 +25,6 @@ interface VictoryScreenProps {
   highScore: number;
   isNewHighScore: boolean;
   onNextLevel: () => void;
-  nextLevelLabel?: string;
   onPlayAgain: () => void;
   onOpenWorldMap: () => void;
 }
@@ -38,7 +37,6 @@ export default function VictoryScreen({
   highScore,
   isNewHighScore,
   onNextLevel,
-  nextLevelLabel,
   onPlayAgain,
   onOpenWorldMap,
 }: VictoryScreenProps) {
@@ -343,7 +341,7 @@ export default function VictoryScreen({
                 onClick={onNextLevel}
                 className="flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-l from-rose-500 via-pink-500 to-rose-600 text-white font-bold text-base sm:text-lg shadow-[0_10px_28px_-6px_rgba(244,63,94,0.5)] hover:shadow-[0_14px_34px_-6px_rgba(244,63,94,0.65)] transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
               >
-                <span>{nextLevelLabel ?? `المستوى التالي (${levelConfig.level + 1})`}</span>
+                <span>المستوى التالي ({levelConfig.level + 1})</span>
                 <ArrowLeft className="w-5 h-5" />
               </motion.button>
             ) : (

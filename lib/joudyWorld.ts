@@ -6,7 +6,7 @@ export type ControlMode = 'classic' | 'joystick';
 export interface WorldSave {
   coins: number;
   blueKeys: number;
-  purchasedWorlds: number[];
+  pearlIslandUnlocked: boolean;
   owned: string[];
   equippedOutfit: string;
   equippedShoes: string;
@@ -21,10 +21,11 @@ export interface WorldSave {
 
 const KEY = 'joudy_world_save_v1';
 const EVENT = 'joudy-world-save-change';
+export const PEARL_ISLAND_PRICE = 10_000;
 const DEFAULT_SAVE: WorldSave = {
   coins: 180,
   blueKeys: 0,
-  purchasedWorlds: [1, 2, 3],
+  pearlIslandUnlocked: false,
   owned: ['look-forest', 'sneakers'],
   equippedOutfit: 'look-forest',
   equippedShoes: 'sneakers',
@@ -90,9 +91,7 @@ function parse(raw: string | null): WorldSave {
     return {
       coins: Math.max(0, Number(value.coins ?? DEFAULT_SAVE.coins) || 0),
       blueKeys: Math.max(0, Number(value.blueKeys ?? 0) || 0),
-      purchasedWorlds: Array.isArray(value.purchasedWorlds)
-        ? value.purchasedWorlds.filter((id): id is number => Number.isInteger(id) && id >= 1 && id <= 6)
-        : DEFAULT_SAVE.purchasedWorlds,
+      pearlIslandUnlocked: value.pearlIslandUnlocked === true,
       owned: Array.isArray(value.owned) ? value.owned.map((id) => {
         const migration: Record<string, string> = { classic: 'look-forest', royal: 'look-forest', mint: 'look-forest', pearl: 'look-forest', emerald: 'look-forest', rose: 'look-mauve', lavender: 'look-mauve', moon: 'look-burgundy', midnight: 'look-burgundy', ocean: 'look-explorer', sunset: 'look-mauve', 'rose-shoes': 'rose-boots', 'swift-shoes': 'high-top', 'lavender-shoes': 'cloud', 'gold-shoes': 'trail-boots', 'cloud-shoes': 'cloud' };
         const migrated = migration[id] ?? id;
@@ -156,6 +155,47 @@ export function addWorldCoins(amount: number) {
   if (!Number.isFinite(amount) || amount <= 0 || typeof window === 'undefined') return loadWorldSave();
   return saveWorld((current) => ({ ...current, coins: current.coins + Math.floor(amount) }));
 }
+
+export type PearlIslandPurchaseResult =
+  | 'purchased'
+  | 'already-unlocked'
+  | 'insufficient-funds'
+  | 'level-15-required'
+  | 'storage-error';
+
+/**
+ * Atomically unlocks the Pearl Island. The functional update checks the latest
+ * saved balance and the existing unlock flag, so repeated clicks cannot charge
+ * the player more than once.
+ */
+export function purchasePearlIsland(hasCompletedLevel15: boolean): PearlIslandPurchaseResult {
+  if (typeof window === 'undefined') return 'insufficient-funds';
+  if (!hasCompletedLevel15) return 'level-15-required';
+
+  const outcome: { value: PearlIslandPurchaseResult } = { value: 'insufficient-funds' };
+  saveWorld((latest) => {
+    if (latest.pearlIslandUnlocked) {
+      outcome.value = 'already-unlocked';
+      return latest;
+    }
+    if (latest.coins < PEARL_ISLAND_PRICE) {
+      outcome.value = 'insufficient-funds';
+      return latest;
+    }
+
+    outcome.value = 'purchased';
+    return {
+      ...latest,
+      coins: latest.coins - PEARL_ISLAND_PRICE,
+      pearlIslandUnlocked: true,
+    };
+  });
+  if (outcome.value === 'purchased' && !loadWorldSave().pearlIslandUnlocked) {
+    return 'storage-error';
+  }
+  return outcome.value;
+}
+
 export function useControlMode() {
   return useSyncExternalStore(
     (callback) => {

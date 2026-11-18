@@ -10,9 +10,7 @@ import GameArena, { type GameRunStats } from './GameArena';
 import VictoryScreen from './VictoryScreen';
 import { getLevelConfig } from '@/lib/levels';
 import {
-  loadProgress,
   recordLevelCompletion,
-  saveProgress,
   updateHighScoreOnly,
   useJoudyProgress,
 } from '@/lib/storage';
@@ -63,7 +61,8 @@ export default function JoudyAdventureGame() {
 
   const handleStartLevel = useCallback(
     (levelNumber: number) => {
-      if (levelNumber >= 16 && !loadWorldSave().purchasedWorlds.includes(4)) {
+      if (levelNumber >= 16 && levelNumber <= 20 && !worldSave.pearlIslandUnlocked) {
+        setSelectedLevel(null);
         setGameState('WORLD_MAP');
         return;
       }
@@ -75,7 +74,7 @@ export default function JoudyAdventureGame() {
       setIsNewHighScore(false);
       setGameState('PLAYING');
     },
-    [soundEnabled],
+    [soundEnabled, worldSave.pearlIslandUnlocked],
   );
 
   const handleHighScoreUpdate = useCallback((candidateScore: number) => {
@@ -84,7 +83,7 @@ export default function JoudyAdventureGame() {
 
   const handleVictory = useCallback((stats: GameRunStats) => {
     setLastStats(stats);
-    const reward = Math.max(250, Math.floor(stats.score * 0.75 + stats.cats * 6 + stats.roses * 4 + stats.chocolates * 3) * characterCoinBonus + 250);
+    const reward = Math.max(25, Math.floor((Math.floor(stats.score / 5) + stats.cats * 3 + stats.roses * 2) * characterCoinBonus));
     addWorldCoins(reward);
     const latest = loadWorldSave();
     const { [stats.level]: _completedRevives, ...remainingRevives } = latest.reviveCountsByLevel;
@@ -103,33 +102,14 @@ export default function JoudyAdventureGame() {
   }, [characterCoinBonus]);
 
   const handleNextLevel = useCallback(() => {
-    const nextLvl = Math.min(30, activeLevel + 1);
-    if (nextLvl === 16 && !loadWorldSave().purchasedWorlds.includes(4)) {
+    if (activeLevel === 15 && !worldSave.pearlIslandUnlocked) {
+      setSelectedLevel(null);
       setGameState('WORLD_MAP');
       return;
     }
+    const nextLvl = Math.min(30, activeLevel + 1);
     handleStartLevel(nextLvl);
-  }, [activeLevel, handleStartLevel]);
-
-  const handlePurchaseWorld = useCallback((worldId: number, price: number) => {
-    if (worldId !== 4 || price !== 10000) return false;
-    const latestProgress = loadProgress();
-    const latestWorldSave = loadWorldSave();
-    if (!latestProgress.completedLevels[15] || latestWorldSave.coins < price || latestWorldSave.purchasedWorlds.includes(worldId)) return false;
-
-    saveWorld((current) => ({
-      ...current,
-      coins: current.coins - price,
-      purchasedWorlds: current.purchasedWorlds.includes(worldId)
-        ? current.purchasedWorlds
-        : [...current.purchasedWorlds, worldId],
-    }));
-    saveProgress({
-      ...latestProgress,
-      highestUnlockedLevel: Math.max(16, latestProgress.highestUnlockedLevel),
-    });
-    return true;
-  }, []);
+  }, [activeLevel, handleStartLevel, worldSave.pearlIslandUnlocked]);
 
   const handleReplayCurrent = useCallback(() => {
     handleStartLevel(activeLevel);
@@ -163,9 +143,6 @@ export default function JoudyAdventureGame() {
             <WorldMapScreen
               key="world-map-2d"
               progress={progress}
-              coins={worldSave.coins}
-              purchasedWorlds={worldSave.purchasedWorlds}
-              onPurchaseWorld={handlePurchaseWorld}
               onSelectLevel={handleStartLevel}
             />
           )}
@@ -202,7 +179,6 @@ export default function JoudyAdventureGame() {
               highScore={progress.highScore}
               isNewHighScore={isNewHighScore}
               onNextLevel={handleNextLevel}
-              nextLevelLabel={activeLevel === 15 && !worldSave.purchasedWorlds.includes(4) ? 'افتحي الخريطة لشراء الجزيرة' : undefined}
               onPlayAgain={handleReplayCurrent}
               onOpenWorldMap={() => setGameState('WORLD_MAP')}
             />
