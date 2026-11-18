@@ -1227,36 +1227,12 @@ export default function GameArena({
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs sm:text-sm mb-1.5">
             <div className="flex items-center gap-2 font-bold text-[#2D1824] whitespace-nowrap">
-              <span className="text-rose-700">المستوى {levelConfig.level}</span>
-              <span className="text-rose-300 hidden sm:inline" aria-hidden="true">
-                ·
-              </span>
               <span className="text-[#6A4558] text-xs hidden sm:inline truncate max-w-[130px]">
                 {levelConfig.worldName}
-              </span>
-              <span className="text-rose-300" aria-hidden="true">
-                ·
               </span>
               <span className="text-rose-600 text-sm sm:text-base font-extrabold tabular-nums">
                 {score} / {levelConfig.targetScore}
               </span>
-
-              {/* 3 Health Lives */}
-              <div
-                className="inline-flex items-center gap-0.5 mr-1"
-                aria-label={`قلوب الحياة: ${hearts} من ${MAX_HEARTS}`}
-              >
-                {[1, 2, 3].map((idx) => (
-                  <Heart
-                    key={idx}
-                    className={`w-4 h-4 transition-transform ${
-                      idx <= hearts
-                        ? 'fill-rose-500 text-rose-600 scale-100'
-                        : 'fill-slate-200 text-slate-300 scale-90'
-                    }`}
-                  />
-                ))}
-              </div>
 
               {combo >= 2 && (
                 <span className="inline-flex items-center gap-1 text-xs font-extrabold text-amber-700 tabular-nums">
@@ -1336,6 +1312,29 @@ export default function GameArena({
               : 'border-rose-200/90 bg-pink-50'
         }`}
       >
+        {/* Detached in-game HUD: level and lives sit on the play screen, not in the top bar. */}
+        <div
+          className="pointer-events-none absolute left-3 top-[5.25rem] z-40 text-sm font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.95)] sm:left-5 sm:text-base"
+          aria-label={`المستوى ${levelConfig.level}`}
+        >
+          المستوى {levelConfig.level}
+        </div>
+        <div
+          className="pointer-events-none absolute right-3 top-[5.25rem] z-40 inline-flex items-center gap-1 sm:right-5"
+          aria-label={`قلوب الحياة: ${hearts} من ${MAX_HEARTS}`}
+        >
+          {[1, 2, 3].map((idx) => (
+            <Heart
+              key={idx}
+              className={`h-5 w-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] sm:h-6 sm:w-6 ${
+                idx <= hearts
+                  ? 'fill-rose-500 text-rose-100'
+                  : 'fill-slate-300/70 text-white/90'
+              }`}
+            />
+          ))}
+        </div>
+
         <canvas
           ref={canvasRef}
           onPointerDown={handleCanvasPointerDown}
