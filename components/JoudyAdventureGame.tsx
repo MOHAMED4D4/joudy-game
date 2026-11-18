@@ -151,6 +151,7 @@ export default function JoudyAdventureGame() {
               key="world-map-2d"
               progress={progress}
               onSelectLevel={handleStartLevel}
+              onBackToHome={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setGameState('TITLE_MENU'); }}
             />
           )}
 

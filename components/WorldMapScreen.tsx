@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { motion } from 'motion/react';
 import {
   Crown,
+  Home,
   Lock,
   Play,
   Sparkles,
@@ -19,11 +20,13 @@ import { saveWorld, useWorldSave } from '@/lib/joudyWorld';
 interface WorldMapScreenProps {
   progress: JoudyGameProgress;
   onSelectLevel: (level: number) => void;
+  onBackToHome: () => void;
 }
 
 export default function WorldMapScreen({
   progress,
   onSelectLevel,
+  onBackToHome,
 }: WorldMapScreenProps) {
   const currentLevelRef = useRef<HTMLDivElement | null>(null);
   const worldSave = useWorldSave();
@@ -99,7 +102,8 @@ export default function WorldMapScreen({
     >
       {/* Map Header & Quick Launch */}
       <div className="bg-[#101b2b]/95 backdrop-blur-xl border border-white/10 rounded-3xl p-5 sm:p-6 shadow-[0_20px_55px_rgba(0,0,0,.32)] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-slate-400">مغامرة التجميع السريعة</span>
@@ -129,8 +133,11 @@ export default function WorldMapScreen({
               </span>
             </div>
           </div>
+          </div>
+          <button type="button" onClick={onBackToHome} className="inline-flex items-center justify-center gap-2 self-start rounded-xl border border-cyan-200/20 bg-cyan-300/10 px-4 py-3 text-xs font-black text-cyan-100 shadow-lg transition hover:border-cyan-200/40 hover:bg-cyan-300/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+            <Home className="h-4 w-4" /> الرئيسية
+          </button>
         </div>
-
 
       </div>
 

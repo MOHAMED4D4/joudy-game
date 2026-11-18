@@ -1,6 +1,6 @@
 'use client';
 
-export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'monster' | 'runner' | 'fierceMonster' | 'exploder' | 'boss' | 'projectile' | 'blueKey' | 'coin' | 'heart';
+export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'monster' | 'runner' | 'fierceMonster' | 'exploder' | 'boss' | 'projectile' | 'blueKey' | 'coin' | 'heart' | 'doubleScore';
 
 const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
   cat: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -70,6 +70,19 @@ const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
       <!-- Cute Heart Emblem on Wrapper -->
       <path d="M50 79 C43 73 42 66 50 70 C58 66 57 73 50 79 Z" fill="#FFE4E6"/>
     </g>
+  </svg>`,
+
+  doubleScore: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs>
+      <radialGradient id="scoreCore" cx="35%" cy="25%" r="80%"><stop stop-color="#FFF7C2"/><stop offset=".45" stop-color="#FBBF24"/><stop offset="1" stop-color="#B45309"/></radialGradient>
+      <linearGradient id="scoreEdge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FEF3C7"/><stop offset="1" stop-color="#D97706"/></linearGradient>
+    </defs>
+    <path d="M50 4 62 15 78 12 83 28 96 39 88 54 92 70 75 78 67 94 50 88 33 94 25 78 8 70 12 54 4 39 17 28 22 12 38 15Z" fill="#FDE68A" opacity=".42"/>
+    <circle cx="50" cy="50" r="34" fill="url(#scoreCore)" stroke="#92400E" stroke-width="5"/>
+    <circle cx="50" cy="50" r="27" fill="none" stroke="url(#scoreEdge)" stroke-width="3"/>
+    <path d="M34 35 Q50 23 66 35" fill="none" stroke="#FFF7D6" stroke-width="4" stroke-linecap="round" opacity=".9"/>
+    <text x="50" y="61" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" font-weight="900" fill="#78350F" stroke="#FFFBEB" stroke-width="1.2" paint-order="stroke">2×</text>
+    <path d="M14 11 18 20 27 24 18 28 14 37 10 28 1 24 10 20Z M84 65 87 72 94 75 87 78 84 85 81 78 74 75 81 72Z" fill="#fff"/>
   </svg>`,
 
   obstacle: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">

@@ -15,6 +15,7 @@ import {
   Volume2,
   VolumeX,
   KeyRound,
+  Sparkles,
 } from 'lucide-react';
 import { soundEngine } from '@/lib/soundEffects';
 import { loadTransparentSprite } from '@/lib/spriteUtils';
@@ -105,6 +106,7 @@ function getComboMultiplier(combo: number): number {
 
 const COMBO_WINDOW_SEC = 3.2;
 const MAGNET_DURATION_SEC = 6.5;
+const DOUBLE_SCORE_DURATION_SEC = 10;
 const MAX_HEARTS = 3;
 
 const CAT_QUOTES = ['قطة تستحق الرعاية 🐱', 'صوت خرخرة هادئ', 'رفيقة صغيرة للمغامرة'];
@@ -122,6 +124,7 @@ const ITEM_CONFIG: Record<
   blueKey: { points: 0, halo: 'rgba(59, 130, 246, 0.55)', fallbackColor: '#3B82F6' },
   coin: { points: 0, halo: 'rgba(250, 204, 21, 0.42)', fallbackColor: '#FACC15' },
   heart: { points: 0, halo: 'rgba(251, 113, 133, 0.58)', fallbackColor: '#F43F5E' },
+  doubleScore: { points: 0, halo: 'rgba(251, 191, 36, 0.68)', fallbackColor: '#F59E0B' },
   obstacle: { points: -15, halo: 'rgba(71, 85, 105, 0.48)', fallbackColor: '#475569' },
   monster: { points: -18, halo: 'rgba(45, 212, 191, 0.42)', fallbackColor: '#0F766E' },
   runner: { points: -16, halo: 'rgba(249, 115, 22, 0.46)', fallbackColor: '#EA580C' },
@@ -211,6 +214,7 @@ export default function GameArena({
   const [counts, setCounts] = useState({ cats: 0, roses: 0, chocolates: 0, obstaclesHit: 0 });
   const [combo, setCombo] = useState(0);
   const [magnetSecondsLeft, setMagnetSecondsLeft] = useState(0);
+  const [doubleScoreSecondsLeft, setDoubleScoreSecondsLeft] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
 
@@ -226,6 +230,7 @@ export default function GameArena({
   const comboRef = useRef(0);
   const comboTimerRef = useRef(0);
   const magnetTimerRef = useRef(0);
+  const doubleScoreTimerRef = useRef(0);
   const startTimeRef = useRef<number>(0);
   const shakeRef = useRef(0);
   const resetSignalRef = useRef(0);
@@ -329,6 +334,7 @@ export default function GameArena({
     comboRef.current = 0;
     comboTimerRef.current = 0;
     magnetTimerRef.current = 0;
+    doubleScoreTimerRef.current = 0;
     reviveRequestRef.current = false;
     victoryFiredRef.current = false;
     isGameOverRef.current = false;
@@ -340,6 +346,7 @@ export default function GameArena({
     setCounts({ cats: 0, roses: 0, chocolates: 0, obstaclesHit: 0 });
     setCombo(0);
     setMagnetSecondsLeft(0);
+    setDoubleScoreSecondsLeft(0);
     setIsGameOver(false);
     setIsPaused(false);
   }, []);
@@ -400,6 +407,7 @@ export default function GameArena({
     let spawnAccumulator = 0;
     let trailAccumulator = 0;
     let magnetHudTick = 0;
+    let doubleScoreHudTick = 0;
     let lastHeartSpawnAt = -999;
     let lightningCooldown = 8 + Math.random() * 5;
     let lightningWarning = 0;
@@ -426,6 +434,8 @@ export default function GameArena({
     const spawnEntity = () => {
       const magnetAlreadyPresent =
         magnetTimerRef.current > 0 || entities.some((e) => e.kind === 'magnet');
+      const scoreBoostAlreadyPresent =
+        doubleScoreTimerRef.current > 0 || entities.some((e) => e.kind === 'doubleScore');
 
       const stageNumber = levelConfig.level;
       const isSecondSeason = stageNumber >= 16;
@@ -497,6 +507,8 @@ export default function GameArena({
           else if (enemyRoll < 0.94) kind = 'boss';
           else kind = 'projectile';
         }
+      } else if (!scoreBoostAlreadyPresent && Math.random() < 0.032) {
+        kind = 'doubleScore';
       } else if (!magnetAlreadyPresent && Math.random() < 0.06) {
         kind = 'magnet';
       } else {
@@ -518,7 +530,8 @@ export default function GameArena({
                     : kind === 'magnet' ? 28
                       : kind === 'blueKey' ? 22
                         : kind === 'coin' ? 17
-                        : kind === 'heart' ? 25 : 27
+                        : kind === 'heart' ? 25
+                          : kind === 'doubleScore' ? 26 : 27
       ) * 0.9;
       const baseSpeed =
         kind === 'cat'
@@ -535,6 +548,8 @@ export default function GameArena({
                     ? 175
                     : kind === 'heart'
                       ? 182
+                      : kind === 'doubleScore'
+                        ? 176
                       : kind === 'boss'
                       ? (stageNumber < 16 ? 300 : 335)
                       : kind === 'fierceMonster'
@@ -621,7 +636,9 @@ export default function GameArena({
               ? ['#D97706', '#FBBF24', '#F472B6']
               : kind === 'magnet'
                 ? ['#38BDF8', '#06B6D4', '#FDE047']
-                : kind === 'heart'
+                : kind === 'doubleScore'
+                  ? ['#FBBF24', '#FDE68A', '#FFFFFF', '#F59E0B']
+                  : kind === 'heart'
                   ? ['#FB7185', '#FDA4AF', '#FFF1F2', '#FDE68A']
                 : kind === 'boss' || kind === 'fierceMonster'
                   ? ['#F43F5E', '#FBBF24', '#7C3AED']
@@ -752,6 +769,14 @@ export default function GameArena({
           if (magnetHudTick >= 0.25 || magnetTimerRef.current === 0) {
             magnetHudTick = 0;
             setMagnetSecondsLeft(Math.ceil(magnetTimerRef.current));
+          }
+        }
+        if (doubleScoreTimerRef.current > 0) {
+          doubleScoreTimerRef.current = Math.max(0, doubleScoreTimerRef.current - dt);
+          doubleScoreHudTick += dt;
+          if (doubleScoreHudTick >= 0.25 || doubleScoreTimerRef.current === 0) {
+            doubleScoreHudTick = 0;
+            setDoubleScoreSecondsLeft(Math.ceil(doubleScoreTimerRef.current));
           }
         }
 
@@ -957,6 +982,17 @@ export default function GameArena({
                 const angle = (Math.PI * 2 * spark) / 12;
                 particles.push({ x: player.x, y: player.y, vx: Math.cos(angle) * 115, vy: Math.sin(angle) * 115 - 35, life: 0, maxLife: .62, size: 5 + Math.random() * 4, color: ['#FB7185', '#FDE68A', '#FFFFFF'][spark % 3], shape: spark % 2 ? 'heart' : 'star', gravity: 35 });
               }
+            } else if (item.kind === 'doubleScore') {
+              doubleScoreTimerRef.current = DOUBLE_SCORE_DURATION_SEC;
+              setDoubleScoreSecondsLeft(DOUBLE_SCORE_DURATION_SEC);
+              player.catchBounce = 1.1;
+              player.happyTimer = 1.1;
+              player.bubbleText = 'مضاعفة النقاط ×2! ✨';
+              player.bubbleTone = 'magnet';
+              player.bubbleTimer = 1.45;
+              shakeRef.current = Math.max(shakeRef.current, 4.5);
+              soundEngine.playMagnetCollect();
+              popups.push({ x: item.x, y: item.y - 12, text: 'النقاط ×2 لمدة 10 ثوانٍ!', color: '#FBBF24', life: 0, maxLife: 1.25 });
             } else if (item.kind === 'magnet') {
               magnetTimerRef.current = MAGNET_DURATION_SEC;
               setMagnetSecondsLeft(Math.ceil(MAGNET_DURATION_SEC));
@@ -981,7 +1017,8 @@ export default function GameArena({
               const multiplier = getComboMultiplier(comboRef.current);
               const secondSeasonProgress = Math.max(0, Math.min(1, (levelConfig.level - 16) / 13));
               const chapterBonus = levelConfig.level === 30 ? 2.8 : levelConfig.level >= 16 ? 1.5 + secondSeasonProgress * 0.8 : 1;
-              const earned = Math.round(item.points * multiplier * chapterBonus);
+              const powerupMultiplier = doubleScoreTimerRef.current > 0 ? 2 : 1;
+              const earned = Math.round(item.points * multiplier * chapterBonus * powerupMultiplier);
               const nextScore = scoreRef.current + earned;
               scoreRef.current = nextScore;
 
@@ -1098,7 +1135,9 @@ export default function GameArena({
       // 1. Cinematic biome backdrop with restrained saturation and deeper contrast
       if (bgRef.current && bgRef.current.complete && bgRef.current.naturalWidth > 0) {
         const img = bgRef.current;
-        ctx.filter = 'saturate(0.78) contrast(1.12) brightness(0.86)';
+        const phaseForLight = (levelConfig.timeOfDayPhase + totalElapsed / (levelConfig.level >= 10 ? 112 : 152)) % 1;
+        const daylightForImage = Math.max(0, Math.sin(((phaseForLight - 0.22) / 0.56) * Math.PI));
+        ctx.filter = `saturate(0.86) contrast(1.10) brightness(${(0.68 + daylightForImage * 0.38).toFixed(3)})`;
         const scale = Math.max(width / img.width, height / img.height);
         const drawW = img.width * scale;
         const drawH = img.height * scale;
@@ -1124,50 +1163,107 @@ export default function GameArena({
         ctx.fillRect(0, 0, width, height);
       }
 
-      // A continuous day-to-night cycle runs in every stage. From stage 10 onward
-      // it moves faster so long rounds visibly pass through dawn, day and dusk.
+      // A continuous sunrise -> noon -> sunset -> moonlit night cycle.
+      // Celestial bodies are drawn first and then naturally hidden by the ridge silhouette.
       const phaseDuration = levelConfig.level >= 10 ? 112 : 152;
       const timePhase = (levelConfig.timeOfDayPhase + totalElapsed / phaseDuration) % 1;
-      const daylight = (1 - Math.cos(timePhase * Math.PI * 2)) / 2;
-      const nightShade = 0.50 * (1 - daylight);
+      const daylight = Math.max(0, Math.sin(((timePhase - 0.22) / 0.56) * Math.PI));
+      const nightShade = 0.52 * (1 - daylight);
       ctx.fillStyle = `rgba(5, 11, 31, ${nightShade.toFixed(3)})`;
       ctx.fillRect(0, 0, width, height);
 
-      const dawnDistance = Math.min(Math.abs(timePhase - 0.25), 1 - Math.abs(timePhase - 0.25));
-      const duskDistance = Math.min(Math.abs(timePhase - 0.75), 1 - Math.abs(timePhase - 0.75));
-      const twilightGlow = Math.max(Math.exp(-Math.pow(dawnDistance / 0.085, 2)), Math.exp(-Math.pow(duskDistance / 0.085, 2)));
-      if (twilightGlow > 0.015) {
-        const twilight = ctx.createLinearGradient(0, height * 0.35, 0, height);
-        twilight.addColorStop(0, `rgba(251, 146, 60, ${0.02 + twilightGlow * 0.12})`);
-        twilight.addColorStop(1, `rgba(244, 63, 94, ${twilightGlow * 0.18})`);
+      const distanceToSunrise = Math.min(Math.abs(timePhase - 0.22), 1 - Math.abs(timePhase - 0.22));
+      const distanceToSunset = Math.min(Math.abs(timePhase - 0.78), 1 - Math.abs(timePhase - 0.78));
+      const dawnDuskGlow = Math.max(
+        Math.exp(-Math.pow(distanceToSunrise / 0.085, 2)),
+        Math.exp(-Math.pow(distanceToSunset / 0.085, 2)),
+      );
+      if (dawnDuskGlow > 0.01) {
+        const twilight = ctx.createLinearGradient(0, height * 0.28, 0, height);
+        twilight.addColorStop(0, `rgba(255, 169, 94, ${0.025 + dawnDuskGlow * 0.12})`);
+        twilight.addColorStop(1, `rgba(225, 76, 105, ${dawnDuskGlow * 0.2})`);
         ctx.fillStyle = twilight;
         ctx.fillRect(0, 0, width, height);
       }
+      if (daylight > 0.01) {
+        const daylightWash = ctx.createLinearGradient(0, 0, 0, height);
+        daylightWash.addColorStop(0, `rgba(255, 226, 166, ${(daylight * 0.045).toFixed(3)})`);
+        daylightWash.addColorStop(1, `rgba(255, 238, 190, ${(daylight * 0.075).toFixed(3)})`);
+        ctx.fillStyle = daylightWash;
+        ctx.fillRect(0, 0, width, height);
+      }
 
-      // The sun travels across the horizon; at night a softly glowing moon appears.
-      if (timePhase >= 0.16 && timePhase <= 0.84) {
-        const sunProgress = (timePhase - 0.16) / 0.68;
-        const sunX = width * (0.08 + sunProgress * 0.84);
-        const sunY = height * (0.60 - Math.sin(Math.PI * sunProgress) * 0.43);
-        const sunGlow = ctx.createRadialGradient(sunX, sunY, 3, sunX, sunY, 62);
-        sunGlow.addColorStop(0, 'rgba(255, 245, 190, .95)');
-        sunGlow.addColorStop(.22, 'rgba(255, 203, 115, .58)');
-        sunGlow.addColorStop(1, 'rgba(255, 190, 100, 0)');
+      // Sun emerges from behind the left mountain at dawn and disappears behind
+      // the right ridge at dusk. Drawing the ridge afterward creates real occlusion.
+      if (timePhase >= 0.19 && timePhase <= 0.81) {
+        const sunProgress = Math.max(0, Math.min(1, (timePhase - 0.19) / 0.62));
+        const sunX = width * (0.055 + sunProgress * 0.89);
+        const sunY = height * (0.755 - Math.sin(Math.PI * sunProgress) * 0.47);
+        const sunGlow = ctx.createRadialGradient(sunX, sunY, 2, sunX, sunY, 86);
+        sunGlow.addColorStop(0, 'rgba(255, 249, 213, .96)');
+        sunGlow.addColorStop(.18, 'rgba(255, 215, 130, .68)');
+        sunGlow.addColorStop(.55, 'rgba(255, 165, 93, .20)');
+        sunGlow.addColorStop(1, 'rgba(255, 152, 80, 0)');
         ctx.fillStyle = sunGlow;
-        ctx.beginPath(); ctx.arc(sunX, sunY, 62, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = 'rgba(255, 237, 190, .92)';
-        ctx.beginPath(); ctx.arc(sunX, sunY, 16, 0, Math.PI * 2); ctx.fill();
-      } else if (daylight < 0.16) {
-        const moonX = width * (0.76 - timePhase * 0.12);
-        const moonY = height * 0.17;
+        ctx.beginPath(); ctx.arc(sunX, sunY, 86, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255, 238, 190, .96)';
+        ctx.beginPath(); ctx.arc(sunX, sunY, 17, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Moon travels in the opposite direction from sunset through the night,
+      // rising behind the right ridge and setting behind the left ridge at dawn.
+      const moonProgressRaw = timePhase >= 0.72 ? (timePhase - 0.72) / 0.56 : (timePhase + 0.28) / 0.56;
+      if (moonProgressRaw >= 0 && moonProgressRaw <= 1) {
+        const moonX = width * (0.95 - moonProgressRaw * 0.90);
+        const moonY = height * (0.75 - Math.sin(Math.PI * moonProgressRaw) * 0.38);
         ctx.save();
-        ctx.shadowColor = 'rgba(191, 219, 254, .9)'; ctx.shadowBlur = 24;
-        ctx.fillStyle = 'rgba(226, 232, 255, .92)';
-        ctx.beginPath(); ctx.arc(moonX, moonY, 13, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = 'rgba(35, 45, 82, .7)';
-        ctx.beginPath(); ctx.arc(moonX + 6, moonY - 5, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowColor = 'rgba(191, 219, 254, .95)'; ctx.shadowBlur = 30;
+        ctx.fillStyle = 'rgba(232, 240, 255, .97)';
+        ctx.beginPath(); ctx.arc(moonX, moonY, 15, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(82, 100, 145, .78)';
+        ctx.beginPath(); ctx.arc(moonX + 7, moonY - 6, 13, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
+
+      // Distant mountain ridges occlude the lower edge of the sun/moon so
+      // sunrise and moonrise look as though they come from behind the landscape.
+      ctx.save();
+      const farMountain = ctx.createLinearGradient(0, height * 0.53, 0, height * 0.88);
+      farMountain.addColorStop(0, daylight > 0.35 ? 'rgba(54, 84, 105, .62)' : 'rgba(21, 35, 65, .82)');
+      farMountain.addColorStop(1, daylight > 0.35 ? 'rgba(30, 59, 75, .84)' : 'rgba(9, 18, 43, .96)');
+      ctx.fillStyle = farMountain;
+      ctx.beginPath();
+      ctx.moveTo(0, height * 0.79);
+      ctx.lineTo(width * 0.09, height * 0.70);
+      ctx.lineTo(width * 0.18, height * 0.745);
+      ctx.lineTo(width * 0.32, height * 0.595);
+      ctx.lineTo(width * 0.43, height * 0.73);
+      ctx.lineTo(width * 0.57, height * 0.64);
+      ctx.lineTo(width * 0.70, height * 0.755);
+      ctx.lineTo(width * 0.84, height * 0.615);
+      ctx.lineTo(width, height * 0.73);
+      ctx.lineTo(width, height);
+      ctx.lineTo(0, height);
+      ctx.closePath(); ctx.fill();
+
+      const nearMountain = ctx.createLinearGradient(0, height * 0.66, 0, height * 0.94);
+      nearMountain.addColorStop(0, daylight > 0.35 ? 'rgba(32, 62, 75, .66)' : 'rgba(10, 20, 45, .88)');
+      nearMountain.addColorStop(1, daylight > 0.35 ? 'rgba(16, 42, 51, .88)' : 'rgba(4, 11, 29, .98)');
+      ctx.fillStyle = nearMountain;
+      ctx.beginPath();
+      ctx.moveTo(0, height * 0.83);
+      ctx.lineTo(width * 0.14, height * 0.75);
+      ctx.lineTo(width * 0.25, height * 0.82);
+      ctx.lineTo(width * 0.39, height * 0.69);
+      ctx.lineTo(width * 0.53, height * 0.82);
+      ctx.lineTo(width * 0.67, height * 0.72);
+      ctx.lineTo(width * 0.82, height * 0.83);
+      ctx.lineTo(width, height * 0.72);
+      ctx.lineTo(width, height);
+      ctx.lineTo(0, height);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
 
       // Level 15 is a snowy winter night, with layered drifting flakes.
       if (levelConfig.weatherMode === 'winter-storm') {
@@ -1342,6 +1438,20 @@ export default function GameArena({
         ctx.setLineDash([10, 6]);
         ctx.beginPath();
         ctx.arc(0, 0, player.size * 0.56 * pulse, totalElapsed * 2.5, totalElapsed * 2.5 + Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Golden rotating aura while the temporary score-doubling token is active.
+      if (doubleScoreTimerRef.current > 0) {
+        ctx.save();
+        ctx.translate(drawPlayerX, drawPlayerY);
+        const boostPulse = 1 + Math.sin(totalElapsed * 8) * 0.07;
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.92)';
+        ctx.lineWidth = 4;
+        ctx.setLineDash([7, 6]);
+        ctx.beginPath();
+        ctx.arc(0, 0, player.size * 0.64 * boostPulse, -totalElapsed * 2.8, -totalElapsed * 2.8 + Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
@@ -1604,6 +1714,11 @@ export default function GameArena({
                   {magnetSecondsLeft > 0 && (
                     <span className="inline-flex items-center gap-0.5 rounded-full bg-sky-400/10 px-1.5 py-0.5 text-[10px] font-black text-sky-200">
                       <Magnet className="h-3 w-3" /> {magnetSecondsLeft}ث
+                    </span>
+                  )}
+                  {doubleScoreSecondsLeft > 0 && (
+                    <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-300/25 bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-black text-amber-100 shadow-[0_0_12px_rgba(251,191,36,.16)]">
+                      <Sparkles className="h-3 w-3" /> ×2 · {doubleScoreSecondsLeft}ث
                     </span>
                   )}
                 </div>
