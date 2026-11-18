@@ -20,6 +20,7 @@ const scoring = [
 
 export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }: CharacterSelectScreenProps) {
   return (
+    <>
     <motion.section
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
@@ -98,5 +99,6 @@ export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }
         <span className="text-xl" aria-hidden="true">←</span>
       </motion.button>
     </div>
+    </>
   );
 }
