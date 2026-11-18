@@ -665,11 +665,11 @@ function buildChibiAnimeHead(initialFaceTex: THREE.Texture): {
     roughness: 0.65,
   });
   const veilMat = new THREE.MeshStandardMaterial({
-    color: 0x6ee7b7,
+    color: 0xA9BDA5,
     roughness: 0.52,
   });
   const veilTrimMat = new THREE.MeshStandardMaterial({
-    color: 0xfde68a,
+    color: 0xD7C49A,
     roughness: 0.35,
     metalness: 0.3,
   });
@@ -723,9 +723,6 @@ function buildChibiAnimeHead(initialFaceTex: THREE.Texture): {
   hoodTrim.position.set(0, 0.08, 0.19);
   headGroup.add(hoodTrim);
 
-  const crown = buildGoldenCrown(0.92);
-  crown.position.set(0, 0.68, 0.02);
-  headGroup.add(crown);
 
   return { headGroup, faceMat };
 }
@@ -911,7 +908,7 @@ export function buildPrincessJoudy3D(shadowTex?: THREE.Texture): PrincessJoudyRi
   headGroup.position.set(0, 2.38, 0);
   bodyGroup.add(headGroup);
 
-  const nameplate = createArabicLabelSprite('الأميرة جودي 👑', {
+  const nameplate = createArabicLabelSprite('جودي', {
     bg: 'rgba(255, 255, 255, 0.96)',
     border: '#F43F5E',
     textColor: '#9F1239',
@@ -997,15 +994,15 @@ export function buildPrincessCar3D(shadowTex?: THREE.Texture): PrincessCarRig {
   root.add(shadow);
 
   const pinkPaint = new THREE.MeshPhysicalMaterial({
-    color: 0xf43f5e,
-    roughness: 0.2,
+    color: 0x202830,
+    roughness: 0.28,
     metalness: 0.35,
     clearcoat: 1.0,
     clearcoatRoughness: 0.06,
   });
   const blushTrim = new THREE.MeshPhysicalMaterial({
-    color: 0xfda4af,
-    roughness: 0.25,
+    color: 0xE4B82F,
+    roughness: 0.3,
     clearcoat: 0.8,
   });
   const goldMat = new THREE.MeshStandardMaterial({
@@ -1013,7 +1010,7 @@ export function buildPrincessCar3D(shadowTex?: THREE.Texture): PrincessCarRig {
     metalness: 0.84,
     roughness: 0.16,
   });
-  const creamSeat = new THREE.MeshStandardMaterial({ color: 0xfff1f2, roughness: 0.72 });
+  const creamSeat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.72 });
   const tireMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
   const glassMat = new THREE.MeshStandardMaterial({
     color: 0xbae6fd,
@@ -1042,9 +1039,11 @@ export function buildPrincessCar3D(shadowTex?: THREE.Texture): PrincessCarRig {
 
   const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.04, 1.6), goldMat);
   stripe.position.set(0, 1.2, 1.42);
-  const hoodCrown = buildGoldenCrown(0.5);
-  hoodCrown.position.set(0, 1.25, 2.04);
-  root.add(stripe, hoodCrown);
+  const taxiSignBase = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.32, 0.48), blushTrim);
+  taxiSignBase.position.set(0, 1.95, -0.22);
+  const taxiSignTop = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.12, 0.38), goldMat);
+  taxiSignTop.position.set(0, 2.17, -0.22);
+  root.add(stripe, taxiSignBase, taxiSignTop);
 
   const cabinFloor = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.24, 1.8), creamSeat);
   cabinFloor.position.set(0, 1.04, -0.2);
@@ -1129,7 +1128,7 @@ export function buildPrincessCar3D(shadowTex?: THREE.Texture): PrincessCarRig {
   driverHead.position.set(0, 0.96, 0);
   driverGroup.add(driverHead);
 
-  const driverName = createArabicLabelSprite('الأميرة جودي 👑', {
+  const driverName = createArabicLabelSprite('جودي', {
     bg: 'rgba(255, 255, 255, 0.96)',
     border: '#F43F5E',
     textColor: '#9F1239',
@@ -2198,27 +2197,25 @@ export function buildWorldEnvironment3D(
   const exteriorRoot = new THREE.Group();
   scene.add(exteriorRoot);
 
-  // 1. Wide Realistic Meadow Grass Ground
-  const grassTex = track(createGrassMeadowTexture());
-  grassTex.anisotropy = maxAniso;
-  const grassGeo = track(new THREE.PlaneGeometry(1080, 1080));
-  const grassMat = track(new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.92 }));
-  const grass = new THREE.Mesh(grassGeo, grassMat);
-  grass.rotation.x = -Math.PI / 2;
-  grass.receiveShadow = true;
-  exteriorRoot.add(grass);
+  // 1. Neutral city terrain — paved urban ground rather than a fantasy meadow.
+  const groundGeo = track(new THREE.PlaneGeometry(1080, 1080));
+  const groundMat = track(new THREE.MeshStandardMaterial({ color: 0x969892, roughness: 0.96 }));
+  const cityGround = new THREE.Mesh(groundGeo, groundMat);
+  cityGround.rotation.x = -Math.PI / 2;
+  cityGround.position.y = -0.18;
+  cityGround.receiveShadow = true;
+  exteriorRoot.add(cityGround);
 
-  // Distant Rolling Green Hills framing the 400x300 kingdom perimeter
-  const hillGeo = track(new THREE.SphereGeometry(40, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.5));
-  const hillMat = track(new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.92, flatShading: true }));
-  for (let i = 0; i < 22; i++) {
-    const ang = (Math.PI * 2 * i) / 22;
-    const rx = 268 + (i % 3) * 22;
-    const rz = 215 + (i % 2) * 20;
-    const hill = new THREE.Mesh(hillGeo, hillMat);
-    hill.position.set(Math.cos(ang) * rx, -1, Math.sin(ang) * rz);
-    hill.scale.set(1.5 + (i % 3) * 0.35, 0.55 + (i % 4) * 0.16, 1.3);
-    exteriorRoot.add(hill);
+  // Distant low skyline silhouettes frame this compact playable Alexandria district.
+  const skylineMat = track(new THREE.MeshStandardMaterial({ color: 0x9BAAB0, roughness: 0.88 }));
+  for (let i = 0; i < 26; i++) {
+    const width = 8 + (i % 4) * 3;
+    const height = 14 + ((i * 7) % 18);
+    const depth = 8 + (i % 3) * 2;
+    const building = new THREE.Mesh(track(new THREE.BoxGeometry(width, height, depth)), skylineMat);
+    const side = i % 2 === 0 ? -1 : 1;
+    building.position.set(side * (225 + (i % 5) * 9), height / 2 - 0.2, -120 + i * 9.1);
+    exteriorRoot.add(building);
   }
 
   // Floating 3D Clouds
@@ -2240,62 +2237,80 @@ export function buildWorldEnvironment3D(
     clouds.push(cg);
   }
 
-  // 2. Marble Royal Plaza & Red Carpet
-  const marbleTex = track(createMarbleTileTexture());
-  marbleTex.anisotropy = maxAniso;
-  const plazaPos = world2DTo3D(2400, 580);
-  const plazaMesh = new THREE.Mesh(
-    track(new THREE.BoxGeometry(size2DTo3D(1050), 0.08, size2DTo3D(260))),
-    track(new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.55 })),
-  );
-  plazaMesh.position.set(plazaPos.x, 0.04, plazaPos.z);
-  plazaMesh.receiveShadow = true;
-  exteriorRoot.add(plazaMesh);
+  // 2. Mediterranean waterfront, sandy strip, promenade and low stone sea wall.
+  const seaMat = track(new THREE.MeshPhysicalMaterial({ color: 0x1686B2, roughness: 0.17, metalness: 0.06, clearcoat: 0.88, clearcoatRoughness: 0.12 }));
+  const sea = new THREE.Mesh(track(new THREE.PlaneGeometry(520, 116)), seaMat);
+  sea.rotation.x = -Math.PI / 2;
+  sea.position.set(0, -0.22, -169);
+  exteriorRoot.add(sea);
 
-  const carpetPos = world2DTo3D(2400, 570);
-  const carpetMesh = new THREE.Mesh(
-    track(new THREE.BoxGeometry(size2DTo3D(88), 0.1, size2DTo3D(220))),
-    track(new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.65 })),
-  );
-  carpetMesh.position.set(carpetPos.x, 0.06, carpetPos.z);
-  carpetMesh.receiveShadow = true;
-  exteriorRoot.add(carpetMesh);
+  const beachMat = track(new THREE.MeshStandardMaterial({ color: 0xD7C39A, roughness: 0.96 }));
+  const beach = new THREE.Mesh(track(new THREE.PlaneGeometry(430, 13)), beachMat);
+  beach.rotation.x = -Math.PI / 2;
+  beach.position.set(0, -0.02, -111.2);
+  exteriorRoot.add(beach);
 
-  // Rose Garden Meadow (South-East)
-  const rgPos = world2DTo3D(3740, 3200);
-  const rgMeadow = new THREE.Mesh(
-    track(new THREE.BoxGeometry(size2DTo3D(1350), 0.05, size2DTo3D(640))),
-    track(new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.88 })),
-  );
-  rgMeadow.position.set(rgPos.x, 0.025, rgPos.z);
-  rgMeadow.receiveShadow = true;
-  exteriorRoot.add(rgMeadow);
+  const seawallMat = track(new THREE.MeshStandardMaterial({ color: 0xB6B2A8, roughness: 0.82 }));
+  const seaWall = new THREE.Mesh(track(new THREE.BoxGeometry(430, 1.35, 1.35)), seawallMat);
+  seaWall.position.set(0, 0.7, -104.5);
+  exteriorRoot.add(seaWall);
+  const promenadeMat = track(new THREE.MeshStandardMaterial({ color: 0xC5C3B9, roughness: 0.9 }));
+  const promenade = new THREE.Mesh(track(new THREE.BoxGeometry(430, 0.16, 7.4)), promenadeMat);
+  promenade.position.set(0, 0.05, -99.9);
+  promenade.receiveShadow = true;
+  exteriorRoot.add(promenade);
 
-  // 3. Starlight Lake & Pier
-  const lakePos = world2DTo3D(WORLD_LAKE.cx, WORLD_LAKE.cy);
-  const lakeRim = new THREE.Mesh(
-    track(new THREE.CylinderGeometry(33.5, 34.4, 0.25, 36)),
-    track(new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.8 })),
-  );
-  lakeRim.scale.set(1, 1, 0.56);
-  lakeRim.position.set(lakePos.x, 0.1, lakePos.z);
-  exteriorRoot.add(lakeRim);
+  // Mediterranean tetrapods and natural rocks along the shore.
+  const rockMat = track(new THREE.MeshStandardMaterial({ color: 0x777C7B, roughness: 0.98, flatShading: true }));
+  const tetrapodMat = track(new THREE.MeshStandardMaterial({ color: 0xA2A5A1, roughness: 0.94, flatShading: true }));
+  for (let i = 0; i < 46; i++) {
+    const x = -210 + i * 9.2;
+    const z = -109.5 - (i % 3) * 2.4;
+    const rock = new THREE.Mesh(track(new THREE.DodecahedronGeometry(1.4 + (i % 3) * 0.32, 0)), rockMat);
+    rock.position.set(x, -0.15, z);
+    rock.rotation.set(i * 0.32, i * 0.7, i * 0.18);
+    exteriorRoot.add(rock);
+    if (i % 2 === 0) {
+      const tetrapod = new THREE.Group();
+      const core = new THREE.Mesh(track(new THREE.BoxGeometry(0.9, 0.9, 0.9)), tetrapodMat);
+      tetrapod.add(core);
+      [[1.15,0,0],[-1.15,0,0],[0,1.15,0],[0,-1.15,0],[0,0,1.15],[0,0,-1.15]].forEach(([tx,ty,tz]) => {
+        const arm = new THREE.Mesh(track(new THREE.BoxGeometry(0.85,0.85,0.85)), tetrapodMat);
+        arm.position.set(tx,ty,tz);
+        arm.rotation.set(0.35,0.45,0.25);
+        tetrapod.add(arm);
+      });
+      tetrapod.position.set(x + 2.8, -0.4, z + 2.1);
+      tetrapod.rotation.y = i * 0.43;
+      tetrapod.scale.setScalar(0.72 + (i % 3) * 0.12);
+      exteriorRoot.add(tetrapod);
+    }
+  }
 
-  const lakeWater = new THREE.Mesh(
-    track(new THREE.CylinderGeometry(32.0, 32.0, 0.3, 36)),
-    track(new THREE.MeshPhysicalMaterial({ color: 0x38bdf8, roughness: 0.1, clearcoat: 0.9 })),
-  );
-  lakeWater.scale.set(1, 1, 0.54);
-  lakeWater.position.set(lakePos.x, 0.14, lakePos.z);
-  exteriorRoot.add(lakeWater);
-
-  const pierPos = world2DTo3D(WORLD_LAKE.cx, WORLD_LAKE.cy - WORLD_LAKE.ry + 12);
-  const pier = new THREE.Mesh(
-    track(new THREE.BoxGeometry(5.5, 0.32, 7.2)),
-    track(new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.8 })),
-  );
-  pier.position.set(pierPos.x, 0.26, pierPos.z);
-  exteriorRoot.add(pier);
+  // Small fishing harbour with wooden boats at the Bahary end.
+  const harbourWater = new THREE.Mesh(track(new THREE.BoxGeometry(38, 0.2, 16)), seaMat);
+  harbourWater.position.set(-166, -0.04, -91);
+  exteriorRoot.add(harbourWater);
+  const boatPaint = track(new THREE.MeshStandardMaterial({ color: 0x8D4A2F, roughness: 0.78 }));
+  const boatBlue = track(new THREE.MeshStandardMaterial({ color: 0x2B718B, roughness: 0.68 }));
+  for (let i = 0; i < 5; i++) {
+    const boat = new THREE.Group();
+    const hull = new THREE.Mesh(track(new THREE.BoxGeometry(2.1, 0.65, 8.2)), i % 2 ? boatBlue : boatPaint);
+    hull.position.y = 0.25;
+    boat.add(hull);
+    const gunwale = new THREE.Mesh(track(new THREE.BoxGeometry(2.25, 0.2, 8.4)), track(new THREE.MeshStandardMaterial({ color: 0xE7D9B9, roughness: 0.8 })));
+    gunwale.position.y = 0.62;
+    boat.add(gunwale);
+    const mast = new THREE.Mesh(track(new THREE.CylinderGeometry(0.08,0.1,5.4,8)), track(new THREE.MeshStandardMaterial({ color: 0x76563B })));
+    mast.position.set(0,3.2,-0.6);
+    boat.add(mast);
+    const sail = new THREE.Mesh(track(new THREE.PlaneGeometry(2.4,2.7)), track(new THREE.MeshStandardMaterial({ color: i%2 ? 0xF1E6D2 : 0xD9E6E6, side: THREE.DoubleSide, roughness: 0.9 })));
+    sail.position.set(0,3.25,-0.55);
+    boat.add(sail);
+    boat.position.set(-178 + i*5.4,0,-91 + (i%2)*5.2);
+    boat.rotation.y = -0.18 + i*0.13;
+    exteriorRoot.add(boat);
+  }
 
   // 4. Paved Asphalt Roads, Sidewalks, Dashes & Zebra Crosswalks
   const asphaltTex = track(createRoadAsphaltTexture());
@@ -2336,14 +2351,67 @@ export function buildWorldEnvironment3D(
       );
       exteriorRoot.add(dash);
     }
+    if (idx === 0 && isHorizontal) {
+      // Six visible lane separators (three per direction) and a raised central median.
+      [-0.36, -0.24, -0.12, 0.12, 0.24, 0.36].forEach((fraction) => {
+        const laneLine = new THREE.Mesh(track(new THREE.BoxGeometry(rw, 0.055, 0.055)), dashMat);
+        laneLine.position.set(pos.x, yOff + 0.035, pos.z + rd * fraction);
+        exteriorRoot.add(laneLine);
+      });
+      const median = new THREE.Mesh(track(new THREE.BoxGeometry(rw, 0.28, 1.1)), track(new THREE.MeshStandardMaterial({ color: 0xB7B7A8, roughness: 0.8 })));
+      median.position.set(pos.x, yOff + 0.1, pos.z);
+      exteriorRoot.add(median);
+
+      // Alexandria Corniche centre reservation: palms and paired lanterns.
+      const palmTrunkMat = track(new THREE.MeshStandardMaterial({ color: 0x8B6543, roughness: 0.94 }));
+      const palmLeafMat = track(new THREE.MeshStandardMaterial({ color: 0x28734C, roughness: 0.82, side: THREE.DoubleSide }));
+      const lampPoleMat = track(new THREE.MeshStandardMaterial({ color: 0x59636A, metalness: 0.55, roughness: 0.42 }));
+      const lampGlowMat = track(new THREE.MeshStandardMaterial({ color: 0xF7E7A2, emissive: 0xD6A94C, emissiveIntensity: 0.22, roughness: 0.3 }));
+
+      // Palm trees are spaced along the median, with two-sided lantern poles in between.
+      for (let i = 0; i < 15; i++) {
+        const palm = new THREE.Group();
+        const trunk = new THREE.Mesh(track(new THREE.CylinderGeometry(0.22, 0.38, 6.6, 8)), palmTrunkMat);
+        trunk.position.y = 3.3;
+        trunk.rotation.z = -0.035;
+        palm.add(trunk);
+        for (let leaf = 0; leaf < 9; leaf++) {
+          const angle = (leaf / 9) * Math.PI * 2;
+          const frond = new THREE.Mesh(track(new THREE.SphereGeometry(1, 8, 6)), palmLeafMat);
+          frond.scale.set(0.25, 1.85, 0.42);
+          frond.position.set(Math.sin(angle) * 0.9, 6.15, Math.cos(angle) * 0.9);
+          frond.rotation.z = 1.05;
+          frond.rotation.y = angle;
+          palm.add(frond);
+        }
+        palm.position.set(pos.x - rw * 0.46 + i * (rw * 0.92 / 14), yOff, pos.z);
+        exteriorRoot.add(palm);
+      }
+
+      for (let i = 0; i < 8; i++) {
+        const lamp = new THREE.Group();
+        const pole = new THREE.Mesh(track(new THREE.CylinderGeometry(0.12, 0.2, 7.2, 8)), lampPoleMat);
+        pole.position.y = 3.6;
+        const crossArm = new THREE.Mesh(track(new THREE.BoxGeometry(3.3, 0.12, 0.12)), lampPoleMat);
+        crossArm.position.set(0, 7.0, 0);
+        lamp.add(pole, crossArm);
+        for (const side of [-1, 1]) {
+          const lampHead = new THREE.Mesh(track(new THREE.BoxGeometry(0.85, 0.22, 0.42)), lampGlowMat);
+          lampHead.position.set(side * 1.4, 6.82, 0);
+          lamp.add(lampHead);
+        }
+        lamp.position.set(pos.x - rw * 0.43 + i * (rw * 0.86 / 7), yOff, pos.z);
+        exteriorRoot.add(lamp);
+      }
+    }
   });
 
   [
-    [2400, 688],
+    [2400, 888],
     [2400, 1408],
     [2935, 1408],
     [1930, 1408],
-    [875, 688],
+    [875, 888],
   ].forEach(([cx, cy]) => {
     const cp = world2DTo3D(cx, cy);
     for (let s = -3; s <= 3; s++) {
@@ -2353,8 +2421,197 @@ export function buildWorldEnvironment3D(
     }
   });
 
-  // 5. Flower Bushes (InstancedMesh)
-  const flowerCount = 160;
+  // 5. Recognisable Alexandria landmarks — built as original low-poly 3D scenery.
+  const addLandmarkBox = (wx: number, wy: number, width: number, height: number, depth: number, color: number, baseY = 0) => {
+    const p = world2DTo3D(wx, wy);
+    const mesh = new THREE.Mesh(track(new THREE.BoxGeometry(width, height, depth)), track(new THREE.MeshStandardMaterial({ color, roughness: 0.82 })));
+    mesh.position.set(p.x, baseY + height / 2, p.z);
+    mesh.castShadow = !isSoftwareGl;
+    mesh.receiveShadow = true;
+    exteriorRoot.add(mesh);
+    return mesh;
+  };
+  const addWorldLabel = (label: string, wx: number, wy: number, color = '#1F2937') => {
+    const p = world2DTo3D(wx, wy);
+    const sign = createArabicLabelSprite(label, { bg: 'rgba(250,248,240,0.94)', border: '#A68D6D', textColor: color, scaleX: 8.4, scaleY: 1.65 });
+    sign.position.set(p.x, 12.5, p.z);
+    exteriorRoot.add(sign);
+  };
+
+  // Qaitbay Citadel: square limestone fortress, corner towers and crenellations.
+  const qaitbay = new THREE.Group();
+  const qaitbayPos = world2DTo3D(500, 440);
+  qaitbay.position.set(qaitbayPos.x, 0, qaitbayPos.z);
+  const fortStone = track(new THREE.MeshStandardMaterial({ color: 0xC7B697, roughness: 0.95 }));
+  const fortTrim = track(new THREE.MeshStandardMaterial({ color: 0x9B896B, roughness: 0.9 }));
+  const fortBase = new THREE.Mesh(track(new THREE.BoxGeometry(25, 7, 23)), fortStone);
+  fortBase.position.y = 3.5;
+  qaitbay.add(fortBase);
+  const fortKeep = new THREE.Mesh(track(new THREE.BoxGeometry(12, 11, 12)), fortStone);
+  fortKeep.position.y = 12.5;
+  qaitbay.add(fortKeep);
+  for (const [x,z] of [[-10,-9],[10,-9],[-10,9],[10,9]]) {
+    const tower = new THREE.Mesh(track(new THREE.CylinderGeometry(2.6,2.9,12,10)), fortStone);
+    tower.position.set(x,9,z);
+    qaitbay.add(tower);
+    const roof = new THREE.Mesh(track(new THREE.ConeGeometry(2.6,3.0,10)), fortTrim);
+    roof.position.set(x,16.2,z);
+    qaitbay.add(roof);
+  }
+  for (let x=-11; x<=11; x+=2.1) {
+    const merlon = new THREE.Mesh(track(new THREE.BoxGeometry(0.95,1.35,1.0)), fortTrim);
+    merlon.position.set(x,7.3,11.3); qaitbay.add(merlon);
+  }
+  qaitbay.position.y = 0;
+  exteriorRoot.add(qaitbay);
+  addWorldLabel('قلعة قايتباي · بحري', 500, 395, '#5D4733');
+
+  // Mansheya Square and the Unknown Soldier memorial column.
+  const squarePos = world2DTo3D(1240, 1050);
+  const square = new THREE.Mesh(track(new THREE.BoxGeometry(28,0.16,21)), track(new THREE.MeshStandardMaterial({ color:0xB9B5A8, roughness:0.88 })));
+  square.position.set(squarePos.x,0.08,squarePos.z); exteriorRoot.add(square);
+  addLandmarkBox(1240,1050,1.6,7.5,1.6,0x8E8B80);
+  const memorialTop = new THREE.Mesh(track(new THREE.SphereGeometry(1.4,12,10)), track(new THREE.MeshStandardMaterial({ color:0x9B9586, roughness:0.88 })));
+  memorialTop.position.set(squarePos.x,8.3,squarePos.z); exteriorRoot.add(memorialTop);
+  addWorldLabel('ميدان المنشية · الجندي المجهول',1240,1000);
+
+  // Bibliotheca Alexandrina: circular, inclined disc with etched roof rings.
+  const libraryPos = world2DTo3D(2070, 1050);
+  const library = new THREE.Group();
+  library.position.set(libraryPos.x,0,libraryPos.z);
+  const libBody = new THREE.Mesh(track(new THREE.CylinderGeometry(10.5,17.5,9.4,48,1,false)), track(new THREE.MeshStandardMaterial({ color:0xB9B4A8, roughness:0.55, metalness:0.08 })));
+  libBody.rotation.z = -0.17; libBody.position.y=5.2; library.add(libBody);
+  const libRoof = new THREE.Mesh(track(new THREE.CylinderGeometry(10.1,17.0,0.5,48)), track(new THREE.MeshStandardMaterial({ color:0x8C9697, roughness:0.7 })));
+  libRoof.rotation.z=-0.17; libRoof.position.y=10.0; library.add(libRoof);
+  for (let i=0;i<20;i++) {
+    const etch = new THREE.Mesh(track(new THREE.BoxGeometry(0.14,0.08,24)), track(new THREE.MeshStandardMaterial({ color:0x707D7D, roughness:0.8 })));
+    etch.position.set(-9.5+i*1.0,10.32,0); etch.rotation.z=-0.17; library.add(etch);
+  }
+  exteriorRoot.add(library);
+  addWorldLabel('مكتبة الإسكندرية · الشاطبي',2070,990);
+
+  // Stanley Bridge with four small royal-style towers crossing the coastal inlet.
+  const bridgePos = world2DTo3D(3010, 430);
+  const bridgeDeck = new THREE.Mesh(track(new THREE.BoxGeometry(53,1.2,5.2)), track(new THREE.MeshStandardMaterial({ color:0xD5D1C6, roughness:0.72 })));
+  bridgeDeck.position.set(bridgePos.x,5.2,bridgePos.z); exteriorRoot.add(bridgeDeck);
+  const archGeo = track(new THREE.CylinderGeometry(0.32,0.32,53,12));
+  const bridgePillarMat = track(new THREE.MeshStandardMaterial({ color:0xD8D1BF, roughness:0.78 }));
+  for (const xOff of [-21,-7,7,21]) {
+    const pillar = new THREE.Mesh(track(new THREE.BoxGeometry(1.3,8,1.3)), bridgePillarMat);
+    pillar.position.set(bridgePos.x+xOff,9.6,bridgePos.z); exteriorRoot.add(pillar);
+    const cap = new THREE.Mesh(track(new THREE.ConeGeometry(1.25,1.5,4)), track(new THREE.MeshStandardMaterial({ color:0xBCA77F, roughness:0.7 })));
+    cap.position.set(bridgePos.x+xOff,14.2,bridgePos.z); exteriorRoot.add(cap);
+  }
+  const arch = new THREE.Mesh(archGeo,bridgePillarMat); arch.position.set(bridgePos.x,7.8,bridgePos.z-0.4); arch.rotation.z=Math.PI/2; exteriorRoot.add(arch);
+  addWorldLabel('كوبري ستانلي · جليم',3010,385);
+
+  // Montaza palace garden gate and coastal park markers.
+  const montazaPos = world2DTo3D(4380, 2760);
+  const gateMat = track(new THREE.MeshStandardMaterial({ color:0xD6C5A4, roughness:0.8 }));
+  const gate = new THREE.Group();
+  gate.position.set(montazaPos.x,0,montazaPos.z);
+  const gateTop = new THREE.Mesh(track(new THREE.BoxGeometry(24,1.5,1.4)),gateMat); gateTop.position.y=8; gate.add(gateTop);
+  for (const xo of [-10,-3.3,3.3,10]) {
+    const column = new THREE.Mesh(track(new THREE.CylinderGeometry(0.65,0.85,8,12)),gateMat); column.position.set(xo,4,0); gate.add(column);
+    const cap = new THREE.Mesh(track(new THREE.BoxGeometry(1.8,0.7,1.8)),gateMat); cap.position.set(xo,8.3,0); gate.add(cap);
+  }
+  exteriorRoot.add(gate);
+  addWorldLabel('حدائق وقصور المنتزه',4380,2710);
+
+  // San Stefano's paired high-rise towers are also emphasised above the city blocks.
+  [ -9, 9 ].forEach((offset, i) => {
+    const p = world2DTo3D(3635, 1050);
+    const tower = new THREE.Mesh(track(new THREE.BoxGeometry(8.5,34-i*2,8.5)), track(new THREE.MeshStandardMaterial({ color:0xB6C8CC, roughness:0.32, metalness:0.12 })));
+    tower.position.set(p.x+offset,17-i,p.z);
+    exteriorRoot.add(tower);
+    for (let floor=0; floor<12; floor++) {
+      const balcony = new THREE.Mesh(track(new THREE.BoxGeometry(8.7,0.18,8.7)), track(new THREE.MeshStandardMaterial({ color:0x87999D, roughness:0.45 })));
+      balcony.position.set(p.x+offset,2.8+floor*2.55,p.z); exteriorRoot.add(balcony);
+    }
+  });
+  addWorldLabel('سان ستيفانو · سيدي بشر',3635,990);
+
+  // Road vehicles: black/yellow taxis, blue-striped white microbuses and parked cars.
+  const addCityCar = (wx: number, wy: number, bodyColor: number, stripeColor?: number, rotation = 0) => {
+    const group = new THREE.Group();
+    const bodyMat = track(new THREE.MeshStandardMaterial({ color:bodyColor, roughness:0.42, metalness:0.16 }));
+    const glassMat = track(new THREE.MeshStandardMaterial({ color:0x25485A, roughness:0.18, metalness:0.25, transparent:true, opacity:0.78 }));
+    const tireMat = track(new THREE.MeshStandardMaterial({ color:0x171B20, roughness:0.92 }));
+    const body = new THREE.Mesh(track(new THREE.BoxGeometry(2.35,0.75,4.9)),bodyMat); body.position.y=0.78; group.add(body);
+    const cabin = new THREE.Mesh(track(new THREE.BoxGeometry(1.9,0.95,2.3)),bodyMat); cabin.position.set(0,1.55,-0.2); group.add(cabin);
+    const glass = new THREE.Mesh(track(new THREE.BoxGeometry(1.76,0.68,2.12)),glassMat); glass.position.set(0,1.56,-0.16); group.add(glass);
+    if (stripeColor !== undefined) {
+      const stripe = new THREE.Mesh(track(new THREE.BoxGeometry(2.38,0.18,4.85)),track(new THREE.MeshStandardMaterial({ color:stripeColor, roughness:0.5 })));
+      stripe.position.y=0.99; group.add(stripe);
+    }
+    for (const x of [-1.15,1.15]) for (const z of [-1.55,1.55]) {
+      const wheel = new THREE.Mesh(track(new THREE.CylinderGeometry(0.48,0.48,0.28,12)),tireMat);
+      wheel.rotation.z=Math.PI/2; wheel.position.set(x,0.5,z); group.add(wheel);
+    }
+    const p=world2DTo3D(wx,wy); group.position.set(p.x,0,p.z); group.rotation.y=rotation;
+    exteriorRoot.add(group);
+  };
+  addCityCar(890,620,0x15191E,0xE1B62B,0);
+  addCityCar(1790,620,0xF5F1E7,0x266FA0,0);
+  addCityCar(2510,620,0x20252B,0xE2B52A,0);
+  addCityCar(3920,620,0xF2F0E8,0x2C78A8,0);
+  addCityCar(1220,1570,0xD7D8D4,0x336A8C,Math.PI/2);
+  addCityCar(2280,2190,0x39464D,undefined,Math.PI/2);
+  addCityCar(3350,1570,0xF4F0E4,0x246C9B,Math.PI/2);
+  addCityCar(4210,2310,0x1B2024,0xE1B62B,Math.PI/2);
+
+  // Tram tracks and a blue/yellow two-carriage Raml tram.
+  const tramCenter = world2DTo3D(1515,2200);
+  const railMat = track(new THREE.MeshStandardMaterial({ color:0x545D63, metalness:0.7, roughness:0.35 }));
+  for (const offset of [-0.85,0.85]) {
+    const rail = new THREE.Mesh(track(new THREE.BoxGeometry(0.16,0.14,206)),railMat);
+    rail.position.set(tramCenter.x+offset,0.1,tramCenter.z); exteriorRoot.add(rail);
+  }
+  const sleeperMat = track(new THREE.MeshStandardMaterial({ color:0x756B5D, roughness:0.9 }));
+  for (let i=0;i<60;i++) {
+    const sleeper = new THREE.Mesh(track(new THREE.BoxGeometry(2.5,0.13,0.5)),sleeperMat);
+    sleeper.position.set(tramCenter.x,0.04,tramCenter.z-101+i*3.4); exteriorRoot.add(sleeper);
+  }
+  const tramBodyMat = track(new THREE.MeshStandardMaterial({ color:0xF2C84B, roughness:0.5 }));
+  const tramGlassMat = track(new THREE.MeshStandardMaterial({ color:0x25485A, roughness:0.18, metalness:0.25, transparent:true, opacity:0.78 }));
+  const tramBlueMat = track(new THREE.MeshStandardMaterial({ color:0x1E5E86, roughness:0.45 }));
+  for (let car=0;car<2;car++) {
+    const tram = new THREE.Group();
+    // Two stacked passenger decks evoke the historic double-decker Raml tram.
+    const base = new THREE.Mesh(track(new THREE.BoxGeometry(3.0,3.25,8.2)),tramBodyMat); base.position.y=1.78; tram.add(base);
+    const blueBand = new THREE.Mesh(track(new THREE.BoxGeometry(3.05,0.46,8.25)),tramBlueMat); blueBand.position.y=1.55; tram.add(blueBand);
+    for (let wi=0;wi<5;wi++) {
+      for (const side of [-1,1]) {
+        for (const deckY of [0.95,2.42]) {
+          const window = new THREE.Mesh(track(new THREE.BoxGeometry(0.09,0.72,0.95)),tramGlassMat);
+          window.position.set(side*1.53,deckY,-3.2+wi*1.55); tram.add(window);
+        }
+      }
+    }
+    tram.position.set(tramCenter.x,0,tramCenter.z-4.4+car*9.2);
+    tram.rotation.y=Math.PI/2;
+    exteriorRoot.add(tram);
+  }
+  addWorldLabel('خط ترام الرمل',1515,2110);
+
+  // Small pavement kiosks and food carts.
+  const addVendorCart = (wx:number,wy:number,accent:number) => {
+    const p=world2DTo3D(wx,wy); const cart=new THREE.Group();
+    const wood=track(new THREE.MeshStandardMaterial({ color:0x8B5E3C, roughness:0.85 }));
+    const cartWheelMat=track(new THREE.MeshStandardMaterial({ color:0x171B20, roughness:0.92 }));
+    const top=track(new THREE.MeshStandardMaterial({ color:accent, roughness:0.6 }));
+    const base=new THREE.Mesh(track(new THREE.BoxGeometry(2.7,1.25,1.65)),wood); base.position.y=0.85; cart.add(base);
+    const canopy=new THREE.Mesh(track(new THREE.BoxGeometry(3.2,0.2,2.0)),top); canopy.position.y=1.9; cart.add(canopy);
+    for (const x of [-1,1]) { const wheel=new THREE.Mesh(track(new THREE.CylinderGeometry(0.38,0.38,0.16,12)),cartWheelMat); wheel.rotation.z=Math.PI/2; wheel.position.set(x,0.42,0.6); cart.add(wheel); }
+    cart.position.set(p.x,0,p.z); exteriorRoot.add(cart);
+  };
+  addVendorCart(1090,990,0xE0B849);
+  addVendorCart(2820,950,0xE87C52);
+  addVendorCart(4110,1850,0x68A8C2);
+  addVendorCart(650,2320,0xB94B3F);
+
+  // 5. Low garden flower beds kept inside the Montaza park area.
+  const flowerCount = 48;
   const bushGeo = track(new THREE.DodecahedronGeometry(0.55, 1));
   const bushMat = track(new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.82 }));
   const bloomGeo = track(new THREE.DodecahedronGeometry(0.28, 0));
@@ -2364,27 +2621,15 @@ export function buildWorldEnvironment3D(
   const blooms = new THREE.InstancedMesh(bloomGeo, bloomMat, flowerCount);
   const dummy = new THREE.Object3D();
   const bloomColors = [
-    new THREE.Color(0xf43f5e),
-    new THREE.Color(0xfbbf24),
-    new THREE.Color(0xf472b6),
-    new THREE.Color(0xa855f7),
+    new THREE.Color(0xe8d9b7),
+    new THREE.Color(0xd9c28e),
+    new THREE.Color(0xd9a7a5),
+    new THREE.Color(0xc8d4c0),
   ];
 
   for (let i = 0; i < flowerCount; i++) {
-    let wx = 0;
-    let wy = 0;
-    if (i < 60) {
-      wx = 520 + i * 64;
-      wy = i % 2 === 0 ? 660 : 855;
-    } else if (i < 112) {
-      const k = i - 60;
-      wx = 540 + k * 72;
-      wy = k % 2 === 0 ? 1380 : 1575;
-    } else {
-      const k = i - 112;
-      wx = 3150 + (k % 8) * 165;
-      wy = 2940 + Math.floor(k / 8) * 95;
-    }
+    const wx = 3900 + (i % 8) * 92;
+    const wy = 2700 + Math.floor(i / 8) * 34;
     const p = world2DTo3D(wx, wy);
     const s = 0.85 + (i % 3) * 0.22;
 
@@ -2459,16 +2704,9 @@ export function buildWorldEnvironment3D(
     const pos = world2DTo3D(b.x + b.w / 2, b.y + b.h / 2);
     const bw = size2DTo3D(b.w);
     const bd = size2DTo3D(b.h);
-    const bh =
-      b.kind === 'palace'
-        ? 13.0
-        : b.kind === 'observatory'
-          ? 10.6
-          : b.kind === 'flower_stand'
-            ? 4.8
-            : b.hasSecondFloor
-              ? 9.6
-              : 7.4;
+    const bh = b.height ?? (
+      b.kind === 'palace' ? 13.0 : b.kind === 'observatory' ? 10.6 : b.kind === 'flower_stand' ? 4.8 : b.hasSecondFloor ? 9.6 : 7.4
+    );
 
     const bGroup = new THREE.Group();
     bGroup.position.set(pos.x, 0, pos.z);
@@ -2507,16 +2745,23 @@ export function buildWorldEnvironment3D(
     }
 
     const winCount = b.kind === 'palace' ? 4 : 2;
-    for (let wi = 0; wi < winCount; wi++) {
-      const side = wi % 2 === 0 ? -1 : 1;
-      const tier = Math.floor(wi / 2);
-      const wx = side * (bw * 0.28 + tier * 5.2);
-      const wy = b.kind === 'palace' ? 7.6 : b.hasSecondFloor ? 6.0 : 4.2;
-      const winFrame = new THREE.Mesh(track(new THREE.BoxGeometry(2.3, 2.3, 0.32)), trimMat);
-      winFrame.position.set(wx, wy, bd / 2 + 0.08);
-      const winGlass = new THREE.Mesh(track(new THREE.BoxGeometry(1.85, 1.85, 0.36)), windowGlassMat);
-      winGlass.position.set(wx, wy, bd / 2 + 0.1);
-      bGroup.add(winFrame, winGlass);
+    const floors = Math.max(2, Math.floor(bh / 3.2));
+    const windowsPerFloor = Math.max(2, Math.min(7, Math.floor(bw / 3.6)));
+    for (let floor = 0; floor < floors; floor++) {
+      for (let wi = 0; wi < windowsPerFloor; wi++) {
+        const wx = -bw / 2 + ((wi + 0.5) * bw) / windowsPerFloor;
+        const wy = 1.9 + floor * 3.0;
+        const winFrame = new THREE.Mesh(track(new THREE.BoxGeometry(1.25, 1.65, 0.24)), trimMat);
+        winFrame.position.set(wx, wy, bd / 2 + 0.08);
+        const winGlass = new THREE.Mesh(track(new THREE.BoxGeometry(0.98, 1.38, 0.27)), windowGlassMat);
+        winGlass.position.set(wx, wy, bd / 2 + 0.1);
+        bGroup.add(winFrame, winGlass);
+        // Thin iron balcony rails evoke the old European façades in the centre.
+        if (bh < 20 && b.kind !== 'palace') {
+          const rail = new THREE.Mesh(track(new THREE.BoxGeometry(1.55,0.1,0.48)),trimMat);
+          rail.position.set(wx,wy-0.95,bd/2+0.42); bGroup.add(rail);
+        }
+      }
     }
 
     if (b.kind === 'palace') {
@@ -2568,8 +2813,8 @@ export function buildWorldEnvironment3D(
 
     const sign = createArabicLabelSprite(b.name, {
       bg: 'rgba(255, 255, 255, 0.94)',
-      border: '#FDA4AF',
-      textColor: '#881337',
+      border: '#A68D6D',
+      textColor: '#374151',
       scaleX: 8.2,
       scaleY: 1.85,
     });

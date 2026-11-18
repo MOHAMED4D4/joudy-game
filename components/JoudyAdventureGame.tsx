@@ -14,9 +14,9 @@ import {
   useJoudyProgress,
 } from '@/lib/storage';
 import { soundEngine } from '@/lib/soundEffects';
-import PlatformerMode from './PlatformerMode';
+import OpenWorldArena from './OpenWorldArena';
 
-type GameState = 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY' | 'PLATFORMER';
+type GameState = 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY' | 'OPEN_WORLD';
 
 const REAL_IMAGE_SRC = '/images/joudy-real.png';
 const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
@@ -117,13 +117,20 @@ export default function JoudyAdventureGame() {
             <CharacterSelectScreen
               key="title-menu"
               realImageSrc={realImageSrc}
+              animeImageSrc={animeImageSrc}
               onStartAdventure={handleOpenWorldMap}
-              onStartPlatformer={() => setGameState('PLATFORMER')}
+              onStartOpenWorld={() => setGameState('OPEN_WORLD')}
             />
           )}
 
-          {gameState === 'PLATFORMER' && (
-            <PlatformerMode key="platformer-mode" imageSrc={realImageSrc} onBack={() => setGameState('TITLE_MENU')} />
+          {gameState === 'OPEN_WORLD' && (
+            <OpenWorldArena
+              key="alexandria-open-world"
+              animeImageSrc={animeImageSrc}
+              soundEnabled={soundEnabled}
+              onToggleSound={handleToggleSound}
+              onExitToHub={() => setGameState('TITLE_MENU')}
+            />
           )}
 
           {gameState === 'WORLD_MAP' && (

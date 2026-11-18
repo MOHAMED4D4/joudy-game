@@ -148,9 +148,9 @@ export const OUTFIT_CATALOG: OutfitOption[] = [
     id: 'emerald_queen',
     name: 'فستان الزمرد الملكي',
     category: 'dress',
-    primaryHex: '#059669',
-    secondaryHex: '#D1FAE5',
-    accentHex: '#FBBF24',
+    primaryHex: '#A9BDA5',
+    secondaryHex: '#F0ECDD',
+    accentHex: '#C8A96A',
     badge: '💚',
     description: 'فستان زمردي أنيق يناسب حجابكِ الملكي',
   },
@@ -510,6 +510,7 @@ export interface WorldBuilding {
   roofColor: string;
   wallColor: string;
   trimColor: string;
+  height?: number;
   enterable: boolean;
   hasBed: boolean;
   hasSecondFloor?: boolean;
@@ -550,7 +551,7 @@ export interface WorldCoinDef {
 }
 
 export interface WorldNpcDef {
-  id: 'guard' | 'florist' | 'bestie' | 'cat' | 'shopkeeper';
+  id: string;
   name: string;
   role: string;
   emoji: string;
@@ -570,498 +571,104 @@ export interface DialogueLine {
   text: string;
 }
 
+// North edge of the playable city is the Mediterranean. The collision ellipse
+// keeps the player on land while the 3D scene renders the open sea.
 export const WORLD_LAKE = {
-  cx: 820,
-  cy: 3060,
-  rx: 380,
-  ry: 210,
+  cx: 2400,
+  cy: -900,
+  rx: 3900,
+  ry: 1320,
 };
 
+// A compact west-to-east slice of Alexandria: the coastal road plus the
+// inland streets that connect the six playable neighbourhoods.
 export const WORLD_ROADS: WorldRoadSegment[] = [
-  // 1. Grand Northern Royal Boulevard
-  { x: 360, y: 690, w: 4080, h: 135 },
-  // 2. Central Mid-Town Avenue
-  { x: 360, y: 1410, w: 4080, h: 135 },
-  // 3. Southern Residential & Café Avenue
-  { x: 360, y: 2130, w: 4080, h: 130 },
-  // 4. Grand Outer Rose & Lake Parkway
-  { x: 360, y: 2780, w: 4080, h: 125 },
-  // 5. Western Café & Lake Boulevard (North-South)
-  { x: 360, y: 690, w: 135, h: 2215 },
-  // 6. Central-West Palace Park Axis (North-South)
-  { x: 1480, y: 690, w: 125, h: 2215 },
-  // 7. Grand Royal Central Axis (North-South)
-  { x: 2335, y: 690, w: 135, h: 2215 },
-  // 8. Eastern Pet Shop & Rose Boulevard (North-South)
-  { x: 3320, y: 690, w: 130, h: 2215 },
-  // 9. Far-East Villa District Road (North-South)
-  { x: 4305, y: 690, w: 135, h: 2215 },
+  { x: 160, y: 760, w: 4480, h: 260 }, // Corniche / coastal highway
+  { x: 160, y: 1190, w: 4480, h: 160 },
+  { x: 160, y: 1870, w: 4480, h: 170 },
+  { x: 160, y: 2670, w: 4480, h: 180 },
+  { x: 620, y: 740, w: 155, h: 2660 },
+  { x: 1360, y: 740, w: 155, h: 2660 },
+  { x: 2150, y: 740, w: 155, h: 2660 },
+  { x: 2940, y: 740, w: 155, h: 2660 },
+  { x: 3720, y: 740, w: 155, h: 2660 },
+  { x: 4440, y: 740, w: 155, h: 2660 },
 ];
 
 export const WORLD_BUILDINGS: WorldBuilding[] = [
-  {
-    id: 'royal_palace',
-    name: 'القصر الملكي الكبير 👑',
-    x: 1940,
-    y: 130,
-    w: 920,
-    h: 350,
-    kind: 'palace',
-    roofColor: '#F43F5E',
-    wallColor: '#FFF7FA',
-    trimColor: '#FBBF24',
-    enterable: true,
-    hasBed: true,
-    hasSecondFloor: true,
-    hasMakeup: true,
-    hasWardrobe: true,
-    hasPetCorner: true,
-    doorX: 2400,
-    doorY: 505,
-  },
-  {
-    id: 'princess_villa',
-    name: 'فيلا الأميرة جودي 🏡',
-    x: 680,
-    y: 220,
-    w: 390,
-    h: 240,
-    kind: 'villa',
-    roofColor: '#EC4899',
-    wallColor: '#FFF1F2',
-    trimColor: '#FBBF24',
-    enterable: true,
-    hasBed: true,
-    hasSecondFloor: true,
-    hasMakeup: true,
-    hasWardrobe: true,
-    hasPetCorner: true,
-    doorX: 875,
-    doorY: 485,
-  },
-  {
-    id: 'pet_shop',
-    name: 'متجر القطط 🐾',
-    x: 2740,
-    y: 970,
-    w: 390,
-    h: 240,
-    kind: 'pet_shop',
-    roofColor: '#F97316',
-    wallColor: '#FFF7ED',
-    trimColor: '#FACC15',
-    enterable: true,
-    hasBed: false,
-    hasPetShop: true,
-    doorX: 2935,
-    doorY: 1235,
-  },
-  {
-    id: 'fashion_salon',
-    name: 'صالون المكياج والأزياء 💄👗',
-    x: 1740,
-    y: 970,
-    w: 380,
-    h: 240,
-    kind: 'salon',
-    roofColor: '#DB2777',
-    wallColor: '#FDF2F8',
-    trimColor: '#FBBF24',
-    enterable: true,
-    hasBed: false,
-    hasMakeup: true,
-    hasWardrobe: true,
-    doorX: 1930,
-    doorY: 1235,
-  },
-  {
-    id: 'villa_east',
-    name: 'بيت الشوكولاتة 🍫',
-    x: 3680,
-    y: 220,
-    w: 370,
-    h: 240,
-    kind: 'house_mint',
-    roofColor: '#10B981',
-    wallColor: '#ECFDF5',
-    trimColor: '#6EE7B7',
-    enterable: true,
-    hasBed: true,
-    hasSecondFloor: true,
-    doorX: 3865,
-    doorY: 485,
-  },
-  {
-    id: 'villa_west',
-    name: 'جناح الياسمين 🌸',
-    x: 720,
-    y: 970,
-    w: 360,
-    h: 230,
-    kind: 'house_pink',
-    roofColor: '#FB7185',
-    wallColor: '#FFF5F7',
-    trimColor: '#FDA4AF',
-    enterable: true,
-    hasBed: true,
-    hasSecondFloor: true,
-    doorX: 900,
-    doorY: 1225,
-  },
-  {
-    id: 'house_sugar',
-    name: 'البيت الوردي السكّري 🏠',
-    x: 3680,
-    y: 970,
-    w: 350,
-    h: 230,
-    kind: 'house_pink',
-    roofColor: '#F472B6',
-    wallColor: '#FFF1F2',
-    trimColor: '#FDE047',
-    enterable: true,
-    hasBed: true,
-    hasSecondFloor: true,
-    hasWardrobe: true,
-    doorX: 3855,
-    doorY: 1225,
-  },
-  {
-    id: 'house_pearl',
-    name: 'منزل اللؤلؤ السماوي 🏡',
-    x: 1740,
-    y: 1690,
-    w: 350,
-    h: 230,
-    kind: 'house_sky',
-    roofColor: '#0EA5E9',
-    wallColor: '#F0F9FF',
-    trimColor: '#BAE6FD',
-    enterable: true,
-    hasBed: true,
-    doorX: 1915,
-    doorY: 1945,
-  },
-  {
-    id: 'house_emerald',
-    name: 'بيت الزمرد الهادئ 🏘️',
-    x: 3680,
-    y: 1690,
-    w: 350,
-    h: 230,
-    kind: 'house_mint',
-    roofColor: '#059669',
-    wallColor: '#ECFDF5',
-    trimColor: '#FBBF24',
-    enterable: true,
-    hasBed: true,
-    hasSecondFloor: true,
-    hasPetCorner: true,
-    doorX: 3855,
-    doorY: 1945,
-  },
-  {
-    id: 'house_sunset',
-    name: 'فيلا غروب الشمس 🌅',
-    x: 1740,
-    y: 2390,
-    w: 360,
-    h: 230,
-    kind: 'villa',
-    roofColor: '#F59E0B',
-    wallColor: '#FFFBEB',
-    trimColor: '#FB7185',
-    enterable: true,
-    hasBed: true,
-    hasSecondFloor: true,
-    doorX: 1920,
-    doorY: 2645,
-  },
-  {
-    id: 'princess_cafe',
-    name: 'مقهى الأميرات السحري ☕',
-    x: 720,
-    y: 1690,
-    w: 360,
-    h: 230,
-    kind: 'cafe',
-    roofColor: '#EC4899',
-    wallColor: '#FFFBEB',
-    trimColor: '#F59E0B',
-    enterable: true,
-    hasBed: false,
-    hasCafeCounter: true,
-    doorX: 900,
-    doorY: 1945,
-  },
-  {
-    id: 'kitty_boutique',
-    name: 'متجر الهدايا والورود 🎀',
-    x: 2740,
-    y: 1690,
-    w: 360,
-    h: 230,
-    kind: 'boutique',
-    roofColor: '#8B5CF6',
-    wallColor: '#FDF4FF',
-    trimColor: '#F472B6',
-    enterable: true,
-    hasBed: false,
-    hasWardrobe: true,
-    doorX: 2920,
-    doorY: 1945,
-  },
-  {
-    id: 'bakery_house',
-    name: 'مخبز الحلويات الملكي 🧁',
-    x: 720,
-    y: 2390,
-    w: 350,
-    h: 225,
-    kind: 'bakery',
-    roofColor: '#F59E0B',
-    wallColor: '#FFFBEB',
-    trimColor: '#FB7185',
-    enterable: true,
-    hasBed: false,
-    hasCafeCounter: true,
-    doorX: 895,
-    doorY: 2640,
-  },
-  {
-    id: 'royal_observatory',
-    name: 'مرصد النجوم الملكي 🔭',
-    x: 2740,
-    y: 2390,
-    w: 340,
-    h: 225,
-    kind: 'observatory',
-    roofColor: '#4F46E5',
-    wallColor: '#EEF2FF',
-    trimColor: '#FACC15',
-    enterable: true,
-    hasBed: false,
-    hasObservatory: true,
-    doorX: 2910,
-    doorY: 2640,
-  },
-  {
-    id: 'rose_stand',
-    name: 'كشك بائعة الورد 🌹',
-    x: 3740,
-    y: 3060,
-    w: 230,
-    h: 150,
-    kind: 'flower_stand',
-    roofColor: '#E11D48',
-    wallColor: '#FFF5F7',
-    trimColor: '#34D399',
-    enterable: false,
-    hasBed: false,
-    doorX: 3855,
-    doorY: 3225,
-  },
-  {
-    id: 'garden_gazebo',
-    name: 'شرفة الورود الملكية ✨',
-    x: 3200,
-    y: 3180,
-    w: 215,
-    h: 165,
-    kind: 'gazebo',
-    roofColor: '#F59E0B',
-    wallColor: '#FFFBEB',
-    trimColor: '#FB7185',
-    enterable: false,
-    hasBed: false,
-    doorX: 3307,
-    doorY: 3360,
-  },
+  // Bahary & Anfoushi — low-rise, faded coastal colours
+  { id: 'bahary-1', name: 'بحري والأنفوشي', x: 220, y: 900, w: 320, h: 250, kind: 'house_sky', roofColor: '#B7A58B', wallColor: '#E9D9BC', trimColor: '#7C6F61', enterable: false, hasBed: false, height: 10.5, doorX: 380, doorY: 1170 },
+  { id: 'bahary-2', name: 'عمارات الأنفوشي القديمة', x: 780, y: 1450, w: 360, h: 285, kind: 'house_pink', roofColor: '#B2A18A', wallColor: '#E5D6C2', trimColor: '#6D7A82', enterable: false, hasBed: false, height: 11.5, doorX: 960, doorY: 1745 },
+  { id: 'fisher-market', name: 'سوق الصيادين', x: 260, y: 1850, w: 300, h: 220, kind: 'cafe', roofColor: '#477C91', wallColor: '#E9E2D5', trimColor: '#F0C36C', enterable: false, hasBed: false, height: 6.5, doorX: 410, doorY: 2080 },
+
+  // Mansheya & Raml Station — ornate Italian / French façades
+  { id: 'mansheya-arcades', name: 'ميدان المنشية', x: 1000, y: 900, w: 440, h: 300, kind: 'villa', roofColor: '#65717B', wallColor: '#E8D9C5', trimColor: '#9A795D', enterable: false, hasBed: false, height: 17, doorX: 1220, doorY: 1210 },
+  { id: 'saad-zaghloul', name: 'شارع سعد زغلول', x: 1580, y: 1450, w: 410, h: 270, kind: 'house_sky', roofColor: '#5D6772', wallColor: '#E9DFD2', trimColor: '#8E6D50', enterable: false, hasBed: false, height: 15, doorX: 1785, doorY: 1730 },
+  { id: 'raml-cafes', name: 'محطة الرمل والكافيهات', x: 930, y: 2130, w: 390, h: 260, kind: 'cafe', roofColor: '#69574A', wallColor: '#DCCBB2', trimColor: '#B48A62', enterable: false, hasBed: false, height: 13, doorX: 1125, doorY: 2410 },
+
+  // Shatby & Azarita — campus and the modern library
+  { id: 'shatby-campus', name: 'مجمع الكليات النظرية', x: 1740, y: 900, w: 360, h: 330, kind: 'villa', roofColor: '#66747A', wallColor: '#D8D6C9', trimColor: '#A58A6A', enterable: false, hasBed: false, height: 14, doorX: 1920, doorY: 1240 },
+  { id: 'azarita-homes', name: 'الأزاريطة', x: 2340, y: 1460, w: 390, h: 290, kind: 'house_mint', roofColor: '#66727B', wallColor: '#E7D9C7', trimColor: '#A07B5C', enterable: false, hasBed: false, height: 16, doorX: 2535, doorY: 1760 },
+
+  // Stanley & Gleem — coastal apartments and modern hotels
+  { id: 'stanley-tower-west', name: 'أبراج ستانلي', x: 2600, y: 900, w: 260, h: 340, kind: 'house_sky', roofColor: '#526879', wallColor: '#D6E0E1', trimColor: '#94A8AE', enterable: false, hasBed: false, height: 25, doorX: 2730, doorY: 1250 },
+  { id: 'gleem-residences', name: 'جليم', x: 3050, y: 1450, w: 420, h: 280, kind: 'house_mint', roofColor: '#566B78', wallColor: '#E5E1D5', trimColor: '#9B8067', enterable: false, hasBed: false, height: 18, doorX: 3260, doorY: 1740 },
+
+  // San Stefano & Sidi Bishr — contemporary towers and busy retail strips
+  { id: 'san-stefano-tower-a', name: 'سان ستيفانو — البرج الغربي', x: 3450, y: 900, w: 250, h: 340, kind: 'house_sky', roofColor: '#496579', wallColor: '#D6E4E7', trimColor: '#A8BBC2', enterable: false, hasBed: false, height: 31, doorX: 3575, doorY: 1250 },
+  { id: 'san-stefano-tower-b', name: 'سان ستيفانو — البرج الشرقي', x: 3760, y: 900, w: 250, h: 340, kind: 'house_sky', roofColor: '#496579', wallColor: '#D6E4E7', trimColor: '#A8BBC2', enterable: false, hasBed: false, height: 29, doorX: 3885, doorY: 1250 },
+  { id: 'sidi-bishr-shops', name: 'شارع خالد بن الوليد', x: 3420, y: 2110, w: 450, h: 300, kind: 'cafe', roofColor: '#334B62', wallColor: '#D9D5CB', trimColor: '#E7B65A', enterable: false, hasBed: false, height: 12, doorX: 3645, doorY: 2420 },
+
+  // Mandara & Montaza — quieter residential blocks and royal gardens
+  { id: 'mandara-homes', name: 'المندرة', x: 4080, y: 1450, w: 360, h: 280, kind: 'house_mint', roofColor: '#60716B', wallColor: '#E7E0D2', trimColor: '#A88E6B', enterable: false, hasBed: false, height: 13, doorX: 4260, doorY: 1740 },
+  { id: 'montaza-palace', name: 'قصر المنتزه الملكي', x: 4120, y: 2180, w: 520, h: 360, kind: 'palace', roofColor: '#987A4F', wallColor: '#E8DCC7', trimColor: '#C5A66E', enterable: false, hasBed: false, height: 17, doorX: 4380, doorY: 2550 },
+  { id: 'montaza-park', name: 'حدائق المنتزه', x: 4000, y: 2900, w: 520, h: 330, kind: 'villa', roofColor: '#5C7461', wallColor: '#D5DCCB', trimColor: '#A9B88D', enterable: false, hasBed: false, height: 8, doorX: 4260, doorY: 3240 },
 ];
 
-export const WORLD_FOUNTAINS: WorldFountain[] = [
-  { x: 2400, y: 1120, radius: 90 },
-  { x: 2400, y: 1820, radius: 80 },
-  { x: 1545, y: 1820, radius: 70 },
-  { x: 3860, y: 2480, radius: 72 },
-  { x: 4160, y: 3180, radius: 66 },
-];
+export const WORLD_FOUNTAINS: WorldFountain[] = [];
 
 export const WORLD_TREES: WorldTree[] = [
-  // Northern Palace & Villas Parks
-  { x: 220, y: 240, radius: 48, kind: 'sakura' },
-  { x: 430, y: 460, radius: 44, kind: 'emerald' },
-  { x: 1320, y: 270, radius: 42, kind: 'cypress' },
-  { x: 1680, y: 280, radius: 44, kind: 'sakura' },
-  { x: 3160, y: 280, radius: 44, kind: 'sakura' },
-  { x: 3420, y: 280, radius: 40, kind: 'cypress' },
-  { x: 4380, y: 260, radius: 48, kind: 'sakura' },
-  { x: 4520, y: 480, radius: 44, kind: 'emerald' },
-
-  // Mid-Town & Salon District
-  { x: 180, y: 960, radius: 46, kind: 'sakura' },
-  { x: 180, y: 1260, radius: 44, kind: 'emerald' },
-  { x: 1280, y: 1020, radius: 42, kind: 'sakura' },
-  { x: 1280, y: 1280, radius: 42, kind: 'emerald' },
-  { x: 2190, y: 1020, radius: 40, kind: 'cypress' },
-  { x: 2600, y: 1020, radius: 40, kind: 'sakura' },
-  { x: 3190, y: 1060, radius: 40, kind: 'emerald' },
-  { x: 4580, y: 980, radius: 46, kind: 'sakura' },
-  { x: 4580, y: 1260, radius: 44, kind: 'emerald' },
-
-  // Southern Residential Boulevards
-  { x: 180, y: 1700, radius: 44, kind: 'emerald' },
-  { x: 180, y: 1980, radius: 42, kind: 'sakura' },
-  { x: 1280, y: 1700, radius: 40, kind: 'sakura' },
-  { x: 2190, y: 1700, radius: 40, kind: 'emerald' },
-  { x: 2600, y: 1700, radius: 40, kind: 'cypress' },
-  { x: 4580, y: 1700, radius: 46, kind: 'sakura' },
-  { x: 4580, y: 1980, radius: 44, kind: 'emerald' },
-
-  // Observatory & Café Row
-  { x: 180, y: 2420, radius: 44, kind: 'sakura' },
-  { x: 1280, y: 2420, radius: 42, kind: 'emerald' },
-  { x: 2190, y: 2420, radius: 40, kind: 'sakura' },
-  { x: 2600, y: 2420, radius: 40, kind: 'emerald' },
-  { x: 4580, y: 2420, radius: 46, kind: 'sakura' },
-
-  // Starlight Lake & Southern Rose Garden
-  { x: 220, y: 3040, radius: 48, kind: 'sakura' },
-  { x: 280, y: 3360, radius: 46, kind: 'emerald' },
-  { x: 1380, y: 3060, radius: 44, kind: 'sakura' },
-  { x: 1450, y: 3360, radius: 46, kind: 'emerald' },
-  { x: 2920, y: 3080, radius: 42, kind: 'sakura' },
-  { x: 4560, y: 3060, radius: 48, kind: 'sakura' },
-  { x: 4520, y: 3360, radius: 46, kind: 'emerald' },
+  { x: 240, y: 1350, radius: 45, kind: 'emerald' }, { x: 480, y: 1550, radius: 42, kind: 'cypress' },
+  { x: 920, y: 1010, radius: 40, kind: 'emerald' }, { x: 1240, y: 1770, radius: 38, kind: 'cypress' },
+  { x: 1640, y: 2200, radius: 42, kind: 'emerald' }, { x: 1960, y: 2520, radius: 40, kind: 'cypress' },
+  { x: 2470, y: 1510, radius: 38, kind: 'emerald' }, { x: 2850, y: 1880, radius: 42, kind: 'cypress' },
+  { x: 3180, y: 2420, radius: 40, kind: 'emerald' }, { x: 3500, y: 1800, radius: 38, kind: 'cypress' },
+  { x: 3980, y: 1960, radius: 42, kind: 'emerald' }, { x: 4200, y: 2780, radius: 48, kind: 'cypress' },
+  { x: 4480, y: 2880, radius: 46, kind: 'emerald' }, { x: 4600, y: 3180, radius: 42, kind: 'cypress' },
+  { x: 710, y: 2840, radius: 38, kind: 'emerald' }, { x: 1540, y: 3020, radius: 42, kind: 'cypress' },
+  { x: 2310, y: 3060, radius: 40, kind: 'emerald' }, { x: 3000, y: 3180, radius: 42, kind: 'cypress' },
 ];
 
-// 36 Golden Coins distributed generously across avenues & plazas (+15 coins each!)
 export const WORLD_COINS: WorldCoinDef[] = [
-  { id: 1, x: 960, y: 755 },
-  { id: 2, x: 1260, y: 755 },
-  { id: 3, x: 1740, y: 755 },
-  { id: 4, x: 2080, y: 755 },
-  { id: 5, x: 2780, y: 755 },
-  { id: 6, x: 3120, y: 755 },
-  { id: 7, x: 3680, y: 755 },
-  { id: 8, x: 4080, y: 755 },
-
-  { id: 9, x: 820, y: 1475 },
-  { id: 10, x: 1240, y: 1475 },
-  { id: 11, x: 1840, y: 1475 },
-  { id: 12, x: 2180, y: 1475 },
-  { id: 13, x: 2840, y: 1475 },
-  { id: 14, x: 3180, y: 1475 },
-  { id: 15, x: 3780, y: 1475 },
-  { id: 16, x: 4120, y: 1475 },
-
-  { id: 17, x: 900, y: 2195 },
-  { id: 18, x: 1320, y: 2195 },
-  { id: 19, x: 1920, y: 2195 },
-  { id: 20, x: 2840, y: 2195 },
-  { id: 21, x: 3620, y: 2195 },
-  { id: 22, x: 4080, y: 2195 },
-
-  { id: 23, x: 820, y: 2840 },
-  { id: 24, x: 1260, y: 2840 },
-  { id: 25, x: 1840, y: 2840 },
-  { id: 26, x: 2260, y: 2840 },
-  { id: 27, x: 2860, y: 2840 },
-  { id: 28, x: 3440, y: 2840 },
-  { id: 29, x: 3940, y: 2840 },
-
-  { id: 30, x: 425, y: 1120 },
-  { id: 31, x: 425, y: 1840 },
-  { id: 32, x: 2400, y: 920 },
-  { id: 33, x: 2400, y: 1580 },
-  { id: 34, x: 3385, y: 1120 },
-  { id: 35, x: 3385, y: 1840 },
-  { id: 36, x: 4370, y: 1420 },
+  { id: 1, x: 860, y: 890 }, { id: 2, x: 1250, y: 890 }, { id: 3, x: 1740, y: 890 },
+  { id: 4, x: 2260, y: 890 }, { id: 5, x: 2780, y: 890 }, { id: 6, x: 3310, y: 890 },
+  { id: 7, x: 3820, y: 890 }, { id: 8, x: 4290, y: 890 },
+  { id: 9, x: 470, y: 1080 }, { id: 10, x: 1140, y: 1080 }, { id: 11, x: 1850, y: 1080 },
+  { id: 12, x: 2550, y: 1080 }, { id: 13, x: 3260, y: 1080 }, { id: 14, x: 3970, y: 1080 },
+  { id: 15, x: 880, y: 1630 }, { id: 16, x: 1640, y: 1630 }, { id: 17, x: 2380, y: 1630 },
+  { id: 18, x: 3090, y: 1630 }, { id: 19, x: 3810, y: 1630 }, { id: 20, x: 4430, y: 1630 },
+  { id: 21, x: 520, y: 2380 }, { id: 22, x: 1260, y: 2380 }, { id: 23, x: 1950, y: 2380 },
+  { id: 24, x: 2680, y: 2380 }, { id: 25, x: 3420, y: 2380 }, { id: 26, x: 4140, y: 2380 },
+  { id: 27, x: 830, y: 3020 }, { id: 28, x: 1570, y: 3020 }, { id: 29, x: 2300, y: 3020 },
+  { id: 30, x: 3000, y: 3020 }, { id: 31, x: 3720, y: 3020 }, { id: 32, x: 4440, y: 3020 },
 ];
 
-export const INITIAL_CAR_POSE = {
-  x: 1840,
-  y: 755,
-  angle: 0,
-};
-
-export const INITIAL_PLAYER_POSE = {
-  x: 2400,
-  y: 590,
-  angle: -Math.PI / 2,
-};
+export const INITIAL_CAR_POSE = { x: 970, y: 890, angle: 0 };
+export const INITIAL_PLAYER_POSE = { x: 850, y: 890, angle: -Math.PI / 2 };
 
 export const WORLD_NPCS: WorldNpcDef[] = [
-  {
-    id: 'guard',
-    name: 'الحارس الملكي',
-    role: 'حارس بوابة القصر',
-    emoji: '🛡️',
-    homeX: 2230,
-    homeY: 550,
-    patrolRadiusX: 24,
-    patrolRadiusY: 0,
-    patrolSpeed: 0.7,
-    hairColor: '#334155',
-    outfitColor: '#2563EB',
-    accentColor: '#FBBF24',
-  },
-  {
-    id: 'bestie',
-    name: 'صديقة القصر ليلى',
-    role: 'وصيفة الأميرة ومنظمة الحفل',
-    emoji: '🎀',
-    homeX: 2575,
-    homeY: 555,
-    patrolRadiusX: 32,
-    patrolRadiusY: 16,
-    patrolSpeed: 0.85,
-    hairColor: '#92400E',
-    outfitColor: '#A855F7',
-    accentColor: '#FDE047',
-  },
-  {
-    id: 'shopkeeper',
-    name: 'مسؤول متجر القطط',
-    role: 'مسؤول متجر الحيوانات الأليفة',
-    emoji: '🧑‍💼',
-    homeX: 2935,
-    homeY: 1295,
-    patrolRadiusX: 28,
-    patrolRadiusY: 12,
-    patrolSpeed: 0.65,
-    hairColor: '#475569',
-    outfitColor: '#F97316',
-    accentColor: '#FEF08A',
-  },
-  {
-    id: 'florist',
-    name: 'بائعة الورد ياسمين',
-    role: 'ملكة حديقة الورود',
-    emoji: '🌹',
-    homeX: 3855,
-    homeY: 3260,
-    patrolRadiusX: 28,
-    patrolRadiusY: 14,
-    patrolSpeed: 0.75,
-    hairColor: '#7C2D12',
-    outfitColor: '#10B981',
-    accentColor: '#F43F5E',
-  },
-  {
-    id: 'cat',
-    name: 'القطة المتكلمة بسبوسة',
-    role: 'أذكى قطة في المملكة',
-    emoji: '🐱',
-    homeX: 1620,
-    homeY: 1080,
-    patrolRadiusX: 85,
-    patrolRadiusY: 42,
-    patrolSpeed: 1.05,
-    hairColor: '#F59E0B',
-    outfitColor: '#FDE68A',
-    accentColor: '#FB7185',
-  },
+  { id: 'fish-vendor', name: 'عم صبحي — صياد بحري', role: 'صياد في بحري', emoji: '🐟', homeX: 720, homeY: 940, patrolRadiusX: 48, patrolRadiusY: 28, patrolSpeed: 0.65, hairColor: '#514338', outfitColor: '#256A83', accentColor: '#D6B17A' },
+  { id: 'corn-vendor', name: 'أم دنيا — بائعة ذرة', role: 'عربة ذرة على الكورنيش', emoji: '🌽', homeX: 1120, homeY: 940, patrolRadiusX: 35, patrolRadiusY: 18, patrolSpeed: 0.78, hairColor: '#4B3428', outfitColor: '#C47D36', accentColor: '#F4D06F' },
+  { id: 'tram-driver', name: 'عم رجب — سائق الترام', role: 'سائق ترام الرمل', emoji: '🚋', homeX: 1515, homeY: 1570, patrolRadiusX: 22, patrolRadiusY: 44, patrolSpeed: 0.58, hairColor: '#4A4038', outfitColor: '#234D69', accentColor: '#F1C45B' },
+  { id: 'student', name: 'مريم — طالبة في الشاطبي', role: 'طالبة جامعية', emoji: '🎓', homeX: 2180, homeY: 1250, patrolRadiusX: 55, patrolRadiusY: 32, patrolSpeed: 0.92, hairColor: '#7D4B32', outfitColor: '#8B6AB0', accentColor: '#E7D1A7' },
+  { id: 'photographer', name: 'كريم — مصور ستانلي', role: 'مصور على كوبري ستانلي', emoji: '📷', homeX: 2940, homeY: 960, patrolRadiusX: 52, patrolRadiusY: 22, patrolSpeed: 0.82, hairColor: '#42342E', outfitColor: '#3C6C83', accentColor: '#E5C88B' },
+  { id: 'cafe-owner', name: 'عماد — صاحب كافيه جليم', role: 'صاحب مقهى', emoji: '☕', homeX: 3180, homeY: 1640, patrolRadiusX: 36, patrolRadiusY: 25, patrolSpeed: 0.62, hairColor: '#463B35', outfitColor: '#647B62', accentColor: '#D4B483' },
+  { id: 'shopper', name: 'سلمى — من سكان سيدي بشر', role: 'من سكان المنطقة', emoji: '🛍️', homeX: 3800, homeY: 2070, patrolRadiusX: 46, patrolRadiusY: 28, patrolSpeed: 0.9, hairColor: '#5A3D2B', outfitColor: '#B65F65', accentColor: '#E7D1A7' },
+  { id: 'icecream-vendor', name: 'عم فوزي — بائع آيس كريم', role: 'عربة آيس كريم', emoji: '🍦', homeX: 4210, homeY: 900, patrolRadiusX: 32, patrolRadiusY: 18, patrolSpeed: 0.7, hairColor: '#584033', outfitColor: '#5A88A1', accentColor: '#F2C76D' },
+  { id: 'park-visitor', name: 'ليلى — زائرة المنتزه', role: 'زائرة حدائق المنتزه', emoji: '🌳', homeX: 4380, homeY: 2940, patrolRadiusX: 70, patrolRadiusY: 42, patrolSpeed: 0.72, hairColor: '#75462F', outfitColor: '#63836A', accentColor: '#E8D4AB' },
+  { id: 'student-two', name: 'يوسف — طالب', role: 'طالب جامعي', emoji: '📚', homeX: 1910, homeY: 2140, patrolRadiusX: 60, patrolRadiusY: 30, patrolSpeed: 1.0, hairColor: '#49392F', outfitColor: '#405B7B', accentColor: '#C9B48A' },
+  { id: 'resident', name: 'ندى — من سكان المندرة', role: 'من سكان المندرة', emoji: '🏙️', homeX: 4500, homeY: 1710, patrolRadiusX: 45, patrolRadiusY: 34, patrolSpeed: 0.75, hairColor: '#6A4933', outfitColor: '#8D7393', accentColor: '#DCC9A7' },
+  { id: 'street-vendor', name: 'عم حسن — بائع حمص الشام', role: 'عربة حمص الشام', emoji: '🥣', homeX: 760, homeY: 2300, patrolRadiusX: 34, patrolRadiusY: 22, patrolSpeed: 0.66, hairColor: '#55443B', outfitColor: '#A65F3F', accentColor: '#E0C28C' },
 ];
 
 export function getQuestObjective(stage: QuestStage, isInCar: boolean): QuestObjectiveInfo {
@@ -1219,6 +826,25 @@ export function getNpcDialogue(
   triggersGameCompletion?: boolean;
   openPetShopAfter?: boolean;
 } {
+  if (stage >= 11) {
+    const cityLines: Record<string, { speaker: string; text: string }> = {
+      'fish-vendor': { speaker: 'عم صبحي — صياد بحري', text: 'البحر هادي النهارده، والمراكب راجعة من المينا. اتفرجي على قلعة قايتباي من الناحية دي!' },
+      'corn-vendor': { speaker: 'أم دنيا — بائعة ذرة', text: 'ذرة سخنة يا آنسة؟ الكورنيش بالليل له جو تاني خالص.' },
+      'tram-driver': { speaker: 'عم رجب — سائق الترام', text: 'ترام الرمل ماشي من زمان في شوارع إسكندرية. خلي بالك من السكة وإنتِ بتعدّي.' },
+      student: { speaker: 'مريم — طالبة في الشاطبي', text: 'مكتبة إسكندرية قريبة من هنا، المكان حواليها هادي ولطيف للمشي.' },
+      photographer: { speaker: 'كريم — مصور ستانلي', text: 'كوبري ستانلي أحلى وقت للتصوير قبل الغروب، البحر بيبقى لونه تحفة.' },
+      'cafe-owner': { speaker: 'عماد — صاحب كافيه جليم', text: 'أهلاً بيكي في جليم! اقعدي على البحر واطلبي حاجة ساقعة.' },
+      shopper: { speaker: 'سلمى — من سكان سيدي بشر', text: 'شارع خالد بن الوليد زحمة شوية، بس هتلاقي محلات وأكل في كل حتة.' },
+      'icecream-vendor': { speaker: 'عم فوزي — بائع آيس كريم', text: 'آيس كريم يا حلوين! الجو على البحر محتاج حاجة ساقعة.' },
+      'park-visitor': { speaker: 'ليلى — زائرة المنتزه', text: 'حدائق المنتزه واسعة جداً، خدي لفة بين الشجر والبحر.' },
+      'student-two': { speaker: 'يوسف — طالب', text: 'الشاطبي والأزاريطة دايماً فيهم حركة طلبة ومكتبات وكافيهات.' },
+      resident: { speaker: 'ندى — من سكان المندرة', text: 'المنطقة هنا أهدى من وسط البلد، خصوصاً ناحية المندرة.' },
+      'street-vendor': { speaker: 'عم حسن — بائع حمص الشام', text: 'حمص الشام سخن! ده أحسن حاجة في الليالي الساقعة على الكورنيش.' },
+    };
+    const line = cityLines[npcId] ?? { speaker: 'أحد سكان إسكندرية', text: 'أهلاً بيكي في إسكندرية! استمتعي بالتمشية على البحر.' };
+    return { lines: [{ speaker: line.speaker, speakerTone: 'npc', text: line.text }] };
+  }
+
   if (npcId === 'guard') {
     if (stage === 0) {
       return {

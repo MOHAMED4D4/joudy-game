@@ -88,7 +88,6 @@ import {
 import { soundEngine } from '@/lib/soundEffects';
 
 interface OpenWorldArenaProps {
-  realImageSrc: string;
   animeImageSrc: string;
   soundEnabled: boolean;
   onToggleSound: () => void;
@@ -232,41 +231,36 @@ function renderKingdomMap(
   const sx = mw / WORLD_WIDTH;
   const sy = mh / WORLD_HEIGHT;
 
-  ctx.fillStyle = '#D9F99D';
+  ctx.fillStyle = '#B8B7AE';
   ctx.fillRect(0, 0, mw, mh);
 
-  ctx.fillStyle = '#86EFAC';
-  ctx.fillRect(3000 * sx, 2880 * sy, 1450 * sx, 620 * sy);
+  // Mediterranean sea and beach across the north edge.
+  ctx.fillStyle = '#147FA5';
+  ctx.fillRect(0, 0, mw, 0.112 * mh);
+  ctx.fillStyle = '#D8C69F';
+  ctx.fillRect(0, 0.112 * mh, mw, 0.025 * mh);
+  ctx.fillStyle = '#C6C2B8';
+  ctx.fillRect(0, 0.137 * mh, mw, 0.024 * mh);
 
-  // Starlight Lake
-  ctx.fillStyle = '#FEF08A';
-  ctx.beginPath();
-  ctx.ellipse(
-    WORLD_LAKE.cx * sx,
-    WORLD_LAKE.cy * sy,
-    (WORLD_LAKE.rx + 28) * sx,
-    (WORLD_LAKE.ry + 24) * sy,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.fillStyle = '#38BDF8';
-  ctx.beginPath();
-  ctx.ellipse(
-    WORLD_LAKE.cx * sx,
-    WORLD_LAKE.cy * sy,
-    WORLD_LAKE.rx * sx,
-    WORLD_LAKE.ry * sy,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  // Royal Plaza
-  ctx.fillStyle = '#FFE4E6';
-  ctx.fillRect(1880 * sx, 450 * sy, 1040 * sx, 250 * sy);
+  // Neighbourhood bands from west to east.
+  const districts = [
+    { x: 0, w: 0.16, label: 'بحري · الأنفوشي' },
+    { x: 0.16, w: 0.17, label: 'المنشية · محطة الرمل' },
+    { x: 0.33, w: 0.17, label: 'الشاطبي · الأزاريطة' },
+    { x: 0.50, w: 0.17, label: 'ستانلي · جليم' },
+    { x: 0.67, w: 0.17, label: 'سان ستيفانو · سيدي بشر' },
+    { x: 0.84, w: 0.16, label: 'المندرة · المنتزه' },
+  ];
+  districts.forEach((district, index) => {
+    ctx.fillStyle = index % 2 === 0 ? '#AAAFA6' : '#A1A7A2';
+    ctx.fillRect(district.x * mw, 0.17 * mh, district.w * mw, 0.83 * mh);
+    if (detailed) {
+      ctx.fillStyle = 'rgba(31,41,55,.8)';
+      ctx.font = '700 11px Cairo, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(district.label, (district.x + district.w/2) * mw, 0.19 * mh);
+    }
+  });
 
   // Roads
   for (const r of WORLD_ROADS) {
@@ -315,6 +309,20 @@ function renderKingdomMap(
     ctx.beginPath();
     ctx.arc(c.x * sx, c.y * sy, detailed ? 3.2 : 1.5, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  if (detailed) {
+    ctx.font = '700 10px Cairo, sans-serif';
+    ctx.fillStyle = '#0F3D55';
+    ctx.textAlign = 'left';
+    ctx.fillText('البحر المتوسط', 10, 18);
+    ctx.textAlign = 'center';
+    ctx.fillText('قلعة قايتباي', 500 * sx, 430 * sy);
+    ctx.fillText('مكتبة الإسكندرية', 2070 * sx, 1000 * sy);
+    ctx.fillText('كوبري ستانلي', 3010 * sx, 425 * sy);
+    ctx.fillText('ميدان المنشية', 1240 * sx, 1020 * sy);
+    ctx.fillText('سان ستيفانو', 3635 * sx, 875 * sy);
+    ctx.fillText('حدائق المنتزه', 4380 * sx, 2750 * sy);
   }
 
   for (const b of WORLD_BUILDINGS) {
@@ -386,7 +394,7 @@ function renderKingdomMap(
 }
 
 export default function OpenWorldArena({
-  realImageSrc,
+  animeImageSrc,
   soundEnabled,
   onToggleSound,
   onExitToHub,
@@ -397,8 +405,9 @@ export default function OpenWorldArena({
   const miniMapRef = useRef<HTMLCanvasElement>(null);
   const fullMapRef = useRef<HTMLCanvasElement>(null);
 
-  const [questStage, setQuestStage] = useState<QuestStage>(0);
+  const [questStage, setQuestStage] = useState<QuestStage>(11);
   const [isInCar, setIsInCar] = useState(false);
+  const [cameraMode, setCameraMode] = useState<'third' | 'first' | 'front'>('third');
   const [nearCar, setNearCar] = useState(false);
   const [nearbyNpc, setNearbyNpc] = useState<WorldNpcDef | null>(null);
   const [nearbyStreetCat, setNearbyStreetCat] = useState<StreetCatDef | null>(null);
@@ -431,7 +440,7 @@ export default function OpenWorldArena({
   const [energy, setEnergy] = useState(100);
   const [coinsCount, setCoinsCount] = useState(30 + bonusCoins);
   const [makeupState, setMakeupState] = useState<MakeupState>(DEFAULT_MAKEUP_STATE);
-  const [outfitId, setOutfitId] = useState<OutfitId>('royal_pink');
+  const [outfitId, setOutfitId] = useState<OutfitId>('emerald_queen');
   const [ownedPet, setOwnedPet] = useState<OwnedPetState | null>(null);
 
   const [showWardrobeModal, setShowWardrobeModal] = useState(false);
@@ -445,7 +454,7 @@ export default function OpenWorldArena({
   const [webglFallback, setWebglFallback] = useState(false);
 
   const [hudToast, setHudToast] = useState<string | null>(
-    'أهلاً بكِ في مملكة جودي الكبرى! تحدّثي مع الحارس الملكي للبدء 👑✨',
+    'أهلاً بكِ في إسكندرية! استكشفي الكورنيش والأحياء، امشي أو اركبي العربية وخدي لفة في المدينة 🌊🚋',
   );
   const toastTimeoutRef = useRef<number | null>(null);
 
@@ -457,7 +466,8 @@ export default function OpenWorldArena({
   const [walkLeftPressed, setWalkLeftPressed] = useState(false);
   const [walkRightPressed, setWalkRightPressed] = useState(false);
 
-  const questStageRef = useRef<QuestStage>(0);
+  const questStageRef = useRef<QuestStage>(11);
+  const cameraModeRef = useRef<'third' | 'first' | 'front'>('third');
   const isInCarRef = useRef(false);
   const insideBuildingRef = useRef<WorldBuilding | null>(null);
   const isSleepingRef = useRef(false);
@@ -1318,8 +1328,8 @@ export default function OpenWorldArena({
     renderer.domElement.addEventListener('webglcontextrestored', onContextRestored);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xdbeafe);
-    scene.fog = new THREE.Fog(0xdbeafe, 95, 290);
+    scene.background = new THREE.Color(0xA8D3E4);
+    scene.fog = new THREE.Fog(0xA8D3E4, 115, 340);
 
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     const roomEnv = new RoomEnvironment();
@@ -1328,10 +1338,10 @@ export default function OpenWorldArena({
     roomEnv.dispose();
     pmremGenerator.dispose();
 
-    const hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x86efac, 0.92);
+    const hemiLight = new THREE.HemisphereLight(0xd9f1ff, 0x77766d, 1.0);
     scene.add(hemiLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.38);
+    const sunLight = new THREE.DirectionalLight(0xfff3d8, 1.48);
     sunLight.position.set(60, 95, 70);
     sunLight.castShadow = !isSoftwareGl;
     sunLight.shadow.mapSize.set(1024, 1024);
@@ -1393,7 +1403,7 @@ export default function OpenWorldArena({
     });
 
     const applyFaceWithMakeup = (m: MakeupState) => {
-      createRealFaceTexture(realImageSrc, m)
+      createRealFaceTexture(animeImageSrc, m)
         .then((tex) => {
           if (disposed) {
             tex.dispose();
@@ -2015,31 +2025,48 @@ export default function OpenWorldArena({
           interiorStateRef.current.z < -4.0;
         const camDist = activeBuilding ? 7.8 : isInCarRef.current ? 12.2 : 9.2;
         const camHeight = activeBuilding
-          ? isUnderBalcony
-            ? 3.1
-            : 4.1
-          : isInCarRef.current
-            ? 5.2
-            : 4.35;
+          ? isUnderBalcony ? 3.1 : 4.1
+          : isInCarRef.current ? 5.2 : 4.35;
         const lookAheadDist = activeBuilding ? 3.2 : isInCarRef.current ? 9.5 : 5.5;
         const yaw = cameraYawRef.current;
 
-        let desiredX = focus3DX - Math.sin(yaw) * camDist;
-        let desiredY = focus3DY + camHeight;
-        let desiredZ = focus3DZ + Math.cos(yaw) * camDist;
-
-        if (activeBuilding) {
-          desiredX = Math.max(-INTERIOR_HALF_W + 0.5, Math.min(INTERIOR_HALF_W - 0.5, desiredX));
-          desiredZ = Math.max(-INTERIOR_HALF_D + 0.5, Math.min(INTERIOR_HALF_D - 0.5, desiredZ));
-          desiredY = Math.max(1.8, Math.min(19.8, desiredY));
+        if (!activeBuilding && cameraModeRef.current === 'first') {
+          // First-person view: camera sits at Joudy's eye level (or inside the car).
+          _camDesiredPos.set(
+            focus3DX + Math.sin(yaw) * 0.28,
+            focus3DY + (isInCarRef.current ? 2.05 : 1.85),
+            focus3DZ - Math.cos(yaw) * 0.28,
+          );
+          _camDesiredLook.set(
+            focus3DX + Math.sin(yaw) * 65,
+            focus3DY + (isInCarRef.current ? 1.95 : 1.78),
+            focus3DZ - Math.cos(yaw) * 65,
+          );
+        } else if (!activeBuilding && cameraModeRef.current === 'front') {
+          // Minecraft-like front third-person view: Joudy remains visible facing the camera.
+          _camDesiredPos.set(
+            focus3DX + Math.sin(yaw) * camDist,
+            focus3DY + camHeight,
+            focus3DZ - Math.cos(yaw) * camDist,
+          );
+          _camDesiredLook.set(focus3DX, focus3DY + 2.05, focus3DZ);
+        } else {
+          let desiredX = focus3DX - Math.sin(yaw) * camDist;
+          let desiredY = focus3DY + camHeight;
+          let desiredZ = focus3DZ + Math.cos(yaw) * camDist;
+          if (activeBuilding) {
+            desiredX = Math.max(-INTERIOR_HALF_W + 0.5, Math.min(INTERIOR_HALF_W - 0.5, desiredX));
+            desiredZ = Math.max(-INTERIOR_HALF_D + 0.5, Math.min(INTERIOR_HALF_D - 0.5, desiredZ));
+            desiredY = Math.max(1.8, Math.min(19.8, desiredY));
+          }
+          _camDesiredPos.set(desiredX, desiredY, desiredZ);
+          _camDesiredLook.set(
+            focus3DX + Math.sin(yaw) * lookAheadDist,
+            focus3DY + 2.15,
+            focus3DZ - Math.cos(yaw) * lookAheadDist,
+          );
         }
-
-        _camDesiredPos.set(desiredX, desiredY, desiredZ);
-        _camDesiredLook.set(
-          focus3DX + Math.sin(yaw) * lookAheadDist,
-          focus3DY + 2.15,
-          focus3DZ - Math.cos(yaw) * lookAheadDist,
-        );
+        joudyRig.root.visible = cameraModeRef.current !== 'first' && !isInCarRef.current;
       }
 
       const camSmooth = Math.min(1, dt * 8.5);
@@ -2271,6 +2298,7 @@ export default function OpenWorldArena({
         }
       }
 
+      if (!isInCarRef.current && cameraModeRef.current === 'first') joudyRig.root.visible = false;
       renderer.render(scene, camera);
       if (isSoftwareGl) afterDraw(tick);
       else frameId = window.requestAnimationFrame(tick);
@@ -2328,7 +2356,7 @@ export default function OpenWorldArena({
       renderer.dispose();
       mount.innerHTML = '';
     };
-  }, [realImageSrc]);
+  }, [animeImageSrc]);
 
   const handleLookPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (
@@ -2397,7 +2425,13 @@ export default function OpenWorldArena({
     },
   });
 
-  const objective = getQuestObjective(questStage, isInCar);
+  const objective = {
+    ...getQuestObjective(11, isInCar),
+    stepLabel: insideBuilding ? insideBuilding.name : 'إسكندرية · استكشاف حر',
+    title: insideBuilding ? insideBuilding.name : isInCar ? 'قدّي جودي في شوارع إسكندرية واستكشفي المناطق الست' : 'حرّكي جودي بحرية، اتكلمي مع الناس، ولفّي على الكورنيش',
+    description: 'عالم مفتوح مستوحى من الإسكندرية، من بحري والأنفوشي حتى المنتزه.',
+    targetLabel: 'استكشاف المدينة',
+  };
   const currentDialogueLine = dialogue ? dialogue.lines[dialogue.lineIndex] : null;
   const activeOutfit = OUTFIT_CATALOG.find((o) => o.id === outfitId) ?? OUTFIT_CATALOG[0];
 
@@ -2428,7 +2462,7 @@ export default function OpenWorldArena({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-extrabold text-rose-600">
               <span className="inline-flex items-center gap-1">
-                <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+                <MapIcon className="w-3.5 h-3.5 text-cyan-600" />
                 <span>
                   {insideBuilding
                     ? `${insideBuilding.name}${insideBuilding.hasSecondFloor ? ` (الدور ${interiorFloorNum})` : ''}`
@@ -2453,7 +2487,7 @@ export default function OpenWorldArena({
           </div>
         </div>
 
-        {/* Coins, Energy, Quests, Wardrobe, Map, Sound */}
+        {/* City collectibles, clothing, map, camera and sound */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-extrabold tabular-nums bg-amber-50 border border-amber-300 rounded-xl px-2.5 sm:px-3 py-1.5 shadow-sm">
             <span className="inline-flex items-center gap-1 text-amber-800">
@@ -2469,23 +2503,27 @@ export default function OpenWorldArena({
 
           <button
             type="button"
-            onClick={() => setShowQuestLogModal(true)}
-            aria-label="سجل المهام"
-            className="h-10 px-2.5 rounded-xl border border-rose-200 bg-[#FFF7FA] hover:bg-rose-100 text-rose-700 flex items-center gap-1 text-xs font-extrabold transition-colors cursor-pointer"
-          >
-            <ClipboardList className="w-4 h-4" />
-            <span className="hidden md:inline">
-              المهام ({Math.min(TOTAL_QUEST_COUNT, questStage)}/{TOTAL_QUEST_COUNT})
-            </span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => setShowWardrobeModal((prev) => !prev)}
             aria-label="خزانة الملابس"
             className="w-10 h-10 rounded-xl border border-rose-200 bg-[#FFF7FA] hover:bg-rose-100 text-purple-700 flex items-center justify-center transition-colors cursor-pointer"
           >
             <Shirt className="w-4 h-4" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const order: Array<'third' | 'first' | 'front'> = ['third', 'first', 'front'];
+              const next = order[(order.indexOf(cameraMode) + 1) % order.length];
+              cameraModeRef.current = next;
+              setCameraMode(next);
+              triggerTopNotification(next === 'first' ? 'منظور الشخص الأول' : next === 'front' ? 'منظور الشخص الثالث من الأمام' : 'منظور الشخص الثالث من الخلف');
+            }}
+            aria-label="تغيير منظور الكاميرا"
+            className="h-10 px-2.5 rounded-xl border border-cyan-200 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 flex items-center gap-1.5 text-xs font-extrabold transition-colors cursor-pointer"
+          >
+            <Eye className="w-4 h-4" />
+            <span className="hidden sm:inline">{cameraMode === 'first' ? 'أول' : cameraMode === 'front' ? 'ثالث أمامي' : 'ثالث خلفي'}</span>
           </button>
 
           <button
@@ -2560,7 +2598,7 @@ export default function OpenWorldArena({
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => setShowFullMap(true)}
-                aria-label="تكبير خريطة المملكة"
+                aria-label="تكبير خريطة إسكندرية"
                 className="rounded-2xl overflow-hidden border-2 border-white shadow-lg bg-white/95 cursor-pointer"
               >
                 <canvas ref={miniMapRef} width={118} height={86} className="block" />
@@ -2568,7 +2606,7 @@ export default function OpenWorldArena({
                   dir="rtl"
                   className="block text-[10px] font-extrabold text-rose-700 bg-white/95 py-0.5 text-center border-t border-rose-100"
                 >
-                  خريطة المملكة 🗺️
+                  خريطة إسكندرية 🗺️
                 </span>
               </button>
             )}
@@ -2647,8 +2685,8 @@ export default function OpenWorldArena({
           >
             <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden border-2 border-amber-300 bg-rose-50 shrink-0">
               <Image
-                src={realImageSrc}
-                alt="الأميرة جودي"
+                src={animeImageSrc}
+                alt="جودي الأنمي"
                 fill
                 sizes="44px"
                 referrerPolicy="no-referrer"
@@ -3427,7 +3465,7 @@ export default function OpenWorldArena({
                       متجر القطط — مسؤول المتجر 🐾🐱
                     </h3>
                     <p className="text-xs font-semibold text-[#6A4558]">
-                      اختاري قطة من المعروضات، ثم وفّري لها الطعام والماء والرعاية داخل المملكة.
+                      تجوّلي في أحياء إسكندرية وتعرّفي على الأماكن والسكان.
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -3591,7 +3629,7 @@ export default function OpenWorldArena({
                   <div className="flex items-center gap-2">
                     <MapIcon className="w-5 h-5 text-rose-600" />
                     <h3 className="text-lg sm:text-xl font-bold text-[#2D1824]">
-                      خريطة مملكة الأميرة جودي الكاملة
+                      خريطة إسكندرية المفتوحة
                     </h3>
                   </div>
                   <button
@@ -3639,8 +3677,8 @@ export default function OpenWorldArena({
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-rose-200 bg-rose-50 shrink-0 flex items-center justify-center">
                   {currentDialogueLine.speakerTone === 'joudy' ? (
                     <Image
-                      src={realImageSrc}
-                      alt="الأميرة جودي"
+                      src={animeImageSrc}
+                      alt="جودي الأنمي"
                       fill
                       sizes="96px"
                       referrerPolicy="no-referrer"
@@ -3712,8 +3750,8 @@ export default function OpenWorldArena({
                 <div className="flex items-center justify-center">
                   <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-amber-300 shadow-xl ring-4 ring-rose-200">
                     <Image
-                      src={realImageSrc}
-                      alt="الأميرة جودي"
+                      src={animeImageSrc}
+                      alt="جودي الأنمي"
                       fill
                       sizes="144px"
                       referrerPolicy="no-referrer"
@@ -3772,8 +3810,8 @@ export default function OpenWorldArena({
                 <div className="flex items-center justify-center">
                   <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-amber-400 shadow-xl ring-4 ring-rose-200">
                     <Image
-                      src={realImageSrc}
-                      alt="الأميرة جودي"
+                      src={animeImageSrc}
+                      alt="جودي الأنمي"
                       fill
                       sizes="144px"
                       referrerPolicy="no-referrer"
@@ -3834,9 +3872,9 @@ export default function OpenWorldArena({
           ? 'وضع القيادة: أزرار التوجيه يمين/يسار + دواسة البنزين والفرامل · اجمعي العملات 🪙 لشراء قطة من متجر القطط'
           : insideBuilding
             ? insideBuilding.hasSecondFloor
-              ? 'أنتِ داخل مبنى من طابقين: اصعدي السلم للدور الثاني للوصول إلى المرآة والمكياج والخزانة وركن القطة 🪜💄'
+              ? 'تجولي داخل المبنى واكتشفي تفاصيل المنطقة'
               : 'تجولي داخل المبنى واكتشفي الكنوز والخدمات ✨'
-            : 'اسحبي الشاشة لتدوير الكاميرا · احملي قطط الشوارع 🐱 واشتري قطتكِ من متجر القطط عند مسؤول المتجر 🐾'}
+            : 'اسحبي الشاشة لتدوير الكاميرا · استخدمي WASD أو عصا الحركة · بدّلي المنظور من الزر العلوي · اقتربي من السيارة لقيادتها'}
       </p>
     </motion.section>
   );
