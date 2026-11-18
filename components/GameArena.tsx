@@ -334,17 +334,19 @@ export default function GameArena({
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     startTimeRef.current = Date.now();
 
     let width = container.clientWidth || 720;
     let height = container.clientHeight || 480;
-    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
     const updateCanvasSize = () => {
       width = Math.max(300, container.clientWidth);
       height = Math.max(320, container.clientHeight);
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
     };
@@ -559,16 +561,16 @@ export default function GameArena({
         if (player.bubbleTimer > 0) player.bubbleTimer = Math.max(0, player.bubbleTimer - dt);
 
         // Free-flight touch movement: drag anywhere to steer horizontally and vertically.
-        const maxSpeed = 760 * characterSpeedBonus;
+        const maxSpeed = 920 * characterSpeedBonus;
         if (pointerTargetXRef.current !== null) {
           const dx = pointerTargetXRef.current - player.x;
-          player.vx += (Math.max(-maxSpeed, Math.min(maxSpeed, dx * 8)) - player.vx) * Math.min(1, dt * 8);
+          player.vx += (Math.max(-maxSpeed, Math.min(maxSpeed, dx * 12)) - player.vx) * Math.min(1, dt * 12);
         } else {
           player.vx *= Math.pow(0.0008, dt);
         }
         const targetY = pointerTargetYRef.current ?? player.y;
         const dy = targetY - player.y;
-        player.vy += (Math.max(-maxSpeed * 0.78, Math.min(maxSpeed * 0.78, dy * 8)) - player.vy) * Math.min(1, dt * 8);
+        player.vy += (Math.max(-maxSpeed * 0.78, Math.min(maxSpeed * 0.78, dy * 12)) - player.vy) * Math.min(1, dt * 12);
         const halfPlayer = player.size * 0.42;
         player.x = Math.max(halfPlayer, Math.min(width - halfPlayer, player.x + player.vx * dt));
         player.y = Math.max(player.size * 0.52, Math.min(height - player.size * 0.48, player.y + player.vy * dt));
@@ -1209,7 +1211,7 @@ export default function GameArena({
       className="relative left-1/2 w-screen max-w-none -translate-x-1/2 px-0 py-0 flex flex-col gap-1.5 h-[100dvh] max-h-none min-h-[520px]"
     >
       {/* Compact Top Arcade HUD */}
-      <header className="bg-slate-950/75 backdrop-blur-xl border border-white/10 rounded-2xl px-3 sm:px-5 py-2.5 shadow-sm flex items-center justify-between gap-3 shrink-0">
+      <header className="absolute left-2 right-2 top-2 z-30 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-2xl px-2 sm:px-5 py-2 shadow-lg flex items-center justify-between gap-2">
         {realImageSrc && (
           <div className="hidden sm:block relative w-11 h-11 rounded-xl overflow-hidden border-2 border-amber-300 bg-rose-50 shrink-0 shadow-xs">
             <Image
@@ -1326,7 +1328,7 @@ export default function GameArena({
       {/* Full-width 2D flight arena — touch and drag to move in every direction */}
       <div
         ref={stageRef}
-        className={`relative flex-1 min-h-0 mb-0 rounded-none overflow-hidden border-0 shadow-none select-none touch-none ${
+        className={`absolute inset-0 rounded-none overflow-hidden border-0 shadow-none select-none touch-none ${
           levelConfig.worldId === 2
             ? 'border-emerald-300/90 bg-emerald-50'
             : levelConfig.isNight
