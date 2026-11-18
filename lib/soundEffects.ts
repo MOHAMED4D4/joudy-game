@@ -1,0 +1,382 @@
+'use client';
+
+type CollectibleSoundType = 'cat' | 'rose' | 'chocolate';
+
+class MagicalSoundEngine {
+  private ctx: AudioContext | null = null;
+  private sfxEnabled = true;
+  private musicEnabled = true;
+  private musicTimer: number | null = null;
+  private musicStep = 0;
+
+  // Gentle C-major pentatonic music-box melody (Hz)
+  private readonly melodyNotes = [
+    523.25, 659.25, 783.99, 1046.5, 880.0, 783.99,
+    659.25, 587.33, 523.25, 659.25, 783.99, 659.25,
+    587.33, 659.25, 783.99, 880.0, 783.99, 659.25,
+  ];
+
+  private ensureContext(): AudioContext | null {
+    if (typeof window === 'undefined') return null;
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return null;
+
+    if (!this.ctx) {
+      this.ctx = new AudioCtx();
+    }
+    if (this.ctx.state === 'suspended') {
+      void this.ctx.resume();
+    }
+    return this.ctx;
+  }
+
+  public setSfxEnabled(enabled: boolean) {
+    this.sfxEnabled = enabled;
+  }
+
+  public setMusicEnabled(enabled: boolean) {
+    this.musicEnabled = enabled;
+    if (!enabled) {
+      this.stopBackgroundMusic();
+    }
+  }
+
+  public startBackgroundMusic() {
+    if (!this.musicEnabled || this.musicTimer !== null) return;
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+
+    this.musicStep = 0;
+    const playStep = () => {
+      if (!this.musicEnabled) return;
+      const activeCtx = this.ensureContext();
+      if (!activeCtx) return;
+
+      const freq = this.melodyNotes[this.musicStep % this.melodyNotes.length];
+      this.musicStep += 1;
+
+      const now = activeCtx.currentTime;
+      const osc = activeCtx.createOscillator();
+      const gain = activeCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.025, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+
+      osc.connect(gain);
+      gain.connect(activeCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.6);
+    };
+
+    playStep();
+    this.musicTimer = window.setInterval(playStep, 520);
+  }
+
+  public stopBackgroundMusic() {
+    if (this.musicTimer !== null && typeof window !== 'undefined') {
+      window.clearInterval(this.musicTimer);
+      this.musicTimer = null;
+    }
+  }
+
+  private playTone(
+    freq: number,
+    duration: number,
+    options: {
+      type?: OscillatorType;
+      volume?: number;
+      delay?: number;
+      slideToFreq?: number;
+    } = {},
+  ) {
+    if (!this.sfxEnabled) return;
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+
+    const { type = 'sine', volume = 0.14, delay = 0, slideToFreq } = options;
+    const start = ctx.currentTime + delay;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, start);
+    if (slideToFreq) {
+      osc.frequency.exponentialRampToValueAtTime(slideToFreq, start + duration);
+    }
+
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(volume, start + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(start);
+    osc.stop(start + duration + 0.02);
+  }
+
+  public playStartAdventure() {
+    if (!this.sfxEnabled) return;
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((n, idx) => {
+      this.playTone(n, 0.22, { type: 'triangle', volume: 0.13, delay: idx * 0.075 });
+    });
+  }
+
+  public playCollect(itemType: CollectibleSoundType, comboCount = 1) {
+    if (!this.sfxEnabled) return;
+    const comboBoost = 1 + Math.min(8, Math.max(0, comboCount - 1)) * 0.045;
+
+    if (itemType === 'cat') {
+      // Cute cheerful "meow-sparkle" ascending chime (+20)
+      this.playTone(784 * comboBoost, 0.11, {
+        type: 'triangle',
+        volume: 0.15,
+        slideToFreq: 987.77 * comboBoost,
+      });
+      this.playTone(1046.5 * comboBoost, 0.18, {
+        type: 'sine',
+        volume: 0.16,
+        delay: 0.08,
+        slideToFreq: 1318.5 * comboBoost,
+      });
+    } else if (itemType === 'rose') {
+      // Silky floral harp arpeggio (+15)
+      this.playTone(659.25 * comboBoost, 0.15, { type: 'sine', volume: 0.13 });
+      this.playTone(880 * comboBoost, 0.18, { type: 'sine', volume: 0.13, delay: 0.055 });
+      this.playTone(1174.66 * comboBoost, 0.22, { type: 'triangle', volume: 0.1, delay: 0.11 });
+    } else {
+      // Warm sweet chocolate marimba pop (+10)
+      this.playTone(523.25 * comboBoost, 0.12, { type: 'triangle', volume: 0.14 });
+      this.playTone(659.25 * comboBoost, 0.16, { type: 'sine', volume: 0.13, delay: 0.06 });
+    }
+  }
+
+  public playMagnetCollect() {
+    if (!this.sfxEnabled) return;
+    const notes = [587.33, 783.99, 987.77, 1174.66, 1567.98];
+    notes.forEach((n, idx) => {
+      this.playTone(n, 0.18, {
+        type: 'sine',
+        volume: 0.14,
+        delay: idx * 0.055,
+        slideToFreq: n * 1.06,
+      });
+    });
+  }
+
+  public playObstacleHit() {
+    if (!this.sfxEnabled) return;
+    // Soft cartoon "boing" thud (never harsh)
+    this.playTone(320, 0.22, {
+      type: 'triangle',
+      volume: 0.16,
+      slideToFreq: 145,
+    });
+    this.playTone(210, 0.18, {
+      type: 'sine',
+      volume: 0.12,
+      delay: 0.07,
+      slideToFreq: 110,
+    });
+  }
+
+  private engineOsc: OscillatorNode | null = null;
+  private engineGain: GainNode | null = null;
+  private engineFilter: BiquadFilterNode | null = null;
+
+  public playVictoryFanfare() {
+    if (!this.sfxEnabled) return;
+    const fanfare = [
+      { f: 523.25, d: 0.16, t: 0 },
+      { f: 659.25, d: 0.16, t: 0.11 },
+      { f: 783.99, d: 0.16, t: 0.22 },
+      { f: 1046.5, d: 0.28, t: 0.33 },
+      { f: 880.0, d: 0.16, t: 0.56 },
+      { f: 1046.5, d: 0.45, t: 0.72 },
+      { f: 1318.51, d: 0.55, t: 0.9 },
+    ];
+    fanfare.forEach((n) => {
+      this.playTone(n.f, n.d, {
+        type: 'triangle',
+        volume: 0.16,
+        delay: n.t,
+      });
+    });
+  }
+
+  public playDialoguePop() {
+    if (!this.sfxEnabled) return;
+    this.playTone(620, 0.08, {
+      type: 'sine',
+      volume: 0.09,
+      slideToFreq: 780,
+    });
+  }
+
+  public playQuestComplete() {
+    if (!this.sfxEnabled) return;
+    const notes = [587.33, 739.99, 880, 1174.66];
+    notes.forEach((n, idx) => {
+      this.playTone(n, 0.24, {
+        type: 'triangle',
+        volume: 0.14,
+        delay: idx * 0.08,
+      });
+    });
+  }
+
+  public playCarEnter() {
+    if (!this.sfxEnabled) return;
+    this.playTone(180, 0.14, { type: 'triangle', volume: 0.11, slideToFreq: 310 });
+    this.playTone(523.25, 0.16, { type: 'sine', volume: 0.12, delay: 0.09, slideToFreq: 783.99 });
+  }
+
+  public playCarExit() {
+    if (!this.sfxEnabled) return;
+    this.playTone(587.33, 0.13, { type: 'sine', volume: 0.11, slideToFreq: 392.0 });
+    this.stopCarEngineSound();
+  }
+
+  public playCoinCollect() {
+    if (!this.sfxEnabled) return;
+    this.playTone(987.77, 0.08, { type: 'sine', volume: 0.13 });
+    this.playTone(1318.51, 0.18, { type: 'sine', volume: 0.14, delay: 0.065 });
+  }
+
+  public playSleepLullaby() {
+    if (!this.sfxEnabled) return;
+    const notes = [523.25, 440.0, 392.0, 329.63];
+    notes.forEach((n, idx) => {
+      this.playTone(n, 0.38, { type: 'sine', volume: 0.1, delay: idx * 0.22 });
+    });
+  }
+
+  public playMakeupSparkle() {
+    if (!this.sfxEnabled) return;
+    const notes = [880, 1174.66, 1396.91, 1760];
+    notes.forEach((n, idx) => {
+      this.playTone(n, 0.14, { type: 'sine', volume: 0.1, delay: idx * 0.045, slideToFreq: n * 1.05 });
+    });
+  }
+
+  public playOutfitChange() {
+    if (!this.sfxEnabled) return;
+    this.playTone(440, 0.12, { type: 'triangle', volume: 0.12, slideToFreq: 659.25 });
+    this.playTone(659.25, 0.18, { type: 'sine', volume: 0.13, delay: 0.08, slideToFreq: 987.77 });
+  }
+
+  public playCatMeow(stage = 1) {
+    if (!this.sfxEnabled) return;
+    const base = stage === 1 ? 840 : stage === 2 ? 680 : 540;
+    this.playTone(base, 0.14, { type: 'triangle', volume: 0.13, slideToFreq: base * 1.28 });
+    this.playTone(base * 1.22, 0.22, {
+      type: 'sine',
+      volume: 0.12,
+      delay: 0.12,
+      slideToFreq: base * 0.86,
+    });
+  }
+
+  public playPetFeed() {
+    if (!this.sfxEnabled) return;
+    [523.25, 659.25, 783.99].forEach((n, idx) => {
+      this.playTone(n, 0.12, { type: 'triangle', volume: 0.12, delay: idx * 0.07 });
+    });
+  }
+
+  public playPetDrink() {
+    if (!this.sfxEnabled) return;
+    this.playTone(740, 0.11, { type: 'sine', volume: 0.11, slideToFreq: 1046.5 });
+    this.playTone(987.77, 0.14, { type: 'sine', volume: 0.11, delay: 0.08, slideToFreq: 1318.51 });
+  }
+
+  public playTurboBoost() {
+    if (!this.sfxEnabled) return;
+    this.playTone(220, 0.28, { type: 'sawtooth', volume: 0.1, slideToFreq: 760 });
+    this.playTone(587.33, 0.24, { type: 'triangle', volume: 0.12, delay: 0.06, slideToFreq: 1174.66 });
+  }
+
+  public playTelescopeSparkle() {
+    if (!this.sfxEnabled) return;
+    const notes = [659.25, 880, 1174.66, 1567.98, 1975.53];
+    notes.forEach((n, idx) => {
+      this.playTone(n, 0.22, { type: 'sine', volume: 0.1, delay: idx * 0.07 });
+    });
+  }
+
+  public updateCarEngineSound(speedRatio: number, isDriving: boolean) {
+    if (!isDriving || !this.sfxEnabled) {
+      this.stopCarEngineSound();
+      return;
+    }
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+
+    if (!this.engineOsc || !this.engineGain || !this.engineFilter) {
+      const osc = ctx.createOscillator();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(62, ctx.currentTime);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(170, ctx.currentTime);
+
+      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+
+      this.engineOsc = osc;
+      this.engineFilter = filter;
+      this.engineGain = gain;
+    }
+
+    const clamped = Math.max(0, Math.min(1, speedRatio));
+    const now = ctx.currentTime;
+    this.engineOsc.frequency.setTargetAtTime(58 + clamped * 68, now, 0.06);
+    this.engineFilter.frequency.setTargetAtTime(140 + clamped * 160, now, 0.06);
+    this.engineGain.gain.setTargetAtTime(0.015 + clamped * 0.025, now, 0.06);
+  }
+
+  public stopCarEngineSound() {
+    if (this.engineOsc) {
+      try {
+        this.engineOsc.stop();
+        this.engineOsc.disconnect();
+      } catch {
+        // Ignore already-stopped oscillator
+      }
+    }
+    if (this.engineFilter) {
+      try {
+        this.engineFilter.disconnect();
+      } catch {
+        // Ignore
+      }
+    }
+    if (this.engineGain) {
+      try {
+        this.engineGain.disconnect();
+      } catch {
+        // Ignore
+      }
+    }
+    this.engineOsc = null;
+    this.engineFilter = null;
+    this.engineGain = null;
+  }
+}
+
+export const soundEngine = new MagicalSoundEngine();

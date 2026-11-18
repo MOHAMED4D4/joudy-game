@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes glowBreath {
+  0%, 100% {
+    box-shadow: 0 0 24px rgba(244, 63, 94, 0.35), 0 0 48px rgba(251, 191, 36, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 34px rgba(244, 63, 94, 0.55), 0 0 64px rgba(251, 191, 36, 0.32);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 4.2s ease-in-out infinite;
+}
+
+.animate-glow-breath {
+  animation: glowBreath 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-glow-breath {
+    animation: none;
+  }
+}
