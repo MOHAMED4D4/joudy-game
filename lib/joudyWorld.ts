@@ -6,7 +6,6 @@ export type ControlMode = 'classic' | 'joystick';
 export interface WorldSave {
   coins: number;
   blueKeys: number;
-  purchasedWorlds: number[];
   owned: string[];
   equippedOutfit: string;
   equippedShoes: string;
@@ -17,6 +16,8 @@ export interface WorldSave {
   reviveCountsByLevel: Record<number, number>;
   petsOwned: string[];
   equippedPet: string;
+  coastalRegionUnlocked: boolean;
+  finalBossRewardClaimed: boolean;
 }
 
 const KEY = 'joudy_world_save_v1';
@@ -24,7 +25,6 @@ const EVENT = 'joudy-world-save-change';
 const DEFAULT_SAVE: WorldSave = {
   coins: 180,
   blueKeys: 0,
-  purchasedWorlds: [1, 2, 3],
   owned: ['look-forest', 'sneakers'],
   equippedOutfit: 'look-forest',
   equippedShoes: 'sneakers',
@@ -35,6 +35,8 @@ const DEFAULT_SAVE: WorldSave = {
   reviveCountsByLevel: {},
   petsOwned: ['moon-cat'],
   equippedPet: 'moon-cat',
+  coastalRegionUnlocked: false,
+  finalBossRewardClaimed: false,
 };
 
 export interface ShopItem {
@@ -90,9 +92,6 @@ function parse(raw: string | null): WorldSave {
     return {
       coins: Math.max(0, Number(value.coins ?? DEFAULT_SAVE.coins) || 0),
       blueKeys: Math.max(0, Number(value.blueKeys ?? 0) || 0),
-      purchasedWorlds: Array.isArray(value.purchasedWorlds)
-        ? value.purchasedWorlds.filter((id): id is number => Number.isInteger(id) && id >= 1 && id <= 6)
-        : DEFAULT_SAVE.purchasedWorlds,
       owned: Array.isArray(value.owned) ? value.owned.map((id) => {
         const migration: Record<string, string> = { classic: 'look-forest', royal: 'look-forest', mint: 'look-forest', pearl: 'look-forest', emerald: 'look-forest', rose: 'look-mauve', lavender: 'look-mauve', moon: 'look-burgundy', midnight: 'look-burgundy', ocean: 'look-explorer', sunset: 'look-mauve', 'rose-shoes': 'rose-boots', 'swift-shoes': 'high-top', 'lavender-shoes': 'cloud', 'gold-shoes': 'trail-boots', 'cloud-shoes': 'cloud' };
         const migrated = migration[id] ?? id;
@@ -117,6 +116,8 @@ function parse(raw: string | null): WorldSave {
       reviveCountsByLevel: value.reviveCountsByLevel && typeof value.reviveCountsByLevel === 'object' ? value.reviveCountsByLevel : {},
       petsOwned: Array.isArray(value.petsOwned) ? value.petsOwned : DEFAULT_SAVE.petsOwned,
       equippedPet: typeof value.equippedPet === 'string' ? value.equippedPet : DEFAULT_SAVE.equippedPet,
+      coastalRegionUnlocked: value.coastalRegionUnlocked === true,
+      finalBossRewardClaimed: value.finalBossRewardClaimed === true,
     };
   } catch {
     return DEFAULT_SAVE;
