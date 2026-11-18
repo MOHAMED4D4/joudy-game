@@ -14,8 +14,9 @@ import {
   useJoudyProgress,
 } from '@/lib/storage';
 import { soundEngine } from '@/lib/soundEffects';
+import PlatformerMode from './PlatformerMode';
 
-type GameState = 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY';
+type GameState = 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY' | 'PLATFORMER';
 
 const REAL_IMAGE_SRC = '/images/joudy-real.png';
 const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
@@ -117,7 +118,12 @@ export default function JoudyAdventureGame() {
               key="title-menu"
               realImageSrc={realImageSrc}
               onStartAdventure={handleOpenWorldMap}
+              onStartPlatformer={() => setGameState('PLATFORMER')}
             />
+          )}
+
+          {gameState === 'PLATFORMER' && (
+            <PlatformerMode key="platformer-mode" imageSrc={realImageSrc} onBack={() => setGameState('TITLE_MENU')} />
           )}
 
           {gameState === 'WORLD_MAP' && (

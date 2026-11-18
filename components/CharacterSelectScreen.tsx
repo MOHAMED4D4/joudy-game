@@ -8,6 +8,7 @@ import { ArrowUpRight, Heart, Play, ShieldCheck, Star, Trophy, Zap } from 'lucid
 interface CharacterSelectScreenProps {
   realImageSrc: string;
   onStartAdventure: () => void;
+  onStartPlatformer: () => void;
 }
 
 const scoring = [
@@ -18,7 +19,7 @@ const scoring = [
   { icon: '⚡', name: 'تجنب العوائق', points: 'حافظ على القلوب' },
 ];
 
-export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }: CharacterSelectScreenProps) {
+export default function CharacterSelectScreen({ realImageSrc, onStartAdventure, onStartPlatformer }: CharacterSelectScreenProps) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 18 }}
@@ -95,6 +96,20 @@ export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }
           <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-slate-500"><Trophy className="h-3.5 w-3.5" /><Star className="h-3 w-3" /> اجمع النقاط وارفع رقمك القياسي</div>
         </div>
       </div>
+
+      <motion.button type="button" whileHover={{ y: -3, scale: 1.006 }} whileTap={{ scale: .99 }} onClick={onStartPlatformer}
+        className="group mt-5 grid w-full overflow-hidden rounded-[1.75rem] border border-amber-200/30 bg-gradient-to-l from-[#352b24] via-[#1b2933] to-[#101b2b] text-right shadow-[0_24px_70px_rgba(0,0,0,.35)] md:grid-cols-[1fr_auto]">
+        <div className="p-5 sm:p-7">
+          <div className="flex items-center gap-2 text-xs font-bold tracking-[.18em] text-amber-300"><span className="h-px w-7 bg-amber-300"/> MODE 02 / PLATFORMER</div>
+          <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">مغامرة المنصات</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-300">نمط مستقل بأسلوب ألعاب المنصات الكلاسيكية: قفز، منصات متحركة، شارات، وعقبات عبر 30 مرحلة متدرجة.</p>
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-amber-100"><span className="rounded-full border border-amber-200/20 bg-black/20 px-3 py-1.5">30 مرحلة</span><span className="rounded-full border border-amber-200/20 bg-black/20 px-3 py-1.5">قفز واستكشاف</span><span className="rounded-full border border-amber-200/20 bg-black/20 px-3 py-1.5">جمع الشارات</span></div>
+        </div>
+        <div className="flex items-center justify-center gap-4 border-t border-white/10 bg-black/15 px-6 py-5 md:border-r md:border-t-0">
+          <div className="relative h-24 w-20 overflow-hidden rounded-xl border border-amber-200/30 bg-slate-800"><Image src={realImageSrc} alt="الشخصية" fill sizes="80px" className="object-cover object-top"/></div>
+          <div className="text-right"><div className="text-xs text-amber-200">ابدأ النمط الثاني</div><div className="mt-1 flex items-center gap-2 text-lg font-black text-white"><Play className="h-5 w-5 fill-amber-300 text-amber-300"/> العب الآن</div></div>
+        </div>
+      </motion.button>
     </motion.section>
   );
 }

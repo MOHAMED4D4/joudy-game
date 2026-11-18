@@ -224,35 +224,6 @@ export default function VictoryScreen({
       />
 
       <div className="relative z-20 w-full max-w-4xl mx-auto">
-        {/* Victory Headline */}
-        <motion.div
-          initial={{ y: -16, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-5"
-        >
-          <div className="inline-flex items-center gap-2 text-cyan-300 font-bold text-sm mb-1.5">
-            {isGrandFinale ? (
-              <Crown className="w-5 h-5 text-amber-500 fill-amber-400" />
-            ) : (
-              <Trophy className="w-4 h-4 text-amber-500" />
-            )}
-            <span>
-              {isGrandFinale
-                ? 'التتويج الأسطوري — اجتزتِ كل المستويات الـ 30!'
-                : `اكتمل المستوى ${levelConfig.level} بنجاح!`}
-            </span>
-          </div>
-          <h1
-            className="text-3xl sm:text-5xl font-bold text-white leading-tight"
-            style={{ fontFamily: 'var(--font-display)', textWrap: 'balance' }}
-          >
-            {isGrandFinale
-              ? 'اكتملت المغامرة'
-              : 'تم اجتياز المرحلة'}
-          </h1>
-        </motion.div>
-
         {/* Visual Novel Celebration Window with Real Portrait + Anime Chibi Side-by-Side */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -313,13 +284,6 @@ export default function VictoryScreen({
                 </div>
               </div>
 
-              {/* Main Message */}
-              <p className="text-base sm:text-xl font-bold text-slate-100 leading-relaxed">
-                {isGrandFinale
-                  ? 'تم إنهاء جميع المستويات الثلاثين.'
-                  : `تم إنهاء المستوى ${levelConfig.level} — ${levelConfig.worldName}. النتيجة: ${stats.score} نقطة.`}
-              </p>
-
               {/* Run Summary */}
               <div className="pt-3 border-t border-white/10 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm font-semibold text-slate-300 tabular-nums">
                 <span className="text-rose-700 font-extrabold">النقاط: {stats.score}</span>
@@ -332,40 +296,6 @@ export default function VictoryScreen({
                 <span>🐱 {stats.cats} · 🌹 {stats.roses} · 🍫 {stats.chocolates}</span>
               </div>
             </div>
-          </div>
-
-          {/* Dedicated Secret Gift / Special Message Box */}
-          <div className="mt-6 pt-5 border-t border-white/10">
-            {!giftOpened ? (
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                onClick={() => setGiftOpened(true)}
-                className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-l from-amber-50 via-rose-50 to-emerald-50 border border-amber-300/80 text-[#2D1824] font-bold text-sm sm:text-base hover:border-rose-400 transition-all flex items-center justify-center gap-2.5 shadow-xs cursor-pointer"
-              >
-                <Gift className="w-5 h-5 text-rose-500" />
-                <span>فتح الهدية السرية / رسالة خاصة لـ جودي 🎁</span>
-                <Sparkles className="w-4 h-4 text-amber-500" />
-              </motion.button>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.28 }}
-                className="rounded-2xl bg-gradient-to-br from-[#FFF6F9] via-[#FFFDF7] to-[#F2FAF6] border border-rose-200 p-4 sm:p-5 text-center space-y-2"
-              >
-                <div className="text-xs font-extrabold text-rose-600 flex items-center justify-center gap-1.5">
-                  <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
-                  <span>رسالة سرية خاصة إلى جودي</span>
-                </div>
-                <p className="text-base sm:text-lg font-bold text-slate-100 leading-relaxed">
-                  {isGrandFinale
-                    ? 'شكراً لكِ يا جودي على مشاركتكِ في هذه الرحلة. نتمنى لكِ استمرار النجاح والتقدم.'
-                    : levelConfig.secretNote}
-                </p>
-              </motion.div>
-            )}
           </div>
 
           {/* Action Buttons */}
