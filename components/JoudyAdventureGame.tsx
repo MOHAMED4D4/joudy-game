@@ -3,14 +3,16 @@
 import React, { useCallback, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
-import { addWorldCoins, loadWorldSave, saveWorld } from '@/lib/joudyWorld';
+import { addWorldCoins, loadWorldSave, saveWorld, useWorldSave } from '@/lib/joudyWorld';
 import CharacterSelectScreen from './CharacterSelectScreen';
 import WorldMapScreen from './WorldMapScreen';
 import GameArena, { type GameRunStats } from './GameArena';
 import VictoryScreen from './VictoryScreen';
 import { getLevelConfig } from '@/lib/levels';
 import {
+  loadProgress,
   recordLevelCompletion,
+  saveProgress,
   updateHighScoreOnly,
   useJoudyProgress,
 } from '@/lib/storage';
@@ -23,6 +25,7 @@ const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
 
 export default function JoudyAdventureGame() {
   const progress = useJoudyProgress();
+  const worldSave = useWorldSave();
 
   // Restore the original welcome page before the stages map.
   const [gameState, setGameState] = useState<GameState>('TITLE_MENU');
@@ -34,7 +37,6 @@ export default function JoudyAdventureGame() {
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [runId, setRunId] = useState(1);
   const [isNewHighScore, setIsNewHighScore] = useState(false);
-  const [lastRewardCoins, setLastRewardCoins] = useState(0);
 
   const [lastStats, setLastStats] = useState<GameRunStats>({
     level: 1,
@@ -61,10 +63,7 @@ export default function JoudyAdventureGame() {
 
   const handleStartLevel = useCallback(
     (levelNumber: number) => {
-      // Never allow a direct start into season two before the first city is
-      // completed and its 10,000-coin gate has been purchased.
-      if (levelNumber > progress.highestUnlockedLevel || (levelNumber >= 16 && !loadWorldSave().coastalRegionUnlocked)) {
-        setSelectedLevel(null);
+      if (levelNumber >= 16 && !loadWorldSave().purchasedWorlds.includes(4)) {
         setGameState('WORLD_MAP');
         return;
       }
@@ -76,7 +75,7 @@ export default function JoudyAdventureGame() {
       setIsNewHighScore(false);
       setGameState('PLAYING');
     },
-    [soundEnabled, progress.highestUnlockedLevel],
+    [soundEnabled],
   );
 
   const handleHighScoreUpdate = useCallback((candidateScore: number) => {
@@ -85,18 +84,13 @@ export default function JoudyAdventureGame() {
 
   const handleVictory = useCallback((stats: GameRunStats) => {
     setLastStats(stats);
-    const beforeReward = loadWorldSave();
-    const reward = stats.level === 30
-      ? (beforeReward.finalBossRewardClaimed ? 0 : 50_000)
-      : Math.max(25, Math.floor((Math.floor(stats.score / 5) + stats.cats * 3 + stats.roses * 2) * characterCoinBonus));
-    setLastRewardCoins(reward);
-    if (reward > 0) addWorldCoins(reward);
+    const reward = Math.max(250, Math.floor(stats.score * 0.75 + stats.cats * 6 + stats.roses * 4 + stats.chocolates * 3) * characterCoinBonus + 250);
+    addWorldCoins(reward);
     const latest = loadWorldSave();
     const { [stats.level]: _completedRevives, ...remainingRevives } = latest.reviveCountsByLevel;
     saveWorld({
       reviveCountsByLevel: remainingRevives,
       highestAchievement: Math.max(latest.highestAchievement, stats.level >= 30 ? 3 : stats.level >= 15 ? 2 : stats.level >= 5 ? 1 : 0),
-      finalBossRewardClaimed: latest.finalBossRewardClaimed || (stats.level === 30 && reward > 0),
     });
 
     const { isNewHighScore: beatRecord } = recordLevelCompletion(
@@ -109,14 +103,33 @@ export default function JoudyAdventureGame() {
   }, [characterCoinBonus]);
 
   const handleNextLevel = useCallback(() => {
-    // Finishing level 15 returns to the map so the player must buy the new city.
-    if (activeLevel === 15 && !loadWorldSave().coastalRegionUnlocked) {
+    const nextLvl = Math.min(30, activeLevel + 1);
+    if (nextLvl === 16 && !loadWorldSave().purchasedWorlds.includes(4)) {
       setGameState('WORLD_MAP');
       return;
     }
-    const nextLvl = Math.min(30, activeLevel + 1);
     handleStartLevel(nextLvl);
   }, [activeLevel, handleStartLevel]);
+
+  const handlePurchaseWorld = useCallback((worldId: number, price: number) => {
+    if (worldId !== 4 || price !== 10000) return false;
+    const latestProgress = loadProgress();
+    const latestWorldSave = loadWorldSave();
+    if (!latestProgress.completedLevels[15] || latestWorldSave.coins < price || latestWorldSave.purchasedWorlds.includes(worldId)) return false;
+
+    saveWorld((current) => ({
+      ...current,
+      coins: current.coins - price,
+      purchasedWorlds: current.purchasedWorlds.includes(worldId)
+        ? current.purchasedWorlds
+        : [...current.purchasedWorlds, worldId],
+    }));
+    saveProgress({
+      ...latestProgress,
+      highestUnlockedLevel: Math.max(16, latestProgress.highestUnlockedLevel),
+    });
+    return true;
+  }, []);
 
   const handleReplayCurrent = useCallback(() => {
     handleStartLevel(activeLevel);
@@ -150,6 +163,9 @@ export default function JoudyAdventureGame() {
             <WorldMapScreen
               key="world-map-2d"
               progress={progress}
+              coins={worldSave.coins}
+              purchasedWorlds={worldSave.purchasedWorlds}
+              onPurchaseWorld={handlePurchaseWorld}
               onSelectLevel={handleStartLevel}
             />
           )}
@@ -183,10 +199,10 @@ export default function JoudyAdventureGame() {
               realImageSrc={realImageSrc}
               animeImageSrc={animeImageSrc}
               stats={lastStats}
-              rewardCoins={lastRewardCoins}
               highScore={progress.highScore}
               isNewHighScore={isNewHighScore}
               onNextLevel={handleNextLevel}
+              nextLevelLabel={activeLevel === 15 && !worldSave.purchasedWorlds.includes(4) ? 'افتحي الخريطة لشراء الجزيرة' : undefined}
               onPlayAgain={handleReplayCurrent}
               onOpenWorldMap={() => setGameState('WORLD_MAP')}
             />
