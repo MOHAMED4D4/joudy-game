@@ -1,6 +1,6 @@
 'use client';
 
-type CollectibleSoundType = 'cat' | 'rose' | 'chocolate';
+type CollectibleSoundType = 'cat' | 'rose' | 'chocolate' | 'coin';
 
 class MagicalSoundEngine {
   private ctx: AudioContext | null = null;
@@ -152,6 +152,10 @@ class MagicalSoundEngine {
       this.playTone(659.25 * comboBoost, 0.15, { type: 'sine', volume: 0.13 });
       this.playTone(880 * comboBoost, 0.18, { type: 'sine', volume: 0.13, delay: 0.055 });
       this.playTone(1174.66 * comboBoost, 0.22, { type: 'triangle', volume: 0.1, delay: 0.11 });
+    } else if (itemType === 'coin') {
+      // Bright coin pickup chime
+      this.playTone(987.77 * comboBoost, 0.09, { type: 'triangle', volume: 0.13 });
+      this.playTone(1318.5 * comboBoost, 0.16, { type: 'sine', volume: 0.14, delay: 0.055 });
     } else {
       // Warm sweet chocolate marimba pop (+10)
       this.playTone(523.25 * comboBoost, 0.12, { type: 'triangle', volume: 0.14 });

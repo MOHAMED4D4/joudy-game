@@ -1,6 +1,6 @@
 'use client';
 
-export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'blueKey';
+export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'blueKey' | 'coin';
 
 const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
   cat: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -105,6 +105,7 @@ const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
     <path d="M55 51 L82 78 L72 88 L64 80 L56 88 L46 78 L55 69 L47 61 Z" fill="#60a5fa" stroke="#1d4ed8" stroke-width="5" stroke-linejoin="round"/>
     <path d="M19 10 L22 20 L32 23 L22 26 L19 36 L16 26 L6 23 L16 20 Z" fill="#fff"/>
   </svg>`,
+coin: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="coinGold"><stop stop-color="#fff7ad"/><stop offset=".62" stop-color="#facc15"/><stop offset="1" stop-color="#b45309"/></radialGradient></defs><circle cx="50" cy="50" r="39" fill="url(#coinGold)" stroke="#92400e" stroke-width="6"/><circle cx="50" cy="50" r="29" fill="none" stroke="#fef3c7" stroke-width="3"/><path d="M59 28 Q40 20 34 37 Q29 49 51 51 Q72 55 64 72 Q57 86 37 73 M50 20 V80" fill="none" stroke="#92400e" stroke-width="6" stroke-linecap="round"/></svg>`,
 
 };
 
