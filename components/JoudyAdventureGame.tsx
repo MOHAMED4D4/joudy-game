@@ -3,6 +3,8 @@
 import React, { useCallback, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
+import JoudyHome from './JoudyHome';
+import { addWorldCoins, loadWorldSave, saveWorld, setControlMode, useControlMode, useWorldSave, SHOP_ITEMS } from '@/lib/joudyWorld';
 import CharacterSelectScreen from './CharacterSelectScreen';
 import WorldMapScreen from './WorldMapScreen';
 import GameArena, { type GameRunStats } from './GameArena';
@@ -14,9 +16,8 @@ import {
   useJoudyProgress,
 } from '@/lib/storage';
 import { soundEngine } from '@/lib/soundEffects';
-import OpenWorldArena from './OpenWorldArena';
 
-type GameState = 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY' | 'OPEN_WORLD';
+type GameState = 'HOME' | 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY';
 
 const REAL_IMAGE_SRC = '/images/joudy-real.png';
 const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
@@ -24,7 +25,14 @@ const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
 export default function JoudyAdventureGame() {
   const progress = useJoudyProgress();
 
-  const [gameState, setGameState] = useState<GameState>('TITLE_MENU');
+  const [gameState, setGameState] = useState<GameState>('HOME');
+  const controlMode = useControlMode();
+  const worldSave = useWorldSave();
+  const equippedOutfit = SHOP_ITEMS.find((item) => item.id === worldSave.equippedOutfit) ?? SHOP_ITEMS[0];
+  const equippedShoes = SHOP_ITEMS.find((item) => item.id === worldSave.equippedShoes) ?? SHOP_ITEMS.find((item) => item.id === 'sneakers')!;
+  const characterSpeedBonus = equippedOutfit.bonus === 'speed' || equippedShoes.bonus === 'speed' ? 1.08 : 1;
+  const characterShieldBonus = equippedOutfit.bonus === 'shield' || equippedShoes.bonus === 'shield' ? 0.2 : 0;
+  const characterCoinBonus = equippedOutfit.bonus === 'coins' || equippedShoes.bonus === 'coins' ? 1.05 : 1;
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [runId, setRunId] = useState(1);
@@ -79,6 +87,23 @@ export default function JoudyAdventureGame() {
 
   const handleVictory = useCallback((stats: GameRunStats) => {
     setLastStats(stats);
+    const reward = Math.max(25, Math.floor((Math.floor(stats.score / 5) + stats.cats * 3 + stats.roses * 2) * characterCoinBonus));
+    addWorldCoins(reward);
+    const latest = loadWorldSave();
+    const { [stats.level]: _completedRevives, ...remainingRevives } = latest.reviveCountsByLevel;
+    saveWorld({
+      reviveCountsByLevel: remainingRevives,
+      highestAchievement: Math.max(latest.highestAchievement, stats.level >= 30 ? 3 : stats.level >= 15 ? 2 : stats.level >= 5 ? 1 : 0),
+    });
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const cheer = new SpeechSynthesisUtterance('جودي!');
+      cheer.lang = 'ar-EG'; cheer.pitch = 1.25; cheer.rate = 0.82; cheer.volume = 0.9;
+      const voices = window.speechSynthesis.getVoices();
+      const female = voices.find((voice) => /female|woman|zira|samantha|aria|salma|laila/i.test(voice.name)) ?? voices.find((voice) => voice.lang.toLowerCase().startsWith('ar'));
+      if (female) cheer.voice = female;
+      window.speechSynthesis.speak(cheer);
+    }
     const { isNewHighScore: beatRecord } = recordLevelCompletion(
       stats.level,
       stats.score,
@@ -86,7 +111,7 @@ export default function JoudyAdventureGame() {
     );
     setIsNewHighScore(beatRecord);
     setGameState('VICTORY');
-  }, []);
+  }, [characterCoinBonus]);
 
   const handleNextLevel = useCallback(() => {
     const nextLvl = Math.min(30, activeLevel + 1);
@@ -102,7 +127,7 @@ export default function JoudyAdventureGame() {
   return (
     <main className="relative min-h-dvh w-full overflow-x-hidden bg-[#080f1b] flex flex-col">
       {/* Minimal audio control */}
-      {gameState !== 'PLAYING' && (
+      {gameState !== 'PLAYING' && gameState !== 'HOME' && (
         <div className="absolute left-4 top-4 z-30">
           <button type="button" onClick={handleToggleSound} aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'} className="rounded-full border border-white/10 bg-slate-950/70 p-3 text-slate-200 shadow-lg backdrop-blur">
             {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
@@ -112,24 +137,23 @@ export default function JoudyAdventureGame() {
 
       {/* Active Screen State Machine (2D Arcade & Winding Map) */}
       <div className="relative z-10 flex-1 flex items-center justify-center w-full">
+        {gameState === 'HOME' && (
+          <JoudyHome
+            animeImageSrc={animeImageSrc}
+            controlMode={controlMode}
+            onControlModeChange={setControlMode}
+            soundEnabled={soundEnabled}
+            onToggleSound={handleToggleSound}
+            onPlayArcade={() => setGameState('TITLE_MENU')}
+          />
+        )}
         <AnimatePresence mode="wait">
           {gameState === 'TITLE_MENU' && (
             <CharacterSelectScreen
               key="title-menu"
               realImageSrc={realImageSrc}
-              animeImageSrc={animeImageSrc}
               onStartAdventure={handleOpenWorldMap}
-              onStartOpenWorld={() => setGameState('OPEN_WORLD')}
-            />
-          )}
-
-          {gameState === 'OPEN_WORLD' && (
-            <OpenWorldArena
-              key="alexandria-open-world"
-              animeImageSrc={animeImageSrc}
-              soundEnabled={soundEnabled}
-              onToggleSound={handleToggleSound}
-              onExitToHub={() => setGameState('TITLE_MENU')}
+              onBackToHome={() => setGameState('HOME')}
             />
           )}
 
@@ -153,6 +177,10 @@ export default function JoudyAdventureGame() {
               highScore={progress.highScore}
               soundEnabled={soundEnabled}
               onToggleSound={handleToggleSound}
+              controlMode={controlMode}
+              characterFilter={equippedOutfit.filter}
+              characterSpeedBonus={characterSpeedBonus}
+              characterShieldBonus={characterShieldBonus}
               onHighScoreUpdate={handleHighScoreUpdate}
               onExitToMap={() => {
                 soundEngine.stopBackgroundMusic();

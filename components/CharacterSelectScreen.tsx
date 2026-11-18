@@ -3,13 +3,12 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
-import { ArrowUpRight, Heart, Play, ShieldCheck, Star, Trophy, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Heart, Play, ShieldCheck, Star, Trophy, Zap } from 'lucide-react';
 
 interface CharacterSelectScreenProps {
   realImageSrc: string;
   onStartAdventure: () => void;
-  animeImageSrc: string;
-  onStartOpenWorld: () => void;
+  onBackToHome: () => void;
 }
 
 const scoring = [
@@ -20,7 +19,7 @@ const scoring = [
   { icon: '⚡', name: 'تجنب العوائق', points: 'حافظ على القلوب' },
 ];
 
-export default function CharacterSelectScreen({ realImageSrc, animeImageSrc, onStartAdventure, onStartOpenWorld }: CharacterSelectScreenProps) {
+export default function CharacterSelectScreen({ realImageSrc, onStartAdventure, onBackToHome }: CharacterSelectScreenProps) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 18 }}
@@ -36,6 +35,7 @@ export default function CharacterSelectScreen({ realImageSrc, animeImageSrc, onS
       </div>
 
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <button type="button" onClick={onBackToHome} className="mb-2 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.06] px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/10"><ArrowLeft className="h-4 w-4" /> العودة إلى عالم جودي</button>
         <div>
           <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[.22em] text-cyan-300">
             <span className="h-px w-7 bg-cyan-300" /> ARCADE / 30 STAGES
@@ -97,20 +97,6 @@ export default function CharacterSelectScreen({ realImageSrc, animeImageSrc, onS
           <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-slate-500"><Trophy className="h-3.5 w-3.5" /><Star className="h-3 w-3" /> اجمع النقاط وارفع رقمك القياسي</div>
         </div>
       </div>
-
-      <motion.button type="button" whileHover={{ y: -3, scale: 1.006 }} whileTap={{ scale: .99 }} onClick={onStartOpenWorld}
-        className="group mt-5 grid w-full overflow-hidden rounded-[1.75rem] border border-amber-200/30 bg-gradient-to-l from-[#352b24] via-[#1b2933] to-[#101b2b] text-right shadow-[0_24px_70px_rgba(0,0,0,.35)] md:grid-cols-[1fr_auto]">
-        <div className="p-5 sm:p-7">
-          <div className="flex items-center gap-2 text-xs font-bold tracking-[.18em] text-amber-300"><span className="h-px w-7 bg-amber-300"/> MODE 02 / OPEN WORLD 3D</div>
-          <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">عالم إسكندرية المفتوح</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-300">مدينة ثلاثية الأبعاد مستوحاة من إسكندرية: تحكّمي في جودي الأنمي، واستكشفي بحري والمنشية والشاطبي وستانلي وسان ستيفانو والمنتزه، وتفاعلي مع السكان وجرّبي قيادة السيارة.</p>
-          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-amber-100"><span className="rounded-full border border-amber-200/20 bg-black/20 px-3 py-1.5">6 مناطق حقيقية</span><span className="rounded-full border border-amber-200/20 bg-black/20 px-3 py-1.5">قيادة وتجول</span><span className="rounded-full border border-amber-200/20 bg-black/20 px-3 py-1.5">سكان وتفاصيل مدينة</span></div>
-        </div>
-        <div className="flex items-center justify-center gap-4 border-t border-white/10 bg-black/15 px-6 py-5 md:border-r md:border-t-0">
-          <div className="relative h-24 w-20 overflow-hidden rounded-xl border border-amber-200/30 bg-slate-800"><Image src={animeImageSrc} alt="جودي الأنمي" fill sizes="80px" className="object-contain bg-white"/></div>
-          <div className="text-right"><div className="text-xs text-amber-200">منظور 3D مفتوح</div><div className="mt-1 flex items-center gap-2 text-lg font-black text-white"><Play className="h-5 w-5 fill-amber-300 text-amber-300"/> استكشف إسكندرية</div></div>
-        </div>
-      </motion.button>
     </motion.section>
   );
 }

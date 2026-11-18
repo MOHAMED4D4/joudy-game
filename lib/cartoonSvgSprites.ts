@@ -1,6 +1,6 @@
 'use client';
 
-export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle';
+export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'blueKey';
 
 const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
   cat: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -98,6 +98,14 @@ const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
     <!-- Sparkles between poles -->
     <polygon points="50,15 53,23 61,26 53,29 50,37 47,29 39,26 47,23" fill="#FDE047" stroke="#D97706" stroke-width="1.5"/>
   </svg>`,
+  blueKey: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs><radialGradient id="keyGlow"><stop stop-color="#dbeafe"/><stop offset="1" stop-color="#3b82f6"/></radialGradient></defs>
+    <circle cx="39" cy="35" r="25" fill="url(#keyGlow)" stroke="#1d4ed8" stroke-width="8"/>
+    <circle cx="39" cy="35" r="9" fill="#172554" stroke="#bfdbfe" stroke-width="3"/>
+    <path d="M55 51 L82 78 L72 88 L64 80 L56 88 L46 78 L55 69 L47 61 Z" fill="#60a5fa" stroke="#1d4ed8" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M19 10 L22 20 L32 23 L22 26 L19 36 L16 26 L6 23 L16 20 Z" fill="#fff"/>
+  </svg>`,
+
 };
 
 export type CartoonSpriteMap = Partial<Record<CartoonSpriteKind, HTMLImageElement>>;

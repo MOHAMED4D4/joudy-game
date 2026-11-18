@@ -6,16 +6,14 @@ import { motion } from 'motion/react';
 import {
   ArrowLeft,
   Crown,
-  Gift,
   Heart,
   Map as MapIcon,
   RotateCcw,
-  Sparkles,
   Star,
   Trophy,
 } from 'lucide-react';
 import { loadTransparentSprite } from '@/lib/spriteUtils';
-import { GRAND_VICTORY_MESSAGE, type LevelConfig } from '@/lib/levels';
+import type { LevelConfig } from '@/lib/levels';
 import { computeLevelStars } from '@/lib/storage';
 import type { GameRunStats } from './GameArena';
 
@@ -44,7 +42,6 @@ export default function VictoryScreen({
 }: VictoryScreenProps) {
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
   const [transparentAnimeSrc, setTransparentAnimeSrc] = useState<string>(animeImageSrc);
-  const [giftOpened, setGiftOpened] = useState(false);
 
   const isGrandFinale = levelConfig.level === 30;
   const starsEarned = computeLevelStars(stats.obstaclesHit);
@@ -224,6 +221,35 @@ export default function VictoryScreen({
       />
 
       <div className="relative z-20 w-full max-w-4xl mx-auto">
+        {/* Victory Headline */}
+        <motion.div
+          initial={{ y: -16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center mb-5"
+        >
+          <div className="inline-flex items-center gap-2 text-cyan-300 font-bold text-sm mb-1.5">
+            {isGrandFinale ? (
+              <Crown className="w-5 h-5 text-amber-500 fill-amber-400" />
+            ) : (
+              <Trophy className="w-4 h-4 text-amber-500" />
+            )}
+            <span>
+              {isGrandFinale
+                ? 'التتويج الأسطوري — اجتزتِ كل المستويات الـ 30!'
+                : `اكتمل المستوى ${levelConfig.level} بنجاح!`}
+            </span>
+          </div>
+          <h1
+            className="text-3xl sm:text-5xl font-bold text-white leading-tight"
+            style={{ fontFamily: 'var(--font-display)', textWrap: 'balance' }}
+          >
+            {isGrandFinale
+              ? 'اكتملت المغامرة'
+              : 'تم اجتياز المرحلة'}
+          </h1>
+        </motion.div>
+
         {/* Visual Novel Celebration Window with Real Portrait + Anime Chibi Side-by-Side */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -283,6 +309,13 @@ export default function VictoryScreen({
                   ))}
                 </div>
               </div>
+
+              {/* Main Message */}
+              <p className="text-base sm:text-xl font-bold text-slate-100 leading-relaxed">
+                {isGrandFinale
+                  ? 'تم إنهاء جميع المستويات الثلاثين.'
+                  : `تم إنهاء المستوى ${levelConfig.level} — ${levelConfig.worldName}. النتيجة: ${stats.score} نقطة.`}
+              </p>
 
               {/* Run Summary */}
               <div className="pt-3 border-t border-white/10 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm font-semibold text-slate-300 tabular-nums">
