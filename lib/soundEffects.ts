@@ -192,6 +192,58 @@ class MagicalSoundEngine {
     });
   }
 
+  public playHeartCollect() {
+    if (!this.sfxEnabled) return;
+    [659.25, 880, 1174.66, 1567.98].forEach((frequency, index) => {
+      this.playTone(frequency, 0.2, { type: 'sine', volume: 0.13, delay: index * 0.055 });
+    });
+  }
+
+  public playThunder() {
+    if (!this.sfxEnabled) return;
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const rumble = ctx.createOscillator();
+    const rumbleGain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    rumble.type = 'triangle';
+    rumble.frequency.setValueAtTime(88, now);
+    rumble.frequency.exponentialRampToValueAtTime(38, now + 1.15);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(260, now);
+    filter.frequency.exponentialRampToValueAtTime(95, now + 1.2);
+    rumbleGain.gain.setValueAtTime(0.0001, now);
+    rumbleGain.gain.linearRampToValueAtTime(0.16, now + 0.035);
+    rumbleGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.25);
+    rumble.connect(filter);
+    filter.connect(rumbleGain);
+    rumbleGain.connect(ctx.destination);
+    rumble.start(now);
+    rumble.stop(now + 1.28);
+
+    // Short filtered noise adds the crack of the lightning without a harsh peak.
+    const length = Math.floor(ctx.sampleRate * 0.42);
+    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+    const channel = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) channel[i] = (Math.random() * 2 - 1) * (1 - i / length) * 0.55;
+    const noise = ctx.createBufferSource();
+    const noiseFilter = ctx.createBiquadFilter();
+    const noiseGain = ctx.createGain();
+    noise.buffer = buffer;
+    noiseFilter.type = 'lowpass';
+    noiseFilter.frequency.value = 900;
+    noiseGain.gain.setValueAtTime(0.0001, now);
+    noiseGain.gain.linearRampToValueAtTime(0.12, now + 0.012);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.44);
+  }
+
   private engineOsc: OscillatorNode | null = null;
   private engineGain: GainNode | null = null;
   private engineFilter: BiquadFilterNode | null = null;

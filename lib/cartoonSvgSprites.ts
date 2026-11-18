@@ -1,6 +1,6 @@
 'use client';
 
-export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'monster' | 'runner' | 'fierceMonster' | 'exploder' | 'boss' | 'projectile' | 'blueKey' | 'coin';
+export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'monster' | 'runner' | 'fierceMonster' | 'exploder' | 'boss' | 'projectile' | 'blueKey' | 'coin' | 'heart';
 
 const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
   cat: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -230,6 +230,13 @@ const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
     <polygon points="50,15 53,23 61,26 53,29 50,37 47,29 39,26 47,23" fill="#FDE047" stroke="#D97706" stroke-width="1.5"/>
   </svg>`,
   coin: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="coinGold"><stop stop-color="#fff7ad"/><stop offset=".62" stop-color="#facc15"/><stop offset="1" stop-color="#b45309"/></radialGradient></defs><circle cx="50" cy="50" r="39" fill="url(#coinGold)" stroke="#92400e" stroke-width="6"/><circle cx="50" cy="50" r="29" fill="none" stroke="#fef3c7" stroke-width="3"/><path d="M59 28 Q40 20 34 37 Q29 49 51 51 Q72 55 64 72 Q57 86 37 73 M50 20 V80" fill="none" stroke="#92400e" stroke-width="6" stroke-linecap="round"/></svg>`,
+  heart: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs><radialGradient id="reviveHeart" cx="35%" cy="25%" r="75%"><stop stop-color="#fff1f5"/><stop offset=".34" stop-color="#fb7185"/><stop offset=".72" stop-color="#e11d48"/><stop offset="1" stop-color="#9f1239"/></radialGradient><filter id="heartGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <path d="M50 87 C39 76 11 56 11 34 C11 13 37 7 50 27 C63 7 89 13 89 34 C89 56 61 76 50 87Z" fill="url(#reviveHeart)" stroke="#fff1f2" stroke-width="4" filter="url(#heartGlow)"/>
+    <path d="M25 34 C27 22 39 20 45 30" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".8"/>
+    <path d="M50 42 L43 54 H51 L47 68 L61 50 H53 L58 42Z" fill="#fff7ed" stroke="#ffe4e6" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M17 13 L20 21 L28 24 L20 27 L17 35 L14 27 L6 24 L14 21Z" fill="#fef08a"/><circle cx="82" cy="14" r="3.5" fill="#fff"/><circle cx="91" cy="52" r="2.5" fill="#fef08a"/>
+  </svg>`,
   blueKey: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
     <defs>
       <linearGradient id="keyMetal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eff6ff"/><stop offset=".34" stop-color="#7dd3fc"/><stop offset=".7" stop-color="#2563eb"/><stop offset="1" stop-color="#172554"/></linearGradient>

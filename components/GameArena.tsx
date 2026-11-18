@@ -121,6 +121,7 @@ const ITEM_CONFIG: Record<
   magnet: { points: 0, halo: 'rgba(56, 189, 248, 0.42)', fallbackColor: '#38BDF8' },
   blueKey: { points: 0, halo: 'rgba(59, 130, 246, 0.55)', fallbackColor: '#3B82F6' },
   coin: { points: 0, halo: 'rgba(250, 204, 21, 0.42)', fallbackColor: '#FACC15' },
+  heart: { points: 0, halo: 'rgba(251, 113, 133, 0.58)', fallbackColor: '#F43F5E' },
   obstacle: { points: -15, halo: 'rgba(71, 85, 105, 0.48)', fallbackColor: '#475569' },
   monster: { points: -18, halo: 'rgba(45, 212, 191, 0.42)', fallbackColor: '#0F766E' },
   runner: { points: -16, halo: 'rgba(249, 115, 22, 0.46)', fallbackColor: '#EA580C' },
@@ -399,6 +400,11 @@ export default function GameArena({
     let spawnAccumulator = 0;
     let trailAccumulator = 0;
     let magnetHudTick = 0;
+    let lastHeartSpawnAt = -999;
+    let lightningCooldown = 8 + Math.random() * 5;
+    let lightningWarning = 0;
+    let lightningFlash = 0;
+    let lightningX = worldWidth * 0.5;
     let lastResetCount = resetSignalRef.current;
 
     const ambientItems = Array.from({ length: 22 }, (_, i) => ({
@@ -421,17 +427,40 @@ export default function GameArena({
       const magnetAlreadyPresent =
         magnetTimerRef.current > 0 || entities.some((e) => e.kind === 'magnet');
 
-      const roll = Math.random();
       const stageNumber = levelConfig.level;
       const isSecondSeason = stageNumber >= 16;
       const firstSeasonProgress = Math.max(0, Math.min(1, (stageNumber - 2) / 12));
       const secondSeasonProgress = Math.max(0, Math.min(1, (stageNumber - 16) / 13));
+      // Hearts are rare at the start, then become a measured comeback tool.
+      // Never spawn one while Joudy is already at full health or another heart is falling.
+      const heartEligible = heartsRef.current < MAX_HEARTS && !entities.some((entity) => entity.kind === 'heart');
+      const heartDelay = stageNumber <= 4
+        ? 27 - (stageNumber - 1) * 1.5
+        : stageNumber === 5 ? 16
+          : stageNumber === 6 ? 13
+            : stageNumber < 15 ? 12 - ((stageNumber - 7) / 7) * 5
+              : stageNumber === 15 ? 6.5
+                : stageNumber === 30 ? 5.5 : 7 - secondSeasonProgress * 1.5;
+      const heartSpawnChance = stageNumber <= 4
+        ? 0.08
+        : stageNumber === 5 ? 0.16
+          : stageNumber === 6 ? 0.20
+            : stageNumber < 15 ? 0.22 + ((stageNumber - 7) / 7) * 0.08
+              : stageNumber === 15 ? 0.32
+                : stageNumber === 30 ? 0.34 : 0.28 + secondSeasonProgress * 0.04;
+      const heartChance = heartEligible && totalElapsed - lastHeartSpawnAt >= heartDelay ? heartSpawnChance : 0;
+      const randomRoll = Math.random();
+      const roll = heartChance >= 1 ? 1 : Math.max(0, (randomRoll - heartChance) / (1 - heartChance));
+      const heartWasSelected = randomRoll < heartChance;
       // The first stage has only mischievous clouds. From stage 2 onward,
       // hazards grow gradually; stage 15 introduces the stronger red enemies.
       const hazardChance = stageNumber === 1 ? 0.16 : levelConfig.obstacleChance;
       let kind: CartoonSpriteKind = 'chocolate';
 
-      if (roll < 0.055) {
+      if (heartWasSelected) {
+        kind = 'heart';
+        lastHeartSpawnAt = totalElapsed;
+      } else if (roll < 0.055) {
         kind = 'coin';
       } else if (roll < 0.068) {
         kind = 'blueKey';
@@ -488,7 +517,8 @@ export default function GameArena({
                   : kind === 'obstacle' ? 30
                     : kind === 'magnet' ? 28
                       : kind === 'blueKey' ? 22
-                        : kind === 'coin' ? 17 : 27
+                        : kind === 'coin' ? 17
+                        : kind === 'heart' ? 25 : 27
       ) * 0.9;
       const baseSpeed =
         kind === 'cat'
@@ -503,7 +533,9 @@ export default function GameArena({
                   ? 165
                   : kind === 'coin'
                     ? 175
-                    : kind === 'boss'
+                    : kind === 'heart'
+                      ? 182
+                      : kind === 'boss'
                       ? (stageNumber < 16 ? 300 : 335)
                       : kind === 'fierceMonster'
                         ? 305
@@ -589,6 +621,8 @@ export default function GameArena({
               ? ['#D97706', '#FBBF24', '#F472B6']
               : kind === 'magnet'
                 ? ['#38BDF8', '#06B6D4', '#FDE047']
+                : kind === 'heart'
+                  ? ['#FB7185', '#FDA4AF', '#FFF1F2', '#FDE68A']
                 : kind === 'boss' || kind === 'fierceMonster'
                   ? ['#F43F5E', '#FBBF24', '#7C3AED']
                   : kind === 'exploder'
@@ -724,6 +758,32 @@ export default function GameArena({
         if (player.invulnTimer > 0) player.invulnTimer = Math.max(0, player.invulnTimer - dt);
         if (player.happyTimer > 0) player.happyTimer = Math.max(0, player.happyTimer - dt);
         if (player.bubbleTimer > 0) player.bubbleTimer = Math.max(0, player.bubbleTimer - dt);
+
+        // Level 15 winter storm: a visible warning precedes every lightning strike.
+        // A strike only removes a heart if Joudy stays close to the marked lane.
+        if (levelConfig.weatherMode === 'winter-storm') {
+          lightningFlash = Math.max(0, lightningFlash - dt);
+          if (lightningWarning > 0) {
+            lightningWarning = Math.max(0, lightningWarning - dt);
+            if (lightningWarning === 0) {
+              lightningFlash = 0.34;
+              soundEngine.playThunder();
+              if (Math.abs(player.x - lightningX) < 112) {
+                damagePlayer(lightningX, player.y - 24, -6, 'ضربة برق! ابتعدي عن الوميض ⚡');
+              } else {
+                popups.push({ x: lightningX, y: worldHeight - 125, text: 'تفاديتِ البرق!', color: '#BAE6FD', life: 0, maxLife: 0.85 });
+              }
+            }
+          } else {
+            lightningCooldown -= dt;
+            if (lightningCooldown <= 0) {
+              lightningX = worldWidth * (0.12 + Math.random() * 0.76);
+              lightningWarning = 1.05;
+              lightningCooldown = 10 + Math.random() * 7;
+              popups.push({ x: lightningX, y: worldHeight * 0.48, text: '⚡ برق قادم! ابتعدي', color: '#FDE68A', life: 0, maxLife: 1.05 });
+            }
+          }
+        }
 
         // Free-flight touch movement: drag anywhere to steer horizontally and vertically.
         const maxSpeed = (920 * characterSpeedBonus) / cameraZoom;
@@ -882,6 +942,21 @@ export default function GameArena({
               player.bubbleTimer = 1.5;
               soundEngine.playMagnetCollect();
               popups.push({ x: item.x, y: item.y - 12, text: '+1 مفتاح أزرق', color: '#2563EB', life: 0, maxLife: 1.1 });
+            } else if (item.kind === 'heart') {
+              const beforeHearts = heartsRef.current;
+              heartsRef.current = Math.min(MAX_HEARTS, beforeHearts + 1);
+              setHearts(heartsRef.current);
+              player.catchBounce = 1.2;
+              player.happyTimer = 1.15;
+              player.bubbleText = '+1 قلب حياة! ❤️';
+              player.bubbleTone = 'good';
+              player.bubbleTimer = 1.35;
+              soundEngine.playHeartCollect();
+              popups.push({ x: item.x, y: item.y - 12, text: '+1 ❤️ حياة', color: '#FB7185', life: 0, maxLife: 1.15 });
+              for (let spark = 0; spark < 12; spark++) {
+                const angle = (Math.PI * 2 * spark) / 12;
+                particles.push({ x: player.x, y: player.y, vx: Math.cos(angle) * 115, vy: Math.sin(angle) * 115 - 35, life: 0, maxLife: .62, size: 5 + Math.random() * 4, color: ['#FB7185', '#FDE68A', '#FFFFFF'][spark % 3], shape: spark % 2 ? 'heart' : 'star', gravity: 35 });
+              }
             } else if (item.kind === 'magnet') {
               magnetTimerRef.current = MAGNET_DURATION_SEC;
               setMagnetSecondsLeft(Math.ceil(MAGNET_DURATION_SEC));
@@ -1049,6 +1124,64 @@ export default function GameArena({
         ctx.fillRect(0, 0, width, height);
       }
 
+      // A continuous day-to-night cycle runs in every stage. From stage 10 onward
+      // it moves faster so long rounds visibly pass through dawn, day and dusk.
+      const phaseDuration = levelConfig.level >= 10 ? 112 : 152;
+      const timePhase = (levelConfig.timeOfDayPhase + totalElapsed / phaseDuration) % 1;
+      const daylight = (1 - Math.cos(timePhase * Math.PI * 2)) / 2;
+      const nightShade = 0.50 * (1 - daylight);
+      ctx.fillStyle = `rgba(5, 11, 31, ${nightShade.toFixed(3)})`;
+      ctx.fillRect(0, 0, width, height);
+
+      const dawnDistance = Math.min(Math.abs(timePhase - 0.25), 1 - Math.abs(timePhase - 0.25));
+      const duskDistance = Math.min(Math.abs(timePhase - 0.75), 1 - Math.abs(timePhase - 0.75));
+      const twilightGlow = Math.max(Math.exp(-Math.pow(dawnDistance / 0.085, 2)), Math.exp(-Math.pow(duskDistance / 0.085, 2)));
+      if (twilightGlow > 0.015) {
+        const twilight = ctx.createLinearGradient(0, height * 0.35, 0, height);
+        twilight.addColorStop(0, `rgba(251, 146, 60, ${0.02 + twilightGlow * 0.12})`);
+        twilight.addColorStop(1, `rgba(244, 63, 94, ${twilightGlow * 0.18})`);
+        ctx.fillStyle = twilight;
+        ctx.fillRect(0, 0, width, height);
+      }
+
+      // The sun travels across the horizon; at night a softly glowing moon appears.
+      if (timePhase >= 0.16 && timePhase <= 0.84) {
+        const sunProgress = (timePhase - 0.16) / 0.68;
+        const sunX = width * (0.08 + sunProgress * 0.84);
+        const sunY = height * (0.60 - Math.sin(Math.PI * sunProgress) * 0.43);
+        const sunGlow = ctx.createRadialGradient(sunX, sunY, 3, sunX, sunY, 62);
+        sunGlow.addColorStop(0, 'rgba(255, 245, 190, .95)');
+        sunGlow.addColorStop(.22, 'rgba(255, 203, 115, .58)');
+        sunGlow.addColorStop(1, 'rgba(255, 190, 100, 0)');
+        ctx.fillStyle = sunGlow;
+        ctx.beginPath(); ctx.arc(sunX, sunY, 62, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255, 237, 190, .92)';
+        ctx.beginPath(); ctx.arc(sunX, sunY, 16, 0, Math.PI * 2); ctx.fill();
+      } else if (daylight < 0.16) {
+        const moonX = width * (0.76 - timePhase * 0.12);
+        const moonY = height * 0.17;
+        ctx.save();
+        ctx.shadowColor = 'rgba(191, 219, 254, .9)'; ctx.shadowBlur = 24;
+        ctx.fillStyle = 'rgba(226, 232, 255, .92)';
+        ctx.beginPath(); ctx.arc(moonX, moonY, 13, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(35, 45, 82, .7)';
+        ctx.beginPath(); ctx.arc(moonX + 6, moonY - 5, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+
+      // Level 15 is a snowy winter night, with layered drifting flakes.
+      if (levelConfig.weatherMode === 'winter-storm') {
+        ctx.save();
+        for (let flake = 0; flake < 72; flake++) {
+          const fx = (flake * 137.7 + totalElapsed * (12 + (flake % 7) * 3)) % width;
+          const fy = (flake * 83.3 + totalElapsed * (28 + (flake % 5) * 7)) % height;
+          ctx.globalAlpha = 0.28 + (flake % 5) * 0.12;
+          ctx.fillStyle = '#E0F2FE';
+          ctx.beginPath(); ctx.arc(fx, fy, 1.1 + (flake % 3) * 0.65, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+      }
+
       // True zoom-out: the simulation runs in a larger virtual arena from level 5 onward.
       // Touch coordinates are converted back to this world-space by cameraZoom.
       ctx.save();
@@ -1061,7 +1194,9 @@ export default function GameArena({
       floorGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
       floorGrad.addColorStop(
         1,
-        levelConfig.isNight ? 'rgba(30, 27, 75, 0.55)' : 'rgba(255, 241, 242, 0.72)',
+        daylight < 0.38
+          ? `rgba(30, 27, 75, ${(0.24 + (0.38 - daylight) * 0.78).toFixed(3)})`
+          : `rgba(255, 241, 242, ${(0.34 + daylight * 0.38).toFixed(3)})`,
       );
       ctx.fillStyle = floorGrad;
       ctx.fillRect(0, worldHeight - 36, worldWidth, 36);
@@ -1134,6 +1269,39 @@ export default function GameArena({
         ctx.restore();
       }
 
+      // Winter storm lightning has a clearly marked danger lane before the strike.
+      if (levelConfig.weatherMode === 'winter-storm') {
+        if (lightningWarning > 0) {
+          ctx.save();
+          const pulse = 0.55 + Math.sin(totalElapsed * 20) * 0.2;
+          ctx.globalAlpha = pulse;
+          ctx.strokeStyle = '#FDE68A'; ctx.lineWidth = 5; ctx.setLineDash([15, 10]);
+          ctx.beginPath(); ctx.moveTo(lightningX, 18); ctx.lineTo(lightningX, worldHeight - 30); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = 'rgba(251, 191, 36, .18)';
+          ctx.beginPath(); ctx.ellipse(lightningX, worldHeight - 30, 62, 18, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#FDE68A'; ctx.lineWidth = 2.5;
+          ctx.beginPath(); ctx.ellipse(lightningX, worldHeight - 30, 62, 18, 0, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+        }
+        if (lightningFlash > 0) {
+          ctx.save();
+          ctx.globalAlpha = Math.min(0.72, lightningFlash * 2.1);
+          ctx.fillStyle = '#E0F2FE'; ctx.fillRect(0, 0, worldWidth, worldHeight);
+          ctx.globalAlpha = Math.min(1, lightningFlash * 3.2);
+          ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 9; ctx.shadowColor = '#7DD3FC'; ctx.shadowBlur = 28;
+          ctx.beginPath();
+          ctx.moveTo(lightningX, 0);
+          ctx.lineTo(lightningX - 18, worldHeight * .22);
+          ctx.lineTo(lightningX + 16, worldHeight * .34);
+          ctx.lineTo(lightningX - 11, worldHeight * .52);
+          ctx.lineTo(lightningX + 8, worldHeight * .71);
+          ctx.lineTo(lightningX, worldHeight - 28);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
       // 4. Player Character — Crisp Animated Anime Sprite of Joudy
       const isMoving = Math.abs(player.vx) > 25;
       const basePlayerY = player.y;
@@ -1150,7 +1318,7 @@ export default function GameArena({
       // Ground Contact Shadow glued directly underneath Joudy
       const heightRatio = Math.min(0.88, Math.max(0, (worldHeight - 13 - player.y) / Math.max(1, worldHeight - 13)));
       ctx.save();
-      ctx.fillStyle = levelConfig.isNight ? 'rgba(15, 23, 42, 0.5)' : 'rgba(136, 19, 55, 0.24)';
+      ctx.fillStyle = daylight < 0.38 ? 'rgba(15, 23, 42, 0.5)' : 'rgba(136, 19, 55, 0.24)';
       ctx.beginPath();
       ctx.ellipse(
         drawPlayerX,

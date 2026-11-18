@@ -1,4 +1,5 @@
 export type WorldParticleMode = 'petals' | 'fireflies' | 'stars';
+export type LevelWeatherMode = 'clear' | 'winter-storm';
 
 export interface WorldTheme {
   id: number;
@@ -27,6 +28,8 @@ export interface LevelConfig {
   obstacleChance: number;
   windStrength: number;
   secretNote: string;
+  timeOfDayPhase: number;
+  weatherMode: LevelWeatherMode;
 }
 
 export const WORLD_THEMES: WorldTheme[] = [
@@ -103,6 +106,32 @@ export const WORLD_THEMES: WorldTheme[] = [
     borderClass: 'border-rose-300/30',
   },
 ];
+
+
+// Backdrops rotate at every level so consecutive stages feel like new places.
+// The art files are reused with distinct colour grading because the project
+// currently ships four painted world panoramas.
+const LEVEL_BACKDROPS = [
+  '/images/anime-meadow.jpg', '/images/anime-sunset.jpg', '/images/anime-forest.jpg', '/images/anime-night.jpg',
+  '/images/anime-meadow.jpg', '/images/anime-forest.jpg', '/images/anime-sunset.jpg', '/images/anime-night.jpg',
+  '/images/anime-forest.jpg', '/images/anime-meadow.jpg', '/images/anime-night.jpg', '/images/anime-sunset.jpg',
+  '/images/anime-meadow.jpg', '/images/anime-forest.jpg', '/images/anime-night.jpg',
+  '/images/anime-night.jpg', '/images/anime-sunset.jpg', '/images/anime-forest.jpg', '/images/anime-night.jpg',
+  '/images/anime-meadow.jpg', '/images/anime-forest.jpg', '/images/anime-sunset.jpg', '/images/anime-night.jpg',
+  '/images/anime-forest.jpg', '/images/anime-meadow.jpg', '/images/anime-night.jpg', '/images/anime-sunset.jpg',
+  '/images/anime-forest.jpg', '/images/anime-night.jpg', '/images/anime-night.jpg',
+] as const;
+
+const LEVEL_TINTS = [
+  'rgba(255, 226, 235, .18)', 'rgba(255, 190, 156, .18)', 'rgba(120, 210, 167, .16)', 'rgba(50, 72, 125, .20)',
+  'rgba(255, 240, 192, .16)', 'rgba(18, 105, 81, .22)', 'rgba(255, 174, 126, .18)', 'rgba(24, 34, 82, .26)',
+  'rgba(62, 120, 96, .18)', 'rgba(255, 226, 170, .19)', 'rgba(22, 28, 67, .32)', 'rgba(170, 104, 91, .20)',
+  'rgba(255, 203, 184, .18)', 'rgba(34, 73, 92, .22)', 'rgba(120, 154, 190, .43)',
+  'rgba(35, 29, 85, .42)', 'rgba(154, 82, 91, .24)', 'rgba(21, 77, 78, .30)', 'rgba(25, 26, 73, .42)',
+  'rgba(255, 224, 176, .16)', 'rgba(22, 78, 78, .31)', 'rgba(170, 93, 77, .24)', 'rgba(19, 30, 84, .40)',
+  'rgba(16, 73, 75, .34)', 'rgba(255, 222, 160, .16)', 'rgba(26, 21, 70, .44)', 'rgba(145, 77, 95, .26)',
+  'rgba(18, 68, 74, .34)', 'rgba(20, 22, 67, .48)', 'rgba(5, 8, 28, .58)',
+] as const;
 
 const SECRET_NOTES = [
   'بداية موفقة يا جودي. واصلي التقدم خطوةً بعد أخرى.',
@@ -184,14 +213,20 @@ export const LEVELS: LevelConfig[] = Array.from({ length: 30 }, (_, idx) => {
             ? 0.24 + ((level - 5) / 9) * 0.20
             : 0.56 + secondSeasonProgress * 0.08;
 
+  const timeOfDayPhase = level === 15 ? 0.91 : Number(((level * 0.317 + (level % 4) * 0.083) % 1).toFixed(3));
+  const isNight = timeOfDayPhase < 0.13 || timeOfDayPhase > 0.87;
+  const environmentIndex = idx;
+
   return {
     level,
     worldId: world.id,
     worldName: world.name,
-    bgImage: world.bgImage,
-    tintOverlay: world.tintOverlay,
-    isNight: world.isNight,
-    particleMode: world.particleMode,
+    bgImage: LEVEL_BACKDROPS[environmentIndex],
+    tintOverlay: LEVEL_TINTS[environmentIndex],
+    isNight,
+    particleMode: level === 15 ? 'stars' : world.particleMode,
+    timeOfDayPhase,
+    weatherMode: level === 15 ? 'winter-storm' : 'clear',
     targetScore: TARGET_SCORES[idx],
     speedMultiplier: Number(speedMultiplier.toFixed(2)),
     spawnIntervalSec: Number(spawnIntervalSec.toFixed(2)),

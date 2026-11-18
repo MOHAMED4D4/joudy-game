@@ -21,6 +21,32 @@ const scoring = [
 export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }: CharacterSelectScreenProps) {
   return (
     <>
+    <style jsx global>{`
+      @keyframes joudy-portrait-glow {
+        0%, 100% { opacity: .42; transform: scale(.94); filter: blur(22px); }
+        50% { opacity: .82; transform: scale(1.08); filter: blur(30px); }
+      }
+      @keyframes joudy-portrait-sweep {
+        0% { transform: translateX(145%) rotate(18deg); opacity: 0; }
+        16% { opacity: .48; }
+        52%, 100% { transform: translateX(-165%) rotate(18deg); opacity: 0; }
+      }
+      @keyframes joudy-portrait-twinkle {
+        0%, 100% { opacity: .2; transform: scale(.65) rotate(0deg); }
+        50% { opacity: 1; transform: scale(1.25) rotate(35deg); }
+      }
+      @keyframes joudy-portrait-ring {
+        0% { transform: scale(.86); opacity: .65; }
+        100% { transform: scale(1.13); opacity: 0; }
+      }
+      .joudy-portrait-glow { animation: joudy-portrait-glow 4.8s ease-in-out infinite; }
+      .joudy-portrait-sweep { animation: joudy-portrait-sweep 7.5s ease-in-out infinite; }
+      .joudy-portrait-twinkle { animation: joudy-portrait-twinkle 2.6s ease-in-out infinite; }
+      .joudy-portrait-ring { animation: joudy-portrait-ring 3.8s ease-out infinite; }
+      @media (prefers-reduced-motion: reduce) {
+        .joudy-portrait-glow, .joudy-portrait-sweep, .joudy-portrait-twinkle, .joudy-portrait-ring { animation: none !important; }
+      }
+    `}</style>
     <motion.section
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
@@ -51,12 +77,34 @@ export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }
       </div>
 
       <div className="grid overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#101b2b]/90 shadow-[0_30px_90px_rgba(0,0,0,.4)] lg:grid-cols-[.9fr_1.1fr]">
-        <div className="relative min-h-[280px] overflow-hidden bg-[radial-gradient(circle_at_50%_40%,#26445c_0%,#17283b_48%,#101a2a_100%)] sm:min-h-[390px]">
+        <div className="relative isolate min-h-[280px] overflow-hidden bg-[radial-gradient(circle_at_50%_40%,#345b76_0%,#17283b_48%,#101a2a_100%)] sm:min-h-[390px]">
           <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px)', backgroundSize: '34px 34px' }} />
           <div className="absolute left-8 top-8 h-28 w-28 rounded-full bg-cyan-400/20 blur-3xl" />
-          <div className="absolute bottom-8 right-8 h-32 w-32 rounded-full bg-violet-500/20 blur-3xl" />
-          <Image src={realImageSrc} alt="صورة جودي الحقيقية" fill priority sizes="(max-width: 1024px) 100vw, 45vw" className="relative z-10 object-contain object-center drop-shadow-[0_20px_35px_rgba(0,0,0,.45)]" />
-          <div className="absolute bottom-5 right-5 z-20 rounded-xl border border-white/10 bg-black/35 px-3 py-2 text-xs font-semibold text-white backdrop-blur">الشخصية الرئيسية</div>
+          <div className="absolute bottom-8 right-8 h-32 w-32 rounded-full bg-violet-500/25 blur-3xl" />
+          <div className="joudy-portrait-glow absolute left-1/2 top-1/2 z-[1] h-[62%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/35" />
+          <div className="joudy-portrait-ring absolute left-1/2 top-1/2 z-[2] aspect-square w-[min(74%,390px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-100/50 shadow-[0_0_35px_rgba(103,232,249,.28)]" />
+          <div className="joudy-portrait-ring absolute left-1/2 top-1/2 z-[2] aspect-square w-[min(74%,390px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-200/35 [animation-delay:1.9s]" />
+          <motion.div
+            className="absolute inset-0 z-10"
+            initial={{ opacity: 0, y: 18, scale: .92 }}
+            animate={{ opacity: 1, y: [0, -8, 0], scale: [1, 1.025, 1] }}
+            transition={{ opacity: { duration: .8 }, y: { duration: 5.2, repeat: Infinity, ease: 'easeInOut' }, scale: { duration: 5.2, repeat: Infinity, ease: 'easeInOut' } }}
+          >
+            <Image src={realImageSrc} alt="صورة جودي الحقيقية" fill priority sizes="(max-width: 1024px) 100vw, 45vw" className="object-contain object-center drop-shadow-[0_20px_35px_rgba(0,0,0,.5)]" />
+            <div className="joudy-portrait-sweep pointer-events-none absolute inset-y-0 left-[-24%] z-10 w-[28%] skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/30 to-transparent blur-md" />
+          </motion.div>
+          {[
+            { left: '16%', top: '21%', delay: '0s', size: '17px' },
+            { left: '78%', top: '17%', delay: '.7s', size: '13px' },
+            { left: '84%', top: '60%', delay: '1.3s', size: '19px' },
+            { left: '12%', top: '70%', delay: '1.8s', size: '12px' },
+            { left: '27%', top: '43%', delay: '2.2s', size: '10px' },
+            { left: '70%', top: '83%', delay: '.3s', size: '14px' },
+          ].map((spark, index) => (
+            <span key={index} className="joudy-portrait-twinkle pointer-events-none absolute z-[12] text-cyan-100 drop-shadow-[0_0_12px_rgba(165,243,252,.95)]" style={{ left: spark.left, top: spark.top, fontSize: spark.size, animationDelay: spark.delay }}>✦</span>
+          ))}
+          <div className="absolute inset-x-0 bottom-0 z-[13] h-24 bg-gradient-to-t from-[#0b1421]/75 to-transparent" />
+          <div className="absolute bottom-5 right-5 z-20 rounded-xl border border-cyan-100/25 bg-slate-950/45 px-3 py-2 text-xs font-semibold text-white shadow-[0_0_20px_rgba(34,211,238,.16)] backdrop-blur">الشخصية الرئيسية <span className="mr-1 text-cyan-200">✦</span></div>
         </div>
 
         <div className="p-5 sm:p-8 lg:p-9">
