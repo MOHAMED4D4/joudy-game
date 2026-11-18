@@ -4,8 +4,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import {
-  ChevronLeft,
-  ChevronRight,
   Flame,
   Heart,
   Magnet,
@@ -27,8 +25,7 @@ import {
 } from '@/lib/cartoonSvgSprites';
 import type { LevelConfig } from '@/lib/levels';
 import WorldAtmosphereOverlay from './WorldAtmosphereOverlay';
-import VirtualJoystick, { type JoystickVector } from './VirtualJoystick';
-import { saveWorld, useWorldSave, type ControlMode } from '@/lib/joudyWorld';
+import { saveWorld, useWorldSave } from '@/lib/joudyWorld';
 
 export interface GameRunStats {
   level: number;
@@ -47,7 +44,6 @@ interface GameArenaProps {
   highScore: number;
   soundEnabled: boolean;
   onToggleSound: () => void;
-  controlMode: ControlMode;
   characterFilter?: string;
   characterSpeedBonus?: number;
   characterShieldBonus?: number;
@@ -175,7 +171,6 @@ export default function GameArena({
   highScore,
   soundEnabled,
   onToggleSound,
-  controlMode,
   characterFilter = 'none',
   characterSpeedBonus = 1,
   characterShieldBonus = 0,
@@ -192,16 +187,14 @@ export default function GameArena({
   const [counts, setCounts] = useState({ cats: 0, roses: 0, chocolates: 0, obstaclesHit: 0 });
   const [combo, setCombo] = useState(0);
   const [magnetSecondsLeft, setMagnetSecondsLeft] = useState(0);
-  const [activeControl, setActiveControl] = useState<'left' | 'right' | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [jumpActive, setJumpActive] = useState(false);
 
   const isPausedRef = useRef(false);
   const isGameOverRef = useRef(false);
   const victoryFiredRef = useRef(false);
-  const keysRef = useRef<{ left: boolean; right: boolean }>({ left: false, right: false });
   const pointerTargetXRef = useRef<number | null>(null);
+  const pointerTargetYRef = useRef<number | null>(null);
   const dragPointerIdRef = useRef<number | null>(null);
   const scoreRef = useRef(0);
   const heartsRef = useRef(MAX_HEARTS);
@@ -212,7 +205,6 @@ export default function GameArena({
   const startTimeRef = useRef<number>(0);
   const shakeRef = useRef(0);
   const resetSignalRef = useRef(0);
-  const jumpTimerRef = useRef(0);
   const reviveRequestRef = useRef(false);
   const reviveCountRef = useRef(worldSave.reviveCountsByLevel[levelConfig.level] ?? 0);
 
@@ -281,52 +273,14 @@ export default function GameArena({
   }, [soundEnabled, isPaused, isGameOver]);
 
   useEffect(() => {
-    const syncActiveControl = () => {
-      if (keysRef.current.left && !keysRef.current.right) setActiveControl('left');
-      else if (keysRef.current.right && !keysRef.current.left) setActiveControl('right');
-      else setActiveControl(null);
-    };
-
     const onKeyDown = (e: KeyboardEvent) => {
-      if (isGameOverRef.current) return;
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        keysRef.current.left = true;
-        pointerTargetXRef.current = null;
-        syncActiveControl();
-      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        keysRef.current.right = true;
-        pointerTargetXRef.current = null;
-        syncActiveControl();
-      } else if (e.key === 'Escape' || e.key === ' ') {
+      if (e.key === 'Escape' || e.key === ' ') {
         e.preventDefault();
         setIsPaused((prev) => !prev);
       }
     };
-
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        keysRef.current.left = false;
-        syncActiveControl();
-      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        keysRef.current.right = false;
-        syncActiveControl();
-      }
-    };
-
-    const onWindowBlur = () => {
-      keysRef.current.left = false;
-      keysRef.current.right = false;
-      setActiveControl(null);
-    };
-
     window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-    window.addEventListener('blur', onWindowBlur);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-      window.removeEventListener('blur', onWindowBlur);
-    };
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   const resetRun = useCallback(() => {
@@ -336,7 +290,6 @@ export default function GameArena({
     comboRef.current = 0;
     comboTimerRef.current = 0;
     magnetTimerRef.current = 0;
-    jumpTimerRef.current = 0;
     reviveRequestRef.current = false;
     victoryFiredRef.current = false;
     isGameOverRef.current = false;
@@ -382,7 +335,9 @@ export default function GameArena({
     const player = {
       x: width / 2,
       vx: 0,
-      size: Math.min(158, Math.max(108, width * 0.155)),
+      size: Math.min(194, Math.max(138, width * 0.205)),
+      y: height * 0.72,
+      vy: 0,
       bouncePhase: 0,
       catchBounce: 0,
       hurtShake: 0,
@@ -556,8 +511,7 @@ export default function GameArena({
 
       if (!isPausedRef.current && !victoryFiredRef.current && !isGameOverRef.current) {
         totalElapsed += dt;
-        const normalPlayerSize = Math.min(158, Math.max(108, width * 0.155));
-        if (jumpTimerRef.current > 0) jumpTimerRef.current = Math.max(0, jumpTimerRef.current - dt);
+        const normalPlayerSize = Math.min(194, Math.max(138, width * 0.205));
         player.size = normalPlayerSize;
 
         // Timers
@@ -583,27 +537,20 @@ export default function GameArena({
         if (player.happyTimer > 0) player.happyTimer = Math.max(0, player.happyTimer - dt);
         if (player.bubbleTimer > 0) player.bubbleTimer = Math.max(0, player.bubbleTimer - dt);
 
-        // Smooth Horizontal Player Physics
-        const maxSpeed = 620 * characterSpeedBonus;
-        let moveDir = 0;
-        if (keysRef.current.left) moveDir -= 1;
-        if (keysRef.current.right) moveDir += 1;
-
-        if (moveDir !== 0) {
-          player.vx += (moveDir * maxSpeed - player.vx) * Math.min(1, dt * 15);
-        } else if (pointerTargetXRef.current !== null) {
+        // Free-flight touch movement: drag anywhere to steer horizontally and vertically.
+        const maxSpeed = 760 * characterSpeedBonus;
+        if (pointerTargetXRef.current !== null) {
           const dx = pointerTargetXRef.current - player.x;
-          if (Math.abs(dx) > 4) {
-            player.vx = Math.max(-maxSpeed * 1.3, Math.min(maxSpeed * 1.3, dx * 12));
-          } else {
-            player.vx *= Math.pow(0.001, dt);
-          }
+          player.vx += (Math.max(-maxSpeed, Math.min(maxSpeed, dx * 8)) - player.vx) * Math.min(1, dt * 8);
         } else {
           player.vx *= Math.pow(0.0008, dt);
         }
-
+        const targetY = pointerTargetYRef.current ?? player.y;
+        const dy = targetY - player.y;
+        player.vy += (Math.max(-maxSpeed * 0.78, Math.min(maxSpeed * 0.78, dy * 8)) - player.vy) * Math.min(1, dt * 8);
         const halfPlayer = player.size * 0.42;
         player.x = Math.max(halfPlayer, Math.min(width - halfPlayer, player.x + player.vx * dt));
+        player.y = Math.max(player.size * 0.52, Math.min(height - player.size * 0.48, player.y + player.vy * dt));
 
         // Lively bounce & star trail while moving
         const speedNorm = Math.min(1, Math.abs(player.vx) / 220);
@@ -628,8 +575,7 @@ export default function GameArena({
         }
 
         // Update Falling Items, Magnet Pull & Collisions
-        const activeJumpHeight = jumpTimerRef.current > 0 ? Math.sin((jumpTimerRef.current / 0.68) * Math.PI) * 104 : 0;
-        const playerCenterY = height - player.size * 0.5 - 16 - activeJumpHeight;
+        const playerCenterY = player.y;
         const catchRadiusX = player.size * 0.46;
         const catchRadiusY = player.size * 0.46;
         const magnetActive = magnetTimerRef.current > 0;
@@ -958,19 +904,19 @@ export default function GameArena({
 
       // 4. Player Character — Crisp Animated Anime Sprite of Joudy
       const isMoving = Math.abs(player.vx) > 25;
-      const basePlayerY = height - player.size * 0.5 - 16;
+      const basePlayerY = player.y;
       const runHop = isMoving ? Math.abs(Math.sin(player.bouncePhase)) * 9 : 0;
       const idleBreathY = isMoving ? 0 : Math.sin(player.bouncePhase) * 3;
       const catchJump = Math.sin(player.catchBounce * Math.PI) * 20;
-      const manualJump = jumpTimerRef.current > 0 ? Math.sin((jumpTimerRef.current / 0.68) * Math.PI) * 104 : 0;
+      const manualJump = 0;
       const hurtOffset = Math.sin(player.hurtShake * Math.PI * 6) * 8 * player.hurtShake;
       const tilt = (player.vx / 620) * 0.16;
 
       const drawPlayerX = player.x + hurtOffset;
-      const drawPlayerY = basePlayerY - manualJump - catchJump - runHop + idleBreathY;
+      const drawPlayerY = basePlayerY - catchJump - runHop + idleBreathY;
 
       // Ground Contact Shadow glued directly underneath Joudy
-      const heightRatio = Math.min(0.82, (manualJump + catchJump + runHop) / 150);
+      const heightRatio = Math.min(0.88, Math.max(0, (height - 13 - player.y) / Math.max(1, height - 13)));
       ctx.save();
       ctx.fillStyle = levelConfig.isNight ? 'rgba(15, 23, 42, 0.5)' : 'rgba(136, 19, 55, 0.24)';
       ctx.beginPath();
@@ -1175,47 +1121,26 @@ export default function GameArena({
     };
   }, [levelConfig, characterFilter, characterSpeedBonus, characterShieldBonus]);
 
+  const updateTouchTarget = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    pointerTargetXRef.current = e.clientX - rect.left;
+    pointerTargetYRef.current = e.clientY - rect.top;
+  };
+
   const handleCanvasPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (isPaused || isGameOver) return;
     dragPointerIdRef.current = e.pointerId;
-    const rect = e.currentTarget.getBoundingClientRect();
-    pointerTargetXRef.current = e.clientX - rect.left;
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* Pointer capture is optional */ }
+    updateTouchTarget(e);
   };
 
   const handleCanvasPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (isPaused || isGameOver) return;
-    if (dragPointerIdRef.current !== e.pointerId && e.buttons === 0 && e.pointerType === 'mouse') {
-      return;
-    }
-    const rect = e.currentTarget.getBoundingClientRect();
-    pointerTargetXRef.current = e.clientX - rect.left;
+    if (isPaused || isGameOver || dragPointerIdRef.current !== e.pointerId) return;
+    updateTouchTarget(e);
   };
 
   const handleCanvasPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (dragPointerIdRef.current === e.pointerId) {
-      dragPointerIdRef.current = null;
-    }
-  };
-
-  const handleTouchPress = (side: 'left' | 'right', e: React.PointerEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // Ignore if pointer capture is unsupported
-    }
-    keysRef.current[side] = true;
-    pointerTargetXRef.current = null;
-    setActiveControl(side);
-  };
-
-  const handleTouchRelease = (side: 'left' | 'right', e?: React.PointerEvent<HTMLButtonElement>) => {
-    if (e) e.stopPropagation();
-    keysRef.current[side] = false;
-    if (keysRef.current.left && !keysRef.current.right) setActiveControl('left');
-    else if (keysRef.current.right && !keysRef.current.left) setActiveControl('right');
-    else setActiveControl(null);
+    if (dragPointerIdRef.current === e.pointerId) dragPointerIdRef.current = null;
   };
 
   const handleRevive = useCallback(() => {
@@ -1232,24 +1157,6 @@ export default function GameArena({
 
   }, [worldSave, levelConfig.level]);
 
-  const handleJoystickChange = useCallback((vector: JoystickVector) => {
-    keysRef.current.left = vector.x < -0.18;
-    keysRef.current.right = vector.x > 0.18;
-    pointerTargetXRef.current = null;
-    if (keysRef.current.left && !keysRef.current.right) setActiveControl('left');
-    else if (keysRef.current.right && !keysRef.current.left) setActiveControl('right');
-    else setActiveControl(null);
-  }, []);
-
-  const triggerJump = useCallback(() => {
-    if (isPausedRef.current || isGameOverRef.current || jumpTimerRef.current > 0.1) return;
-    jumpTimerRef.current = 0.68;
-    setJumpActive(true);
-    window.setTimeout(() => setJumpActive(false), 700);
-  }, []);
-
-
-
   const progressPct = Math.min(100, Math.round((score / levelConfig.targetScore) * 100));
   const displayedHighScore = Math.max(highScore, score);
   const comboMultiplier = getComboMultiplier(combo);
@@ -1260,7 +1167,7 @@ export default function GameArena({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="w-full max-w-none mx-auto px-0 sm:px-1 py-1 flex flex-col gap-1.5 h-[100dvh] max-h-none min-h-[520px]"
+      className="relative left-1/2 w-screen max-w-none -translate-x-1/2 px-0 py-0 flex flex-col gap-1.5 h-[100dvh] max-h-none min-h-[520px]"
     >
       {/* Compact Top Arcade HUD */}
       <header className="bg-slate-950/75 backdrop-blur-xl border border-white/10 rounded-2xl px-3 sm:px-5 py-2.5 shadow-sm flex items-center justify-between gap-3 shrink-0">
@@ -1376,7 +1283,7 @@ export default function GameArena({
         </div>
       </header>
 
-      {/* Main 2D Canvas Playfield + Circular Translucent Touch D-Pad */}
+      {/* Full-width 2D flight arena — touch and drag to move in every direction */}
       <div
         ref={stageRef}
         className={`relative flex-1 min-h-0 mb-0 rounded-none overflow-hidden border-0 shadow-none select-none touch-none ${
@@ -1393,7 +1300,7 @@ export default function GameArena({
           onPointerMove={handleCanvasPointerMove}
           onPointerUp={handleCanvasPointerUp}
           onPointerCancel={handleCanvasPointerUp}
-          className="w-full h-full block cursor-grab active:cursor-grabbing"
+          className="w-full h-full block cursor-grab active:cursor-grabbing touch-none"
         />
 
         {/* Framer Motion Biome Atmosphere Layer */}
@@ -1401,22 +1308,7 @@ export default function GameArena({
           <WorldAtmosphereOverlay worldId={levelConfig.worldId} variant="arena" />
         )}
 
-        {/* Touch controls sit on the outer edges, leaving the central world unobstructed. */}
-        {!isPaused && !isGameOver && (
-          <>
-            {controlMode === 'joystick' ? (
-              <div className="absolute left-3 top-1/2 z-30 -translate-y-1/2">
-                <VirtualJoystick onChange={handleJoystickChange} disabled={isPaused || isGameOver} />
-              </div>
-            ) : (
-              <>
-                <button type="button" aria-label="التحرك لليسار" onContextMenu={(e) => e.preventDefault()} onPointerDown={(e) => handleTouchPress('left', e)} onPointerUp={(e) => handleTouchRelease('left', e)} onPointerCancel={(e) => handleTouchRelease('left', e)} onLostPointerCapture={(e) => handleTouchRelease('left', e)} className={`absolute left-3 top-1/2 z-30 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 text-white shadow-lg backdrop-blur-md transition ${activeControl === 'left' ? 'scale-90 bg-cyan-400/80' : 'bg-slate-950/45 hover:bg-slate-950/65'}`}><ChevronLeft className="h-8 w-8" /></button>
-                <button type="button" aria-label="التحرك لليمين" onContextMenu={(e) => e.preventDefault()} onPointerDown={(e) => handleTouchPress('right', e)} onPointerUp={(e) => handleTouchRelease('right', e)} onPointerCancel={(e) => handleTouchRelease('right', e)} onLostPointerCapture={(e) => handleTouchRelease('right', e)} className={`absolute right-3 top-1/2 z-30 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 text-white shadow-lg backdrop-blur-md transition ${activeControl === 'right' ? 'scale-90 bg-cyan-400/80' : 'bg-slate-950/45 hover:bg-slate-950/65'}`}><ChevronRight className="h-8 w-8" /></button>
-              </>
-            )}
-            <button type="button" onClick={triggerJump} disabled={jumpActive} title="قفزة لتفادي العقبات" className={`absolute bottom-4 right-4 z-30 flex h-14 min-w-14 items-center justify-center gap-1 rounded-full border border-white/30 px-3 text-xs font-black text-white shadow-lg backdrop-blur-md ${jumpActive ? 'bg-amber-400/75' : 'bg-slate-950/50 hover:bg-amber-500/50'}`}><span aria-hidden="true">↟</span> قفز</button>
-          </>
-        )}
+        {!isPaused && !isGameOver && <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/15 bg-slate-950/35 px-4 py-2 text-xs font-semibold text-white/85 backdrop-blur-sm">اسحب بإصبعك للتحرك في كل الاتجاهات</div>}
 
         {/* Pause Overlay */}
         {isPaused && !isGameOver && (

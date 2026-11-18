@@ -4,7 +4,7 @@ import React, { useCallback, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import JoudyHome from './JoudyHome';
-import { addWorldCoins, loadWorldSave, saveWorld, setControlMode, useControlMode, useWorldSave, SHOP_ITEMS } from '@/lib/joudyWorld';
+import { addWorldCoins, loadWorldSave, saveWorld, useWorldSave, SHOP_ITEMS } from '@/lib/joudyWorld';
 import CharacterSelectScreen from './CharacterSelectScreen';
 import WorldMapScreen from './WorldMapScreen';
 import GameArena, { type GameRunStats } from './GameArena';
@@ -26,7 +26,6 @@ export default function JoudyAdventureGame() {
   const progress = useJoudyProgress();
 
   const [gameState, setGameState] = useState<GameState>('HOME');
-  const controlMode = useControlMode();
   const worldSave = useWorldSave();
   const equippedOutfit = SHOP_ITEMS.find((item) => item.id === worldSave.equippedOutfit) ?? SHOP_ITEMS[0];
   const equippedShoes = SHOP_ITEMS.find((item) => item.id === worldSave.equippedShoes) ?? SHOP_ITEMS.find((item) => item.id === 'sneakers')!;
@@ -132,8 +131,6 @@ export default function JoudyAdventureGame() {
         {gameState === 'HOME' && (
           <JoudyHome
             animeImageSrc={animeImageSrc}
-            controlMode={controlMode}
-            onControlModeChange={setControlMode}
             soundEnabled={soundEnabled}
             onToggleSound={handleToggleSound}
             onPlayArcade={() => setGameState('TITLE_MENU')}
@@ -169,7 +166,6 @@ export default function JoudyAdventureGame() {
               highScore={progress.highScore}
               soundEnabled={soundEnabled}
               onToggleSound={handleToggleSound}
-              controlMode={controlMode}
               characterFilter={equippedOutfit.filter}
               characterSpeedBonus={characterSpeedBonus}
               characterShieldBonus={characterShieldBonus}

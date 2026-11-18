@@ -4,18 +4,16 @@ import React, { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'motion/react';
 import { Coins, Shirt, Footprints, Settings, Gamepad2, X, Check, Eye } from 'lucide-react';
-import { SHOP_ITEMS, useWorldSave, saveWorld, type ControlMode } from '@/lib/joudyWorld';
+import { SHOP_ITEMS, useWorldSave, saveWorld } from '@/lib/joudyWorld';
 
 interface Props {
   animeImageSrc: string;
-  controlMode: ControlMode;
-  onControlModeChange: (mode: ControlMode) => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
   onPlayArcade: () => void;
 }
 
-export default function JoudyHome({ animeImageSrc, controlMode, onControlModeChange, soundEnabled, onToggleSound, onPlayArcade }: Props) {
+export default function JoudyHome({ animeImageSrc, soundEnabled, onToggleSound, onPlayArcade }: Props) {
   const save = useWorldSave();
   const [category, setCategory] = useState<'outfit' | 'shoes'>('outfit');
   const [selectedId, setSelectedId] = useState(save.equippedOutfit);
@@ -68,7 +66,7 @@ export default function JoudyHome({ animeImageSrc, controlMode, onControlModeCha
 
       <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[1500px] flex-col p-2.5 sm:p-4">
         <header className="z-20 flex items-center justify-between gap-3 rounded-2xl border border-white/55 bg-white/65 px-3 py-2.5 shadow-sm backdrop-blur-md sm:px-5">
-          <div><p className="text-[10px] font-bold tracking-[.18em] text-amber-900/65">JOUdY · WARDROBE</p><h1 className="text-lg font-black sm:text-xl">ملابس جودي</h1></div>
+          <div><p className="text-[10px] font-bold tracking-[.18em] text-amber-900/65">WARDROBE</p><h1 className="text-lg font-black sm:text-xl">ملابس جودي</h1></div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 rounded-xl border border-amber-700/15 bg-amber-100/90 px-3 py-2 font-black text-amber-950"><Coins className="h-4 w-4"/><span>{save.coins}</span></div>
             <button onClick={() => setSettingsOpen(true)} aria-label="الإعدادات" className="rounded-xl border border-amber-900/10 bg-white/75 p-2.5 text-amber-950 hover:bg-white"><Settings className="h-5 w-5"/></button>
@@ -90,7 +88,6 @@ export default function JoudyHome({ animeImageSrc, controlMode, onControlModeCha
                 </g>
               </svg>
             </div>
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-white/50 bg-white/65 px-4 py-1.5 text-xs font-bold text-amber-950/75 shadow-sm backdrop-blur">جودي في بيتها</div>
           </div>
 
           <aside className="flex min-h-0 flex-col gap-3 rounded-[1.6rem] border border-white/60 bg-[#fffaf2]/90 p-3 shadow-lg backdrop-blur-md sm:p-4">
@@ -121,7 +118,7 @@ export default function JoudyHome({ animeImageSrc, controlMode, onControlModeCha
         <p className="py-2 text-center text-[10px] text-amber-950/55">الإطلالة المختارة ترافق جودي أثناء اللعب</p>
       </div>
 
-      <AnimatePresence>{settingsOpen&&<motion.div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.div initial={{y:12,scale:.98}} animate={{y:0,scale:1}} className="w-full max-w-md rounded-2xl border border-white/30 bg-[#fffaf2] p-5 text-slate-900 shadow-2xl"><div className="mb-4 flex items-center justify-between"><h3 className="text-lg font-black">إعدادات التحكم</h3><button onClick={()=>setSettingsOpen(false)} className="rounded-lg bg-amber-900/10 p-2"><X className="h-4 w-4"/></button></div><p className="mb-3 text-sm text-slate-600">اختار طريقة التحكم المفضلة.</p><div className="grid gap-2 sm:grid-cols-2"><button onClick={()=>onControlModeChange('classic')} className={`rounded-xl border p-3 text-right ${controlMode==='classic'?'border-amber-700 bg-amber-100':'border-amber-900/10 bg-white'}`}><b className="block">الأزرار الكلاسيكية</b><span className="text-xs text-slate-500">يمين ويسار</span></button><button onClick={()=>onControlModeChange('joystick')} className={`rounded-xl border p-3 text-right ${controlMode==='joystick'?'border-amber-700 bg-amber-100':'border-amber-900/10 bg-white'}`}><b className="block">العصا الافتراضية</b><span className="text-xs text-slate-500">تحكم بالعصا</span></button></div><button onClick={onToggleSound} className="mt-3 w-full rounded-xl border border-amber-900/10 bg-white p-3 text-sm font-bold">{soundEnabled?'كتم صوت اللعبة':'تشغيل صوت اللعبة'}</button></motion.div></motion.div>}</AnimatePresence>
+      <AnimatePresence>{settingsOpen&&<motion.div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.div initial={{y:12,scale:.98}} animate={{y:0,scale:1}} className="w-full max-w-md rounded-2xl border border-white/30 bg-[#fffaf2] p-5 text-slate-900 shadow-2xl"><div className="mb-4 flex items-center justify-between"><h3 className="text-lg font-black">إعدادات التحكم</h3><button onClick={()=>setSettingsOpen(false)} className="rounded-lg bg-amber-900/10 p-2"><X className="h-4 w-4"/></button></div><p className="mb-3 text-sm text-slate-600">اسحب بإصبعك داخل مساحة اللعب للتحرك يمينًا ويسارًا ولأعلى ولأسفل.</p><button onClick={onToggleSound} className="mt-3 w-full rounded-xl border border-amber-900/10 bg-white p-3 text-sm font-bold">{soundEnabled?'كتم صوت اللعبة':'تشغيل صوت اللعبة'}</button></motion.div></motion.div>}</AnimatePresence>
     </main>
   );
 }
