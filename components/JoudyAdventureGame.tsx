@@ -23,6 +23,7 @@ const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
 export default function JoudyAdventureGame() {
   const progress = useJoudyProgress();
 
+  // STAGES is the landing screen: open the world map immediately on site load.
   const [gameState, setGameState] = useState<GameState>('WORLD_MAP');
   const worldSave = useWorldSave();
   const equippedOutfit = SHOP_ITEMS.find((item) => item.id === worldSave.equippedOutfit) ?? SHOP_ITEMS[0];

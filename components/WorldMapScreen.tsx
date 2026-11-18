@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import {
@@ -30,9 +30,21 @@ export default function WorldMapScreen({
 }: WorldMapScreenProps) {
   const [wardrobeOpen, setWardrobeOpen] = useState(false);
   const worldSave = useWorldSave();
+  const currentLevelRef = useRef<HTMLDivElement | null>(null);
 
+  // Restore the older map behavior: when STAGES opens, smoothly bring the
+  // currently unlocked level into view; repeat this after progress advances.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      currentLevelRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest',
+      });
+    }, 160);
 
-
+    return () => window.clearTimeout(timer);
+  }, [progress.highestUnlockedLevel]);
 
 
   const completedCount = Object.keys(progress.completedLevels).length;
@@ -58,6 +70,7 @@ export default function WorldMapScreen({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.28 }}
+      id="stages"
       className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5 pb-32 text-slate-100"
     >
       {/* Map Header & Quick Launch */}
@@ -214,6 +227,7 @@ export default function WorldMapScreen({
                       return (
                         <div
                           key={lvl.level}
+                          ref={isCurrent ? currentLevelRef : undefined}
                           className={`relative flex flex-col items-center gap-1.5 ${waveClass} ${isCurrent ? 'scroll-mt-24' : ''}`}
                         >
                           <motion.button
