@@ -7,7 +7,7 @@ import {
   Flame,
   Heart,
   Magnet,
-  Map as MapIcon,
+  DoorOpen,
   Pause,
   Play,
   RotateCcw,
@@ -120,7 +120,16 @@ const ITEM_CONFIG: Record<
   blueKey: { points: 0, halo: 'rgba(59, 130, 246, 0.55)', fallbackColor: '#3B82F6' },
   coin: { points: 0, halo: 'rgba(250, 204, 21, 0.42)', fallbackColor: '#FACC15' },
   obstacle: { points: -15, halo: 'rgba(71, 85, 105, 0.48)', fallbackColor: '#475569' },
+  monster: { points: -18, halo: 'rgba(45, 212, 191, 0.42)', fallbackColor: '#0F766E' },
+  boss: { points: -30, halo: 'rgba(244, 63, 94, 0.58)', fallbackColor: '#BE123C' },
+  projectile: { points: -12, halo: 'rgba(139, 92, 246, 0.48)', fallbackColor: '#7C3AED' },
 };
+
+function isHazardKind(
+  kind: CartoonSpriteKind,
+): kind is 'obstacle' | 'monster' | 'boss' | 'projectile' {
+  return kind === 'obstacle' || kind === 'monster' || kind === 'boss' || kind === 'projectile';
+}
 
 function drawStarShape(
   ctx: CanvasRenderingContext2D,
@@ -402,13 +411,26 @@ export default function GameArena({
         magnetTimerRef.current > 0 || entities.some((e) => e.kind === 'magnet');
 
       const roll = Math.random();
+      const stageNumber = levelConfig.level;
+      const isSecondSeason = stageNumber >= 16;
       let kind: CartoonSpriteKind = 'chocolate';
       if (roll < 0.085) {
         kind = 'coin';
       } else if (roll < 0.097) {
         kind = 'blueKey';
-      } else if (roll < levelConfig.obstacleChance + 0.012) {
-        kind = 'obstacle';
+      } else if (stageNumber >= 2 && roll < levelConfig.obstacleChance + 0.012) {
+        // Stages 2–14 use slower, fewer clouds. The two boss stages use their own
+        // larger enemies, while season two adds strange creatures and their shots.
+        if (stageNumber === 15) {
+          kind = Math.random() < 0.78 ? 'boss' : 'projectile';
+        } else if (stageNumber === 30) {
+          kind = Math.random() < 0.7 ? 'boss' : 'projectile';
+        } else if (isSecondSeason) {
+          kind = Math.random() < 0.68 ? 'monster' : 'projectile';
+        } else {
+          // Small, slower creatures and occasional clouds begin appearing from stage 2.
+          kind = Math.random() < 0.58 ? 'monster' : 'obstacle';
+        }
       } else if (!magnetAlreadyPresent && Math.random() < 0.08) {
         kind = 'magnet';
       } else {
@@ -419,7 +441,15 @@ export default function GameArena({
       }
 
       const cfg = ITEM_CONFIG[kind];
-      const radius = (kind === 'obstacle' ? 30 : kind === 'magnet' ? 28 : kind === 'blueKey' ? 22 : kind === 'coin' ? 17 : 27) * 0.9;
+      const radius = (
+        kind === 'boss' ? 46
+          : kind === 'monster' ? (stageNumber < 15 ? 24 : 35)
+            : kind === 'projectile' ? (stageNumber < 15 ? 16 : 21)
+              : kind === 'obstacle' ? 30
+                : kind === 'magnet' ? 28
+                  : kind === 'blueKey' ? 22
+                    : kind === 'coin' ? 17 : 27
+      ) * 0.9;
       const baseSpeed =
         kind === 'cat'
           ? 245
@@ -433,10 +463,16 @@ export default function GameArena({
                   ? 165
                   : kind === 'coin'
                     ? 175
-                    : 270;
+                    : kind === 'boss'
+                      ? 335
+                      : kind === 'monster'
+                        ? (stageNumber < 15 ? 155 : 275)
+                        : kind === 'projectile'
+                          ? (stageNumber < 15 ? 205 : 365)
+                          : 245;
 
       const x = radius + 16 + Math.random() * Math.max(40, width - (radius + 16) * 2);
-      const hasZigzag = Math.random() < 0.45;
+      const hasZigzag = Math.random() < (kind === 'boss' || kind === 'projectile' ? 0.68 : 0.42);
 
       entities.push({
         id: nextEntityId++,
@@ -444,16 +480,46 @@ export default function GameArena({
         baseX: x,
         x,
         y: -radius - 12,
-        vy: (baseSpeed + Math.random() * 55) * levelConfig.speedMultiplier,
+        vy: (baseSpeed + Math.random() * (isHazardKind(kind) ? 70 : 55)) * levelConfig.speedMultiplier,
         vx: (Math.random() - 0.5) * (30 + levelConfig.windStrength),
-        zigzagAmp: hasZigzag ? (kind === 'obstacle' ? 42 : 58) + Math.random() * 28 : 0,
+        zigzagAmp: hasZigzag
+          ? (kind === 'boss' ? 35 : isHazardKind(kind) ? 68 : 58) + Math.random() * 28
+          : 0,
         zigzagFreq: 2.2 + Math.random() * 1.6,
         zigzagPhase: Math.random() * Math.PI * 2,
         radius,
         rotation: 0,
         vr: (Math.random() - 0.5) * 2.1,
-        points: cfg.points,
+        points: kind === 'monster' && stageNumber < 15 ? -8 : kind === 'projectile' && stageNumber < 15 ? -6 : cfg.points,
       });
+
+      // Monsters and bosses occasionally fire an energy bolt toward Joudy's
+      // current position, making the hazard feel like an intentional attack.
+      if ((kind === 'monster' || kind === 'boss') && Math.random() < (stageNumber < 15 ? 0.28 : 0.68)) {
+        const shotRadius = (stageNumber < 15 ? 16 : 21) * 0.9;
+        const shotX = Math.max(shotRadius + 8, Math.min(width - shotRadius - 8, x + (Math.random() - 0.5) * 34));
+        const shotY = -shotRadius - 18;
+        const shotSpeed = (stageNumber < 15 ? 205 : stageNumber === 15 || stageNumber === 30 ? 420 : 365) * levelConfig.speedMultiplier;
+        const flightSeconds = Math.max(0.45, (player.y - shotY) / shotSpeed);
+        const maxHorizontalSpeed = stageNumber < 15 ? 150 : 290;
+        const shotVx = Math.max(-maxHorizontalSpeed, Math.min(maxHorizontalSpeed, (player.x - shotX) / flightSeconds));
+        entities.push({
+          id: nextEntityId++,
+          kind: 'projectile',
+          baseX: shotX,
+          x: shotX,
+          y: shotY,
+          vy: shotSpeed,
+          vx: shotVx,
+          zigzagAmp: 0,
+          zigzagFreq: 0,
+          zigzagPhase: 0,
+          radius: shotRadius,
+          rotation: 0,
+          vr: 2.4,
+          points: stageNumber < 15 ? -6 : -12,
+        });
+      }
     };
 
     const spawnBurst = (x: number, y: number, kind: CartoonSpriteKind) => {
@@ -466,7 +532,13 @@ export default function GameArena({
               ? ['#D97706', '#FBBF24', '#F472B6']
               : kind === 'magnet'
                 ? ['#38BDF8', '#06B6D4', '#FDE047']
-                : ['#94A3B8', '#64748B', '#FACC15'];
+                : kind === 'boss'
+                  ? ['#F43F5E', '#FBBF24', '#7C3AED']
+                  : kind === 'monster'
+                    ? ['#2DD4BF', '#A78BFA', '#FDE047']
+                    : kind === 'projectile'
+                      ? ['#8B5CF6', '#F97316', '#E0E7FF']
+                      : ['#94A3B8', '#64748B', '#FACC15'];
 
       for (let i = 0; i < 14; i++) {
         const angle = (Math.PI * 2 * i) / 14 + Math.random() * 0.25;
@@ -480,7 +552,7 @@ export default function GameArena({
           maxLife: 0.5 + Math.random() * 0.3,
           size: 5 + Math.random() * 5,
           color: palette[i % palette.length],
-          shape: kind === 'obstacle' ? 'circle' : i % 2 === 0 ? 'star' : 'heart',
+          shape: isHazardKind(kind) ? 'circle' : i % 2 === 0 ? 'star' : 'heart',
           gravity: 210,
         });
       }
@@ -622,7 +694,7 @@ export default function GameArena({
             item.vx = -Math.abs(item.vx);
           }
 
-          if (magnetActive && item.kind !== 'obstacle' && item.kind !== 'magnet') {
+          if (magnetActive && !isHazardKind(item.kind) && item.kind !== 'magnet') {
             const dxPull = player.x - item.x;
             const dyPull = playerCenterY - item.y;
             const dist = Math.hypot(dxPull, dyPull);
@@ -654,7 +726,7 @@ export default function GameArena({
           if (hitX && hitY) {
             spawnBurst(item.x, item.y, item.kind);
 
-            if (item.kind === 'obstacle') {
+            if (isHazardKind(item.kind)) {
               if (player.invulnTimer <= 0) {
                 const nextScore = Math.max(0, scoreRef.current + item.points);
                 scoreRef.current = nextScore;
@@ -1223,94 +1295,73 @@ export default function GameArena({
       transition={{ duration: 0.25 }}
       className="relative left-1/2 w-screen max-w-none -translate-x-1/2 px-0 py-0 flex flex-col gap-1.5 h-[100dvh] max-h-none min-h-[520px]"
     >
-      {/* Compact Top Arcade HUD */}
-      <header className="absolute left-2 right-2 top-2 z-30 bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-2xl px-2 sm:px-5 py-2 shadow-[0_12px_35px_rgba(0,0,0,.35)] flex items-center justify-between gap-2">
-        {realImageSrc && (
-          <div className="hidden sm:block relative w-11 h-11 rounded-xl overflow-hidden border-2 border-amber-300 bg-rose-50 shrink-0 shadow-xs">
-            <Image
-              src={realImageSrc}
-              alt="جودي"
-              fill
-              sizes="44px"
-              referrerPolicy="no-referrer"
-              className="object-cover object-center"
-            />
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs sm:text-sm mb-1.5">
-            <div className="flex items-center gap-2 font-bold text-[#2D1824] whitespace-nowrap">
-              <span className="text-[#6A4558] text-xs hidden sm:inline truncate max-w-[130px]">
-                {levelConfig.worldName}
-              </span>
-              <span className="text-rose-600 text-sm sm:text-base font-extrabold tabular-nums">
-                {score} / {levelConfig.targetScore}
-              </span>
-
-              {combo >= 2 && (
-                <span className="inline-flex items-center gap-1 text-xs font-extrabold text-amber-700 tabular-nums">
-                  <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                  <span>×{comboMultiplier}</span>
-                </span>
-              )}
-              {magnetSecondsLeft > 0 && (
-                <span className="inline-flex items-center gap-1 text-xs font-extrabold text-sky-700 tabular-nums">
-                  <Magnet className="w-3.5 h-3.5 text-sky-500" />
-                  <span>{magnetSecondsLeft}ث</span>
-                </span>
-              )}
+      {/* Premium two-row HUD: score, record, wallet and controls each have their own space. */}
+      <header className="absolute left-2 right-2 top-2 z-30 flex flex-col gap-2 rounded-[1.35rem] border border-white/15 bg-[#071426]/95 px-2.5 py-2.5 text-white shadow-[0_14px_40px_rgba(0,0,0,.48)] backdrop-blur-2xl sm:left-4 sm:right-4 sm:rounded-[1.6rem] sm:px-4 sm:py-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          {realImageSrc && (
+            <div className="relative hidden h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-amber-200/50 bg-slate-900 shadow-lg sm:block">
+              <Image src={realImageSrc} alt="جودي" fill sizes="40px" referrerPolicy="no-referrer" className="object-cover object-center" />
             </div>
-
-            <div className="flex items-center gap-2.5 text-xs font-semibold text-[#6A4558] tabular-nums whitespace-nowrap">
-              <span className="inline-flex items-center gap-1 text-amber-700 font-bold">
-                <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                <span>الرقم القياسي: {displayedHighScore}</span>
-              </span>
-              <span className="hidden lg:inline text-rose-300" aria-hidden="true">
-                ·
-              </span>
-              <span className="hidden lg:inline">
-                🐱 {counts.cats} · 🌹 {counts.roses} · 🍫 {counts.chocolates}
-              </span>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:gap-4">
+              <div className="min-w-0">
+                <div className="mb-0.5 flex min-w-0 items-center gap-2">
+                  <span className="truncate text-[10px] font-bold text-slate-400 sm:text-xs">{levelConfig.worldName}</span>
+                  <span className="shrink-0 rounded-md border border-cyan-300/20 bg-cyan-300/10 px-1.5 py-0.5 text-[9px] font-black text-cyan-200 sm:text-[10px]">مستوى {levelConfig.level}</span>
+                </div>
+                <div className="flex min-w-0 items-baseline gap-1.5">
+                  <span className="text-base font-black leading-none tabular-nums text-white sm:text-lg">{score.toLocaleString('ar-EG')}</span>
+                  <span className="text-[10px] font-semibold text-slate-400 sm:text-xs">/ {levelConfig.targetScore.toLocaleString('ar-EG')} نقطة</span>
+                  {combo >= 2 && (
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-400/10 px-1.5 py-0.5 text-[10px] font-black text-amber-200">
+                      <Flame className="h-3 w-3 fill-amber-400 text-amber-400" /> ×{comboMultiplier}
+                    </span>
+                  )}
+                  {magnetSecondsLeft > 0 && (
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-sky-400/10 px-1.5 py-0.5 text-[10px] font-black text-sky-200">
+                      <Magnet className="h-3 w-3" /> {magnetSecondsLeft}ث
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="shrink-0 rounded-xl border border-amber-300/20 bg-gradient-to-br from-amber-300/10 to-orange-500/10 px-2.5 py-1.5 text-right shadow-inner sm:px-3">
+                <div className="flex items-center justify-end gap-1 text-[9px] font-bold text-amber-200/80 sm:text-[10px]">
+                  <Trophy className="h-3 w-3 text-amber-300" /> الرقم القياسي
+                </div>
+                <div className="text-xs font-black tabular-nums text-amber-100 sm:text-sm">{displayedHighScore.toLocaleString('ar-EG')}</div>
+              </div>
             </div>
-          </div>
-
-          <div className="w-full h-2.5 rounded-full bg-rose-100 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-l from-rose-500 via-pink-500 to-amber-400 transition-all duration-200"
-              style={{ width: `${progressPct}%` }}
-            />
+            <div className="h-2 overflow-hidden rounded-full border border-white/10 bg-slate-800/90 shadow-inner" role="progressbar" aria-valuenow={progressPct} aria-valuemin={0} aria-valuemax={100} aria-label="تقدم المستوى">
+              <div className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-sky-400 to-violet-400 shadow-[0_0_12px_rgba(56,189,248,.55)] transition-all duration-200" style={{ width: `${progressPct}%` }} />
+            </div>
           </div>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-amber-300/25 bg-gradient-to-br from-amber-400/20 to-orange-700/20 px-3 text-xs font-black text-amber-100 shadow-inner" title="عملاتك"><span className="grid h-6 w-6 place-items-center rounded-lg bg-amber-300/15 text-base">🪙</span>{worldSave.coins.toLocaleString('ar-EG')}</span>
-          <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-sky-300/25 bg-gradient-to-br from-sky-400/20 to-blue-700/25 px-3 text-xs font-black text-sky-100 shadow-inner" title="المفاتيح الزرقاء"><span className="grid h-6 w-6 place-items-center rounded-lg bg-sky-300/15"><KeyRound className="h-4 w-4 text-sky-200 drop-shadow-[0_1px_3px_rgba(56,189,248,.7)]"/></span>{worldSave.blueKeys}</span>
-          <button
-            type="button"
-            onClick={onToggleSound}
-            aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'}
-            className="w-10 h-10 rounded-xl border border-cyan-200/25 bg-cyan-500/15 hover:bg-cyan-400/25 text-cyan-100 flex items-center justify-center transition-colors cursor-pointer"
-          >
-            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsPaused((p) => !p)}
-            aria-label={isPaused ? 'استئناف اللعب' : 'إيقاف مؤقت'}
-            className="w-10 h-10 rounded-xl border border-amber-200/25 bg-amber-500/15 hover:bg-amber-400/25 text-amber-100 flex items-center justify-center transition-colors cursor-pointer"
-          >
-            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-          </button>
-          <button
-            type="button"
-            onClick={onExitToMap}
-            aria-label="العودة لخريطة المستويات"
-            className="w-10 h-10 rounded-xl border border-violet-200/25 bg-violet-500/15 hover:bg-violet-400/25 text-violet-100 flex items-center justify-center transition-colors cursor-pointer"
-          >
-            <MapIcon className="w-4 h-4" />
-          </button>
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="inline-flex h-9 min-w-0 items-center gap-1 rounded-xl border border-amber-300/25 bg-gradient-to-br from-amber-300/15 to-orange-500/10 px-2 text-[10px] font-black text-amber-100 shadow-inner sm:px-3 sm:text-xs" title="العملات الذهبية" aria-label={`العملات الذهبية: ${worldSave.coins}`}>
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-amber-300/15 text-base">🪙</span>
+              <span className="tabular-nums">{worldSave.coins.toLocaleString('ar-EG')}</span>
+            </span>
+            <span className="inline-flex h-9 min-w-0 items-center gap-1 rounded-xl border border-sky-300/25 bg-gradient-to-br from-sky-300/15 to-blue-600/15 px-2 text-[10px] font-black text-sky-100 shadow-inner sm:px-3 sm:text-xs" title="المفاتيح الزرقاء" aria-label={`المفاتيح الزرقاء: ${worldSave.blueKeys}`}>
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-sky-200/20 bg-sky-300/15"><KeyRound className="h-[18px] w-[18px] -rotate-45 text-sky-200 drop-shadow-[0_0_5px_rgba(56,189,248,.8)]" /></span>
+              <span className="tabular-nums">{worldSave.blueKeys.toLocaleString('ar-EG')}</span>
+            </span>
+            <span className="hidden text-[10px] font-semibold text-slate-500 md:inline">🐱 {counts.cats} · 🌹 {counts.roses} · 🍫 {counts.chocolates}</span>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button type="button" onClick={onToggleSound} aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'} title={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'} className="grid h-9 w-9 place-items-center rounded-xl border border-cyan-200/25 bg-gradient-to-br from-cyan-400/20 to-sky-700/20 text-cyan-100 shadow-inner transition hover:border-cyan-200/50 hover:bg-cyan-400/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+              {soundEnabled ? <Volume2 className="h-[18px] w-[18px]" /> : <VolumeX className="h-[18px] w-[18px]" />}
+            </button>
+            <button type="button" onClick={() => setIsPaused((p) => !p)} aria-label={isPaused ? 'استئناف اللعب' : 'إيقاف مؤقت'} title={isPaused ? 'استئناف اللعب' : 'إيقاف مؤقت'} className="grid h-9 w-9 place-items-center rounded-xl border border-amber-200/25 bg-gradient-to-br from-amber-400/20 to-orange-700/20 text-amber-100 shadow-inner transition hover:border-amber-200/50 hover:bg-amber-400/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+              {isPaused ? <Play className="h-[18px] w-[18px] fill-current" /> : <Pause className="h-[18px] w-[18px]" />}
+            </button>
+            <button type="button" onClick={onExitToMap} aria-label="الخروج إلى خريطة المراحل" title="الخروج إلى خريطة المراحل" className="grid h-9 w-9 place-items-center rounded-xl border border-rose-200/25 bg-gradient-to-br from-rose-400/20 to-violet-700/20 text-rose-100 shadow-inner transition hover:border-rose-200/50 hover:bg-rose-400/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300">
+              <DoorOpen className="h-[18px] w-[18px]" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -1327,13 +1378,13 @@ export default function GameArena({
       >
         {/* Detached in-game HUD: level and lives sit on the play screen, not in the top bar. */}
         <div
-          className="pointer-events-none absolute left-3 top-[5.25rem] z-40 text-sm font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.95)] sm:left-5 sm:text-base"
+          className="pointer-events-none absolute left-3 top-[9.5rem] z-40 text-sm font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.95)] sm:left-5 sm:top-[8.25rem] sm:text-base"
           aria-label={`المستوى ${levelConfig.level}`}
         >
           المستوى {levelConfig.level}
         </div>
         <div
-          className="pointer-events-none absolute right-3 top-[5.25rem] z-40 inline-flex items-center gap-1 sm:right-5"
+          className="pointer-events-none absolute bottom-6 right-3 z-40 inline-flex items-center gap-1 rounded-full border border-white/15 bg-slate-950/35 px-2 py-1 shadow-lg backdrop-blur-sm sm:bottom-7 sm:right-5"
           aria-label={`قلوب الحياة: ${hearts} من ${MAX_HEARTS}`}
         >
           {[1, 2, 3].map((idx) => (
@@ -1365,44 +1416,30 @@ export default function GameArena({
 
         {/* Pause Overlay */}
         {isPaused && !isGameOver && (
-          <div className="absolute inset-0 z-30 bg-[#2D1824]/45 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl border border-rose-200 p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl space-y-4">
-              <h3
-                className="relative text-2xl font-black tracking-tight text-white"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                استراحة سحرية — المستوى {levelConfig.level}
-              </h3>
-              <p className="text-sm text-[#6A4558]">
-                نقاطك الحالية <span className="font-bold text-rose-600 tabular-nums">{score}</span> من{' '}
-                <span className="font-bold tabular-nums">{levelConfig.targetScore}</span>.
-              </p>
-              <div className="flex flex-col gap-2.5 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setIsPaused(false)}
-                  className="w-full py-3 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Play className="w-4 h-4" />
-                  <span>استئناف اللعب</span>
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/15 bg-gradient-to-b from-[#172943] via-[#101d31] to-[#080f1c] p-6 text-center text-white shadow-[0_28px_90px_rgba(0,0,0,.65)]">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-cyan-400/15 to-transparent" />
+              <div className="relative mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl border border-cyan-200/25 bg-cyan-400/10 text-cyan-100 shadow-[0_0_35px_rgba(34,211,238,.18)]">
+                <Pause className="h-8 w-8" />
+              </div>
+              <h3 className="relative text-2xl font-black tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>استراحة جودي</h3>
+              <p className="relative mt-1 text-xs font-bold text-cyan-200">المستوى {levelConfig.level} · {levelConfig.worldName}</p>
+              <div className="relative mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-white/5 p-3">
+                <div><p className="text-[10px] font-semibold text-slate-400">النقاط الحالية</p><p className="mt-1 text-lg font-black tabular-nums text-white">{score.toLocaleString('ar-EG')}</p></div>
+                <div><p className="text-[10px] font-semibold text-slate-400">الهدف</p><p className="mt-1 text-lg font-black tabular-nums text-amber-200">{levelConfig.targetScore.toLocaleString('ar-EG')}</p></div>
+              </div>
+              <div className="relative mt-4 flex flex-col gap-2.5">
+                <button type="button" onClick={() => setIsPaused(false)} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-200/30 bg-gradient-to-l from-cyan-400 to-blue-600 px-4 py-3.5 font-black text-white shadow-lg transition hover:brightness-110">
+                  <Play className="h-4 w-4 fill-current" /> استئناف المغامرة
                 </button>
-                <button
-                  type="button"
-                  onClick={resetRun}
-                  className="w-full py-2.5 px-4 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-[#2D1824] font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>إعادة المستوى</span>
+                <button type="button" onClick={resetRun} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-bold text-slate-100 transition hover:bg-white/10">
+                  <RotateCcw className="h-4 w-4" /> إعادة المرحلة
                 </button>
-                <button
-                  type="button"
-                  onClick={onExitToMap}
-                  className="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-[#6A4558] hover:text-[#2D1824] transition-colors cursor-pointer"
-                >
-                  خريطة المستويات
+                <button type="button" onClick={onExitToMap} className="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-slate-400 transition hover:bg-white/5 hover:text-white">
+                  <DoorOpen className="h-4 w-4" /> الخروج إلى الخريطة
                 </button>
               </div>
-            </div>
+            </motion.div>
           </div>
         )}
 
@@ -1413,43 +1450,39 @@ export default function GameArena({
               initial={{ y: 22, scale: 0.94, opacity: 0 }}
               animate={{ y: 0, scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-              className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/15 bg-gradient-to-b from-slate-900 via-[#17243a] to-slate-950 p-6 text-center text-white shadow-[0_28px_90px_rgba(0,0,0,.65)] space-y-4"
+              className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-rose-200/20 bg-gradient-to-b from-[#28172B] via-[#172238] to-[#080F1B] p-5 text-center text-white shadow-[0_28px_90px_rgba(0,0,0,.7)] sm:p-7"
             >
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-rose-500/20 to-transparent" />
-              <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-rose-200/30 bg-rose-500/15 text-rose-300 shadow-[0_0_35px_rgba(244,63,94,.22)]">
-                <Heart className="h-10 w-10 fill-rose-500/20" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-rose-500/25 via-fuchsia-500/5 to-transparent" />
+              <div className="relative mx-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[1.4rem] border border-rose-200/30 bg-gradient-to-br from-rose-400/20 to-fuchsia-600/10 text-rose-200 shadow-[0_0_40px_rgba(244,63,94,.25)]">
+                <Heart className="h-9 w-9 fill-rose-500/20" />
               </div>
               <h3
-                className="relative text-2xl font-black tracking-tight text-white"
+                className="relative mt-3 text-2xl font-black tracking-tight text-white"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
                 انتهت المحاولة
               </h3>
-              <p className="relative text-sm leading-7 text-slate-300">
-                الغيوم المشاكسة كانت أسرع في المستوى {levelConfig.level}! جمعتِ{' '}
-                <span className="font-bold text-rose-600 tabular-nums">{score}</span> نقطة من{' '}
-                <span className="font-bold tabular-nums">{levelConfig.targetScore}</span>. حاولي مرة أخرى!
+              <p className="relative mx-auto max-w-sm text-sm leading-7 text-slate-300">
+                الوحوش كانت أسرع منكِ في المستوى {levelConfig.level}. جمعتِ{' '}
+                <span className="font-black tabular-nums text-rose-200">{score.toLocaleString('ar-EG')}</span> من{' '}
+                <span className="font-black tabular-nums text-white">{levelConfig.targetScore.toLocaleString('ar-EG')}</span> نقطة.
               </p>
-              <div className="flex flex-col gap-2.5 pt-1">
+              <div className="relative mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold text-slate-300">
+                <span>المحاولات المتبقية</span><span className="tabular-nums text-rose-200">{hearts} / {MAX_HEARTS} ❤️</span>
+              </div>
+              <div className="relative mt-4 flex flex-col gap-2.5">
                 {worldSave.blueKeys >= 2 ** reviveCountRef.current && (
-                  <button type="button" onClick={handleRevive} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-300/30 bg-gradient-to-l from-sky-500 to-blue-600 px-4 py-4 font-black text-white shadow-[0_10px_28px_rgba(37,99,235,.28)] transition hover:brightness-110">
-                    <KeyRound className="h-4 w-4" /> استمر بمفتاح أزرق ({2 ** reviveCountRef.current})
+                  <button type="button" onClick={handleRevive} className="group flex w-full items-center gap-3 rounded-2xl border border-sky-200/30 bg-gradient-to-l from-sky-500/25 via-blue-600/25 to-indigo-600/25 px-4 py-3.5 text-right shadow-[0_12px_30px_rgba(37,99,235,.2)] transition hover:border-sky-200/60 hover:from-sky-400/35 hover:to-indigo-500/35">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-sky-100/25 bg-sky-300/15 text-sky-100 shadow-inner"><KeyRound className="h-7 w-7 -rotate-45 drop-shadow-[0_0_8px_rgba(125,211,252,.8)]" /></span>
+                    <span className="min-w-0 flex-1"><span className="block text-sm font-black text-white">إنقاذ جودي بمفتاح أزرق</span><span className="mt-0.5 block text-[10px] font-semibold text-sky-100/75">استكملي اللعب بحياة واحدة</span></span>
+                    <span className="rounded-lg border border-sky-100/20 bg-sky-100/10 px-2.5 py-1.5 text-xs font-black text-sky-100">× {2 ** reviveCountRef.current}</span>
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={resetRun}
-                  className="w-full rounded-2xl border border-rose-200/20 bg-gradient-to-l from-rose-500 to-pink-600 px-4 py-4 font-black text-white shadow-[0_10px_28px_rgba(225,29,72,.24)] transition hover:brightness-110 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>إعادة المحاولة الآن</span>
+                <button type="button" onClick={resetRun} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200/30 bg-gradient-to-l from-rose-500 to-fuchsia-600 px-4 py-3.5 font-black text-white shadow-[0_10px_28px_rgba(225,29,72,.25)] transition hover:brightness-110">
+                  <RotateCcw className="h-4 w-4" /> إعادة المحاولة
                 </button>
-                <button
-                  type="button"
-                  onClick={onExitToMap}
-                  className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/10 cursor-pointer"
-                >
-                  العودة لخريطة المستويات
+                <button type="button" onClick={onExitToMap} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/10">
+                  <DoorOpen className="h-4 w-4" /> العودة إلى خريطة المراحل
                 </button>
               </div>
             </motion.div>

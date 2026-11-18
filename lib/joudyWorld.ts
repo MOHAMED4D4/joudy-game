@@ -17,6 +17,7 @@ export interface WorldSave {
   petsOwned: string[];
   equippedPet: string;
   coastalRegionUnlocked: boolean;
+  finalBossRewardClaimed: boolean;
 }
 
 const KEY = 'joudy_world_save_v1';
@@ -35,6 +36,7 @@ const DEFAULT_SAVE: WorldSave = {
   petsOwned: ['moon-cat'],
   equippedPet: 'moon-cat',
   coastalRegionUnlocked: false,
+  finalBossRewardClaimed: false,
 };
 
 export interface ShopItem {
@@ -115,6 +117,7 @@ function parse(raw: string | null): WorldSave {
       petsOwned: Array.isArray(value.petsOwned) ? value.petsOwned : DEFAULT_SAVE.petsOwned,
       equippedPet: typeof value.equippedPet === 'string' ? value.equippedPet : DEFAULT_SAVE.equippedPet,
       coastalRegionUnlocked: value.coastalRegionUnlocked === true,
+      finalBossRewardClaimed: value.finalBossRewardClaimed === true,
     };
   } catch {
     return DEFAULT_SAVE;
