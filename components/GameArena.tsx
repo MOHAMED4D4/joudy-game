@@ -70,7 +70,6 @@ interface FallingEntity {
   rotation: number;
   vr: number;
   points: number;
-  fireCooldown?: number;
 }
 
 interface Particle {
@@ -120,28 +119,7 @@ const ITEM_CONFIG: Record<
   magnet: { points: 0, halo: 'rgba(56, 189, 248, 0.42)', fallbackColor: '#38BDF8' },
   blueKey: { points: 0, halo: 'rgba(59, 130, 246, 0.55)', fallbackColor: '#3B82F6' },
   obstacle: { points: -15, halo: 'rgba(71, 85, 105, 0.48)', fallbackColor: '#475569' },
-  cloudBrute: { points: -20, halo: 'rgba(148, 163, 184, 0.52)', fallbackColor: '#94A3B8' },
-  cloudWisp: { points: -15, halo: 'rgba(56, 189, 248, 0.48)', fallbackColor: '#7DD3FC' },
-  cloudStarCaller: { points: -20, halo: 'rgba(192, 132, 252, 0.5)', fallbackColor: '#C084FC' },
-  fallingStar: { points: -10, halo: 'rgba(250, 204, 21, 0.58)', fallbackColor: '#FDE047' },
 };
-
-type CloudMonsterKind = 'cloudBrute' | 'cloudWisp' | 'cloudStarCaller';
-type HazardKind = 'obstacle' | 'fallingStar' | CloudMonsterKind;
-
-const CLOUD_MONSTER_KINDS: CloudMonsterKind[] = [
-  'cloudBrute',
-  'cloudWisp',
-  'cloudStarCaller',
-];
-
-function isCloudMonster(kind: CartoonSpriteKind): kind is CloudMonsterKind {
-  return CLOUD_MONSTER_KINDS.includes(kind as CloudMonsterKind);
-}
-
-function isHazardKind(kind: CartoonSpriteKind): kind is HazardKind {
-  return kind === 'obstacle' || kind === 'fallingStar' || isCloudMonster(kind);
-}
 
 function drawStarShape(
   ctx: CanvasRenderingContext2D,
@@ -426,10 +404,7 @@ export default function GameArena({
       let kind: CartoonSpriteKind = 'chocolate';
       if (roll < 0.012) {
         kind = 'blueKey';
-      } else if (levelConfig.level >= 6 && roll < 0.05) {
-        // Rare cloud creatures enter the game after the opening forest levels.
-        kind = CLOUD_MONSTER_KINDS[Math.floor(Math.random() * CLOUD_MONSTER_KINDS.length)];
-      } else if (roll < levelConfig.obstacleChance + (levelConfig.level >= 6 ? 0.05 : 0.012)) {
+      } else if (roll < levelConfig.obstacleChance + 0.012) {
         kind = 'obstacle';
       } else if (!magnetAlreadyPresent && Math.random() < 0.08) {
         kind = 'magnet';
@@ -441,14 +416,7 @@ export default function GameArena({
       }
 
       const cfg = ITEM_CONFIG[kind];
-      const radius = (
-        isCloudMonster(kind)
-          ? kind === 'cloudStarCaller' ? 34 : 32
-          : kind === 'obstacle' ? 30
-            : kind === 'magnet' ? 28
-              : kind === 'blueKey' ? 22
-                : 27
-      ) * 0.9;
+      const radius = (kind === 'obstacle' ? 30 : kind === 'magnet' ? 28 : kind === 'blueKey' ? 22 : 27) * 0.9;
       const baseSpeed =
         kind === 'cat'
           ? 245
@@ -460,13 +428,7 @@ export default function GameArena({
                 ? 190
                 : kind === 'blueKey'
                   ? 165
-                  : kind === 'cloudWisp'
-                    ? 238
-                    : kind === 'cloudStarCaller'
-                      ? 218
-                      : kind === 'cloudBrute'
-                        ? 196
-                        : 270;
+                  : 270;
 
       const x = radius + 16 + Math.random() * Math.max(40, width - (radius + 16) * 2);
       const hasZigzag = Math.random() < 0.45;
@@ -486,7 +448,6 @@ export default function GameArena({
         rotation: 0,
         vr: (Math.random() - 0.5) * 2.1,
         points: cfg.points,
-        ...(kind === 'cloudStarCaller' ? { fireCooldown: 0.75 + Math.random() * 0.5 } : {}),
       });
     };
 
@@ -500,13 +461,7 @@ export default function GameArena({
               ? ['#D97706', '#FBBF24', '#F472B6']
               : kind === 'magnet'
                 ? ['#38BDF8', '#06B6D4', '#FDE047']
-                : kind === 'fallingStar'
-                  ? ['#FDE047', '#FFFFFF', '#F59E0B']
-                  : kind === 'cloudWisp'
-                    ? ['#7DD3FC', '#E0F2FE', '#FFFFFF']
-                    : kind === 'cloudStarCaller'
-                      ? ['#C084FC', '#FDE68A', '#FFFFFF']
-                      : ['#94A3B8', '#64748B', '#FACC15'];
+                : ['#94A3B8', '#64748B', '#FACC15'];
 
       for (let i = 0; i < 14; i++) {
         const angle = (Math.PI * 2 * i) / 14 + Math.random() * 0.25;
@@ -520,7 +475,7 @@ export default function GameArena({
           maxLife: 0.5 + Math.random() * 0.3,
           size: 5 + Math.random() * 5,
           color: palette[i % palette.length],
-          shape: isHazardKind(kind) ? 'star' : i % 2 === 0 ? 'star' : 'heart',
+          shape: kind === 'obstacle' ? 'circle' : i % 2 === 0 ? 'star' : 'heart',
           gravity: 210,
         });
       }
@@ -649,7 +604,6 @@ export default function GameArena({
         const magnetActive = magnetTimerRef.current > 0;
 
         const surviving: FallingEntity[] = [];
-        const spawnedProjectiles: FallingEntity[] = [];
         for (const item of entities) {
           item.y += item.vy * dt;
           item.baseX += item.vx * dt;
@@ -663,7 +617,7 @@ export default function GameArena({
             item.vx = -Math.abs(item.vx);
           }
 
-          if (magnetActive && !isHazardKind(item.kind) && item.kind !== 'magnet') {
+          if (magnetActive && item.kind !== 'obstacle' && item.kind !== 'magnet') {
             const dxPull = player.x - item.x;
             const dyPull = playerCenterY - item.y;
             const dist = Math.hypot(dxPull, dyPull);
@@ -695,7 +649,7 @@ export default function GameArena({
           if (hitX && hitY) {
             spawnBurst(item.x, item.y, item.kind);
 
-            if (isHazardKind(item.kind)) {
+            if (item.kind === 'obstacle') {
               if (player.invulnTimer <= 0) {
                 const nextScore = Math.max(0, scoreRef.current + item.points);
                 scoreRef.current = nextScore;
@@ -831,50 +785,11 @@ export default function GameArena({
             continue;
           }
 
-          // The star-calling cloud occasionally releases a falling star.
-          // Projectiles join the same entity list and reuse its collision path.
-          if (item.kind === 'cloudStarCaller') {
-            item.fireCooldown = (item.fireCooldown ?? 0.9) - dt;
-            if (item.fireCooldown <= 0 && item.y > 34 && item.y < height * 0.72) {
-              item.fireCooldown = 1.45 + Math.random() * 0.35;
-              spawnedProjectiles.push({
-                id: nextEntityId++,
-                kind: 'fallingStar',
-                baseX: item.x,
-                x: item.x,
-                y: item.y + item.radius * 0.55,
-                vy: (305 + Math.random() * 55) * levelConfig.speedMultiplier,
-                vx: (Math.random() - 0.5) * 24,
-                zigzagAmp: 7,
-                zigzagFreq: 3.5,
-                zigzagPhase: Math.random() * Math.PI * 2,
-                radius: 17,
-                rotation: Math.random() * Math.PI,
-                vr: (Math.random() - 0.5) * 2.8,
-                points: ITEM_CONFIG.fallingStar.points,
-              });
-              for (let i = 0; i < 3; i++) {
-                particles.push({
-                  x: item.x + (Math.random() - 0.5) * 18,
-                  y: item.y + item.radius * 0.45,
-                  vx: (Math.random() - 0.5) * 35,
-                  vy: 28 + Math.random() * 32,
-                  life: 0,
-                  maxLife: 0.32,
-                  size: 3 + Math.random() * 2,
-                  color: i % 2 === 0 ? '#FDE68A' : '#FFFFFF',
-                  shape: 'star',
-                  gravity: 20,
-                });
-              }
-            }
-          }
-
           if (item.y < height + 56) {
             surviving.push(item);
           }
         }
-        entities = surviving.concat(spawnedProjectiles);
+        entities = surviving;
 
         particles = particles.filter((p) => {
           p.life += dt;
@@ -912,8 +827,8 @@ export default function GameArena({
       ctx.scale(dpr, dpr);
 
       if (shakeRef.current > 0.2) {
-        const sx = Math.sin(totalElapsed * 38) * shakeRef.current * 0.55;
-        const sy = Math.cos(totalElapsed * 31) * shakeRef.current * 0.38;
+        const sx = (Math.random() - 0.5) * shakeRef.current * 1.8;
+        const sy = (Math.random() - 0.5) * shakeRef.current * 1.4;
         ctx.translate(sx, sy);
       }
 
@@ -1077,15 +992,12 @@ export default function GameArena({
         ctx.restore();
       }
 
-      // Keep Joudy visible during brief protection; a soft pulse replaces the
-      // old on/off flashing effect that could look like a white screen flicker.
-      const protectionAlpha = player.invulnTimer > 0
-        ? 0.78 + 0.22 * (0.5 + 0.5 * Math.sin(totalElapsed * 16))
-        : 1;
-      ctx.save();
-      ctx.globalAlpha = protectionAlpha;
-      ctx.translate(drawPlayerX, drawPlayerY);
-      ctx.rotate(tilt);
+      // Draw Joudy Anime Sprite (with invulnerability blink when recently hit)
+      const isVisible = player.invulnTimer <= 0 || Math.floor(player.invulnTimer * 16) % 2 === 0;
+      if (isVisible) {
+        ctx.save();
+        ctx.translate(drawPlayerX, drawPlayerY);
+        ctx.rotate(tilt);
 
         // Breathing & Squash-Stretch
         const breathScaleY = isMoving
@@ -1163,7 +1075,8 @@ export default function GameArena({
           );
         }
 
-      ctx.restore();
+        ctx.restore();
+      }
 
       // Cute Cartoon Speech Bubble directly above Joudy's head
       if (player.bubbleTimer > 0 && player.bubbleText) {
@@ -1272,35 +1185,18 @@ export default function GameArena({
   };
 
   const handleRevive = useCallback(() => {
-    if (!isGameOverRef.current || reviveRequestRef.current) return;
-
-    let purchaseSucceeded = false;
-    let nextReviveCount = reviveCountRef.current;
-    saveWorld((latest) => {
-      const currentReviveCount = latest.reviveCountsByLevel[levelConfig.level] ?? 0;
-      const price = 2 ** currentReviveCount;
-      if (latest.blueKeys < price) return latest;
-
-      purchaseSucceeded = true;
-      nextReviveCount = currentReviveCount + 1;
-      return {
-        ...latest,
-        blueKeys: latest.blueKeys - price,
-        reviveCountsByLevel: {
-          ...latest.reviveCountsByLevel,
-          [levelConfig.level]: nextReviveCount,
-        },
-      };
-    });
-    if (!purchaseSucceeded) return;
-
-    reviveCountRef.current = nextReviveCount;
+    const price = 2 ** reviveCountRef.current;
+    const current = worldSave;
+    if (current.blueKeys < price) return;
+    saveWorld((latest) => ({ ...latest, blueKeys: Math.max(0, latest.blueKeys - price), reviveCountsByLevel: { ...latest.reviveCountsByLevel, [levelConfig.level]: reviveCountRef.current + 1 } }));
+    reviveCountRef.current += 1;
     heartsRef.current = 1;
     setHearts(1);
     reviveRequestRef.current = true;
     isGameOverRef.current = false;
     setIsGameOver(false);
-  }, [levelConfig.level]);
+
+  }, [worldSave, levelConfig.level]);
 
   const progressPct = Math.min(100, Math.round((score / levelConfig.targetScore) * 100));
   const displayedHighScore = Math.max(highScore, score);
@@ -1315,7 +1211,7 @@ export default function GameArena({
       className="relative left-1/2 w-screen max-w-none -translate-x-1/2 px-0 py-0 flex flex-col gap-1.5 h-[100dvh] max-h-none min-h-[520px]"
     >
       {/* Compact Top Arcade HUD */}
-      <header className="absolute left-2 right-2 top-2 z-30 flex items-center justify-between gap-2 rounded-2xl border border-white/15 bg-slate-950/88 px-2 py-2 shadow-[0_10px_30px_rgba(2,6,23,.34)] backdrop-blur-xl sm:left-3 sm:right-3 sm:px-4">
+      <header className="absolute left-2 right-2 top-2 z-30 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-2xl px-2 sm:px-5 py-2 shadow-lg flex items-center justify-between gap-2">
         {realImageSrc && (
           <div className="hidden sm:block relative w-11 h-11 rounded-xl overflow-hidden border-2 border-amber-300 bg-rose-50 shrink-0 shadow-xs">
             <Image
@@ -1329,35 +1225,59 @@ export default function GameArena({
           </div>
         )}
         <div className="flex-1 min-w-0">
-            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs sm:text-sm">
-            <div className="flex items-center gap-2 whitespace-nowrap font-bold text-white">
-              <span className="hidden max-w-[130px] truncate text-xs text-slate-300 sm:inline">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs sm:text-sm mb-1.5">
+            <div className="flex items-center gap-2 font-bold text-[#2D1824] whitespace-nowrap">
+              <span className="text-rose-700">المستوى {levelConfig.level}</span>
+              <span className="text-rose-300 hidden sm:inline" aria-hidden="true">
+                ·
+              </span>
+              <span className="text-[#6A4558] text-xs hidden sm:inline truncate max-w-[130px]">
                 {levelConfig.worldName}
               </span>
-              <span className="text-sm font-extrabold tabular-nums text-rose-200 sm:text-base">
+              <span className="text-rose-300" aria-hidden="true">
+                ·
+              </span>
+              <span className="text-rose-600 text-sm sm:text-base font-extrabold tabular-nums">
                 {score} / {levelConfig.targetScore}
               </span>
 
+              {/* 3 Health Lives */}
+              <div
+                className="inline-flex items-center gap-0.5 mr-1"
+                aria-label={`قلوب الحياة: ${hearts} من ${MAX_HEARTS}`}
+              >
+                {[1, 2, 3].map((idx) => (
+                  <Heart
+                    key={idx}
+                    className={`w-4 h-4 transition-transform ${
+                      idx <= hearts
+                        ? 'fill-rose-500 text-rose-600 scale-100'
+                        : 'fill-slate-200 text-slate-300 scale-90'
+                    }`}
+                  />
+                ))}
+              </div>
+
               {combo >= 2 && (
-                <span className="inline-flex items-center gap-1 text-xs font-extrabold tabular-nums text-amber-200">
+                <span className="inline-flex items-center gap-1 text-xs font-extrabold text-amber-700 tabular-nums">
                   <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
                   <span>×{comboMultiplier}</span>
                 </span>
               )}
               {magnetSecondsLeft > 0 && (
-                <span className="inline-flex items-center gap-1 text-xs font-extrabold tabular-nums text-sky-200">
+                <span className="inline-flex items-center gap-1 text-xs font-extrabold text-sky-700 tabular-nums">
                   <Magnet className="w-3.5 h-3.5 text-sky-500" />
                   <span>{magnetSecondsLeft}ث</span>
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2.5 whitespace-nowrap text-xs font-semibold tabular-nums text-slate-300">
-              <span className="inline-flex items-center gap-1 font-bold text-amber-200">
+            <div className="flex items-center gap-2.5 text-xs font-semibold text-[#6A4558] tabular-nums whitespace-nowrap">
+              <span className="inline-flex items-center gap-1 text-amber-700 font-bold">
                 <Trophy className="w-3.5 h-3.5 text-amber-500" />
                 <span>الرقم القياسي: {displayedHighScore}</span>
               </span>
-              <span className="hidden text-slate-500 lg:inline" aria-hidden="true">
+              <span className="hidden lg:inline text-rose-300" aria-hidden="true">
                 ·
               </span>
               <span className="hidden lg:inline">
@@ -1366,7 +1286,7 @@ export default function GameArena({
             </div>
           </div>
 
-            <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/15">
+          <div className="w-full h-2.5 rounded-full bg-rose-100 overflow-hidden">
             <div
               className="h-full rounded-full bg-gradient-to-l from-rose-500 via-pink-500 to-amber-400 transition-all duration-200"
               style={{ width: `${progressPct}%` }}
@@ -1375,18 +1295,14 @@ export default function GameArena({
         </div>
 
         {/* Action Controls */}
-        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-          <span className="inline-flex h-10 min-w-[62px] items-center justify-center gap-1.5 rounded-xl border border-amber-300/30 bg-gradient-to-b from-amber-300/20 to-amber-500/10 px-2 text-xs font-black tabular-nums text-amber-100 shadow-inner" title="عملاتك">
-            <span aria-hidden="true">🪙</span><span>{worldSave.coins}</span>
-          </span>
-          <span className="inline-flex h-10 min-w-[54px] items-center justify-center gap-1.5 rounded-xl border border-sky-300/30 bg-gradient-to-b from-sky-300/20 to-blue-500/10 px-2 text-xs font-black tabular-nums text-sky-100 shadow-inner" title="المفاتيح الزرقاء">
-            <KeyRound className="h-4 w-4 text-sky-200"/><span>{worldSave.blueKeys}</span>
-          </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="inline-flex h-10 items-center gap-1 rounded-xl border border-amber-200/20 bg-amber-400/10 px-2 text-xs font-black text-amber-100" title="عملاتك">🪙 {worldSave.coins}</span>
+          <span className="inline-flex h-10 items-center gap-1 rounded-xl border border-blue-200/20 bg-blue-400/10 px-2 text-xs font-black text-blue-100" title="المفاتيح الزرقاء"><KeyRound className="h-4 w-4"/>{worldSave.blueKeys}</span>
           <button
             type="button"
             onClick={onToggleSound}
             aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-cyan-200/30 bg-cyan-500/15 text-cyan-100 transition-all hover:border-cyan-100/60 hover:bg-cyan-400/25 active:scale-95"
+            className="w-10 h-10 rounded-xl border border-cyan-200/25 bg-cyan-500/15 hover:bg-cyan-400/25 text-cyan-100 flex items-center justify-center transition-colors cursor-pointer"
           >
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
@@ -1394,7 +1310,7 @@ export default function GameArena({
             type="button"
             onClick={() => setIsPaused((p) => !p)}
             aria-label={isPaused ? 'استئناف اللعب' : 'إيقاف مؤقت'}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-amber-200/30 bg-amber-500/15 text-amber-100 transition-all hover:border-amber-100/60 hover:bg-amber-400/25 active:scale-95"
+            className="w-10 h-10 rounded-xl border border-amber-200/25 bg-amber-500/15 hover:bg-amber-400/25 text-amber-100 flex items-center justify-center transition-colors cursor-pointer"
           >
             {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </button>
@@ -1402,7 +1318,7 @@ export default function GameArena({
             type="button"
             onClick={onExitToMap}
             aria-label="العودة لخريطة المستويات"
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-violet-200/30 bg-violet-500/15 text-violet-100 transition-all hover:border-violet-100/60 hover:bg-violet-400/25 active:scale-95"
+            className="w-10 h-10 rounded-xl border border-violet-200/25 bg-violet-500/15 hover:bg-violet-400/25 text-violet-100 flex items-center justify-center transition-colors cursor-pointer"
           >
             <MapIcon className="w-4 h-4" />
           </button>
@@ -1420,31 +1336,6 @@ export default function GameArena({
               : 'border-rose-200/90 bg-pink-50'
         }`}
       >
-        {/* Detached in-game HUD: level and lives sit on the play screen, not in the top bar. */}
-        <div
-          className="pointer-events-none absolute left-3 top-[5.25rem] z-40 flex items-center gap-2 rounded-xl border border-cyan-100/35 bg-slate-950/75 px-3 py-2 text-sm font-black text-white shadow-lg backdrop-blur-md sm:left-5 sm:text-base"
-          aria-label={`المستوى ${levelConfig.level}`}
-        >
-          <span className="text-[10px] font-extrabold tracking-[.16em] text-cyan-200">LEVEL</span>
-          <span>المستوى {levelConfig.level}</span>
-        </div>
-        <div
-          className="pointer-events-none absolute right-3 top-[5.25rem] z-40 inline-flex items-center gap-1.5 rounded-xl border border-rose-100/35 bg-slate-950/75 px-2.5 py-2 shadow-lg backdrop-blur-md sm:right-5"
-          aria-label={`قلوب الحياة: ${hearts} من ${MAX_HEARTS}`}
-        >
-          {[1, 2, 3].map((idx) => (
-            <Heart
-              key={idx}
-              className={`h-[21px] w-[21px] drop-shadow-[0_2px_5px_rgba(0,0,0,.5)] sm:h-6 sm:w-6 ${
-                idx <= hearts
-                  ? 'fill-rose-500 text-rose-100'
-                  : 'fill-slate-700/90 text-slate-300'
-              }`}
-            />
-          ))}
-          <span className="ml-0.5 border-l border-white/20 pl-2 text-xs font-black tabular-nums text-rose-100">{hearts}/{MAX_HEARTS}</span>
-        </div>
-
         <canvas
           ref={canvasRef}
           onPointerDown={handleCanvasPointerDown}
@@ -1503,50 +1394,48 @@ export default function GameArena({
           </div>
         )}
 
-        {/* Game Over (all hearts depleted) overlay */}
+        {/* Game Over (3 Hearts Depleted) Overlay */}
         {isGameOver && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
+          <div className="absolute inset-0 z-30 bg-[#1B1018]/65 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
-              initial={{ scale: 0.94, y: 12, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-              className="w-full max-w-sm space-y-4 rounded-[1.75rem] border border-rose-200/80 bg-gradient-to-b from-white to-rose-50 p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,.45)] sm:p-8"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-3xl border-2 border-rose-300 p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl space-y-4"
             >
-              <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-100 to-pink-200 text-rose-600 shadow-inner">
-                <Heart className="h-8 w-8 fill-rose-500 text-rose-700" />
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-rose-100 text-rose-600 mx-auto">
+                <Heart className="w-7 h-7" />
               </div>
               <h3
-                className="text-2xl font-black text-slate-900"
+                className="text-2xl font-bold text-[#2D1824]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                نفدت قلوبك
+                انتهت قلوب الحياة! 💔
               </h3>
-              <p className="text-sm leading-7 text-slate-600">
-                انتهت محاولتك في المستوى {levelConfig.level}. حققتِ{' '}
-                <span className="font-black tabular-nums text-rose-600">{score}</span> من{' '}
-                <span className="font-black tabular-nums text-slate-800">{levelConfig.targetScore}</span> نقطة.
-                يمكنك المتابعة بمفتاح أزرق أو إعادة المستوى.
+              <p className="text-sm text-[#6A4558] leading-relaxed">
+                الغيوم المشاكسة كانت أسرع في المستوى {levelConfig.level}! جمعتِ{' '}
+                <span className="font-bold text-rose-600 tabular-nums">{score}</span> نقطة من{' '}
+                <span className="font-bold tabular-nums">{levelConfig.targetScore}</span>. حاولي مرة أخرى!
               </p>
               <div className="flex flex-col gap-2.5 pt-1">
                 {worldSave.blueKeys >= 2 ** reviveCountRef.current && (
-                  <button type="button" onClick={handleRevive} className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-gradient-to-l from-blue-700 to-sky-600 px-4 py-3.5 font-black text-white shadow-lg transition hover:from-blue-600 hover:to-sky-500 active:scale-[.99]">
-                    <KeyRound className="h-4 w-4" /> المتابعة باستخدام مفتاح أزرق ({2 ** reviveCountRef.current})
+                  <button type="button" onClick={handleRevive} className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3.5 font-black text-white shadow-lg transition hover:bg-blue-500">
+                    <KeyRound className="h-4 w-4" /> استمر بمفتاح أزرق ({2 ** reviveCountRef.current})
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={resetRun}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-rose-600 to-pink-600 px-4 py-3.5 font-black text-white shadow-md transition hover:from-rose-700 hover:to-pink-700 active:scale-[.99]"
+                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-l from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  <span>إعادة المستوى</span>
+                  <span>إعادة المحاولة الآن</span>
                 </button>
                 <button
                   type="button"
                   onClick={onExitToMap}
-                  className="w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="w-full py-2.5 px-4 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-[#2D1824] text-sm font-semibold transition-colors cursor-pointer"
                 >
-                  العودة إلى خريطة المراحل
+                  العودة لخريطة المستويات
                 </button>
               </div>
             </motion.div>

@@ -116,7 +116,7 @@ export default function WorldAtmosphereOverlay({
             animate={{
               y: [0, -18, 8, -12, 0],
               x: [0, 14, -10, 8, 0],
-              opacity: [0.25, 0.68, 0.4, 0.72, 0.25],
+              opacity: [0.25, 0.95, 0.4, 1, 0.25],
               scale: [0.85, 1.3, 0.95, 1.2, 0.85],
             }}
             transition={{
@@ -166,7 +166,7 @@ export default function WorldAtmosphereOverlay({
     );
   }
 
-  // World 4: Pearl Island sunset — drifting shore petals & warm radiance
+  // World 4: Romantic Rose Sunset — Drifting Dusk Petals & Warm Radiance
   if (worldId === 4) {
     return (
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -212,8 +212,8 @@ export default function WorldAtmosphereOverlay({
         <motion.span
           key={`star-${p.id}`}
           animate={{
-            opacity: [0.22, 0.62, 0.3, 0.58, 0.22],
-            scale: [0.82, 1.14, 0.9, 1.1, 0.82],
+            opacity: [0.2, 1, 0.3, 0.95, 0.2],
+            scale: [0.75, 1.35, 0.85, 1.25, 0.75],
             rotate: [0, 45, 0],
           }}
           transition={{
@@ -239,7 +239,7 @@ export default function WorldAtmosphereOverlay({
           animate={{
             x: [-20, -180],
             y: [0, 110],
-            opacity: [0, 0.72, 0],
+            opacity: [0, 1, 0],
             scaleX: [0.4, 1.15, 0.3],
           }}
           transition={{

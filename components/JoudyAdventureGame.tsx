@@ -3,7 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
-import { addWorldCoins, loadWorldSave, saveWorld, useWorldSave } from '@/lib/joudyWorld';
+import { addWorldCoins, loadWorldSave, saveWorld } from '@/lib/joudyWorld';
 import CharacterSelectScreen from './CharacterSelectScreen';
 import WorldMapScreen from './WorldMapScreen';
 import GameArena, { type GameRunStats } from './GameArena';
@@ -23,7 +23,6 @@ const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
 
 export default function JoudyAdventureGame() {
   const progress = useJoudyProgress();
-  const worldSave = useWorldSave();
 
   // Restore the original welcome page before the stages map.
   const [gameState, setGameState] = useState<GameState>('TITLE_MENU');
@@ -61,11 +60,6 @@ export default function JoudyAdventureGame() {
 
   const handleStartLevel = useCallback(
     (levelNumber: number) => {
-      if (levelNumber >= 16 && levelNumber <= 20 && !worldSave.pearlIslandUnlocked) {
-        setSelectedLevel(null);
-        setGameState('WORLD_MAP');
-        return;
-      }
       soundEngine.setSfxEnabled(soundEnabled);
       soundEngine.setMusicEnabled(soundEnabled);
       soundEngine.playStartAdventure();
@@ -74,7 +68,7 @@ export default function JoudyAdventureGame() {
       setIsNewHighScore(false);
       setGameState('PLAYING');
     },
-    [soundEnabled, worldSave.pearlIslandUnlocked],
+    [soundEnabled],
   );
 
   const handleHighScoreUpdate = useCallback((candidateScore: number) => {
@@ -102,14 +96,9 @@ export default function JoudyAdventureGame() {
   }, [characterCoinBonus]);
 
   const handleNextLevel = useCallback(() => {
-    if (activeLevel === 15 && !worldSave.pearlIslandUnlocked) {
-      setSelectedLevel(null);
-      setGameState('WORLD_MAP');
-      return;
-    }
     const nextLvl = Math.min(30, activeLevel + 1);
     handleStartLevel(nextLvl);
-  }, [activeLevel, handleStartLevel, worldSave.pearlIslandUnlocked]);
+  }, [activeLevel, handleStartLevel]);
 
   const handleReplayCurrent = useCallback(() => {
     handleStartLevel(activeLevel);

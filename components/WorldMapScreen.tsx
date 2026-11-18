@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import {
@@ -9,16 +9,9 @@ import {
   Play,
   Sparkles,
   Star,
-  Coins,
-  Gem,
 } from 'lucide-react';
 import { LEVELS, WORLD_THEMES } from '@/lib/levels';
 import type { JoudyGameProgress } from '@/lib/storage';
-import {
-  PEARL_ISLAND_PRICE,
-  purchasePearlIsland,
-  useWorldSave,
-} from '@/lib/joudyWorld';
 import WorldAtmosphereOverlay from './WorldAtmosphereOverlay';
 
 interface WorldMapScreenProps {
@@ -31,8 +24,6 @@ export default function WorldMapScreen({
   onSelectLevel,
 }: WorldMapScreenProps) {
   const currentLevelRef = useRef<HTMLDivElement | null>(null);
-  const worldSave = useWorldSave();
-  const [purchaseNotice, setPurchaseNotice] = useState('');
 
   // Restore the older map behavior: when STAGES opens, smoothly bring the
   // currently unlocked level into view; repeat this after progress advances.
@@ -54,25 +45,7 @@ export default function WorldMapScreen({
     (sum, rec) => sum + rec.stars,
     0,
   );
-  const currentLevel = worldSave.pearlIslandUnlocked
-    ? progress.highestUnlockedLevel
-    : Math.min(progress.highestUnlockedLevel, 15);
-  const pearlGatePending = !worldSave.pearlIslandUnlocked && Boolean(progress.completedLevels[15]);
-
-  const handlePearlIslandPurchase = () => {
-    const result = purchasePearlIsland(Boolean(progress.completedLevels[15]));
-    if (result === 'purchased') {
-      setPurchaseNotice('تم فتح جزيرة اللؤلؤ بنجاح. أصبحت المراحل 16–20 متاحة بالتدرّج.');
-    } else if (result === 'already-unlocked') {
-      setPurchaseNotice('جزيرة اللؤلؤ مفتوحة بالفعل، ولن تُخصم العملات مرة أخرى.');
-    } else if (result === 'level-15-required') {
-      setPurchaseNotice('أكمل المستوى 15 أولًا لفتح بوابة الجزيرة.');
-    } else if (result === 'storage-error') {
-      setPurchaseNotice('تعذّر حفظ عملية الشراء على هذا الجهاز. تحقّق من مساحة التخزين ثم أعد المحاولة.');
-    } else {
-      setPurchaseNotice('رصيدك غير كافٍ. تحتاج إلى 10,000 عملة ذهبية.');
-    }
-  };
+  const currentLevel = progress.highestUnlockedLevel;
 
   // Vertical wave offsets for the 5 nodes inside each world to create a playful winding cartoon path
   const waveOffsets = [
@@ -143,9 +116,7 @@ export default function WorldMapScreen({
           const worldLevels = LEVELS.filter((l) => l.worldId === world.id);
           const isEvenRow = worldIdx % 2 === 1;
           const orderedLevels = [...worldLevels].sort((a, b) => a.level - b.level);
-          const worldUnlocked = world.id === 4
-            ? worldSave.pearlIslandUnlocked
-            : worldLevels.some((l) => l.level <= currentLevel);
+          const worldUnlocked = worldLevels.some((l) => l.level <= currentLevel);
           const hasNextWorld = worldIdx < WORLD_THEMES.length - 1;
 
           return (
@@ -196,59 +167,6 @@ export default function WorldMapScreen({
                   </div>
                 </div>
 
-                {world.id === 4 && !worldSave.pearlIslandUnlocked && (
-                  <div
-                    id="pearl-island-gate"
-                    className="relative z-20 flex flex-col gap-3 border-t border-white/10 bg-slate-950/90 p-4 text-white sm:flex-row sm:items-center sm:justify-between sm:px-6"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-200/25 bg-cyan-300/10 text-cyan-200">
-                        <Gem className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <p className="font-black text-cyan-100">بوابة جزيرة اللؤلؤ</p>
-                        <p className="mt-1 text-xs leading-6 text-slate-300">
-                          {pearlGatePending
-                            ? 'اكتمل المستوى 15. افتح الجزيرة مرة واحدة لتبدأ المراحل 16–20.'
-                            : 'أكمل المستوى 15 أولًا، ثم افتح الجزيرة لبدء المراحل 16–20.'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2 sm:min-w-[230px]">
-                      <div className="flex items-center justify-between gap-3 text-xs font-bold tabular-nums">
-                        <span className="inline-flex items-center gap-1.5 text-amber-200">
-                          <Coins className="h-4 w-4" /> رصيدك: {worldSave.coins}
-                        </span>
-                        <span className="text-slate-300">السعر: {PEARL_ISLAND_PRICE.toLocaleString('en-US')}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handlePearlIslandPurchase}
-                        disabled={!pearlGatePending || worldSave.coins < PEARL_ISLAND_PRICE}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-100/25 bg-gradient-to-l from-cyan-600 to-blue-700 px-4 py-3 text-sm font-black text-white shadow-lg transition hover:from-cyan-500 hover:to-blue-600 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-800 disabled:text-slate-400 disabled:shadow-none"
-                      >
-                        <Gem className="h-4 w-4" />
-                        {pearlGatePending
-                          ? worldSave.coins >= PEARL_ISLAND_PRICE
-                            ? 'فتح الجزيرة · 10,000 عملة'
-                            : 'عملات غير كافية'
-                          : 'أكمل المستوى 15 أولًا'}
-                      </button>
-                      {purchaseNotice && (
-                        <p role="status" className="text-center text-xs font-semibold leading-5 text-cyan-100">
-                          {purchaseNotice}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {world.id === 4 && worldSave.pearlIslandUnlocked && (
-                  <div className="relative z-20 flex items-center gap-2 border-t border-emerald-200/20 bg-emerald-950/55 px-5 py-3 text-sm font-bold text-emerald-100">
-                    <Gem className="h-4 w-4" /> جزيرة اللؤلؤ مفتوحة — المراحل 16–20 متاحة حسب تقدمك.
-                  </div>
-                )}
-
                 {/* Winding Cartoon Node Path */}
                 <div className="relative px-4 sm:px-8 pt-10 pb-8 sm:pt-12 sm:pb-12">
                   {/* Winding Road SVG Track behind nodes on tablet/desktop */}
@@ -279,8 +197,7 @@ export default function WorldMapScreen({
                     {orderedLevels.map((lvl, idx) => {
                       const completed = progress.completedLevels[lvl.level];
                       const isCurrent = lvl.level === currentLevel;
-                      const isPearlIslandLevel = lvl.level >= 16 && lvl.level <= 20;
-                      const isLocked = lvl.level > currentLevel || (isPearlIslandLevel && !worldSave.pearlIslandUnlocked);
+                      const isLocked = lvl.level > currentLevel;
                       const isFinalBoss = lvl.level === 30;
                       const waveClass = waveOffsets[idx % waveOffsets.length];
 
@@ -396,17 +313,11 @@ export default function WorldMapScreen({
         type="button"
         whileHover={{ scale: 1.025, y: -2 }}
         whileTap={{ scale: 0.97 }}
-        onClick={() => {
-          if (pearlGatePending) {
-            document.getElementById('pearl-island-gate')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-          }
-          onSelectLevel(currentLevel);
-        }}
+        onClick={() => onSelectLevel(currentLevel)}
         className="pointer-events-auto flex min-w-[min(92vw,360px)] items-center justify-center gap-2 rounded-2xl border border-cyan-100/35 bg-gradient-to-l from-cyan-400 via-sky-500 to-blue-600 px-7 py-4 text-base font-black text-white shadow-[0_12px_38px_rgba(0,0,0,.48)]"
       >
-        {pearlGatePending ? <Gem className="h-5 w-5" /> : <Play className="h-5 w-5 fill-white" />}
-        <span>{pearlGatePending ? 'بوابة جزيرة اللؤلؤ · 10,000 عملة' : `ابدأ اللعب · المستوى ${currentLevel}`}</span>
+        <Play className="h-5 w-5 fill-white" />
+        <span>ابدأ اللعب · المستوى {currentLevel}</span>
         <Sparkles className="h-4 w-4" />
       </motion.button>
     </div>
