@@ -335,7 +335,7 @@ export default function GameArena({
     const player = {
       x: width / 2,
       vx: 0,
-      size: Math.min(194, Math.max(138, width * 0.205)),
+      size: Math.min(174, Math.max(124, width * 0.184)),
       y: height * 0.72,
       vy: 0,
       bouncePhase: 0,
@@ -393,7 +393,7 @@ export default function GameArena({
       }
 
       const cfg = ITEM_CONFIG[kind];
-      const radius = kind === 'obstacle' ? 30 : kind === 'magnet' ? 28 : kind === 'blueKey' ? 22 : 27;
+      const radius = (kind === 'obstacle' ? 30 : kind === 'magnet' ? 28 : kind === 'blueKey' ? 22 : 27) * 0.9;
       const baseSpeed =
         kind === 'cat'
           ? 245
@@ -836,6 +836,13 @@ export default function GameArena({
         ctx.fillRect(0, 0, width, height);
       }
 
+      // Camera zoom-out: keep portrait screen orientation while showing a wider-feeling play field.
+      // The backdrop stays full-bleed; gameplay objects are framed slightly farther away.
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+      ctx.scale(0.90, 0.90);
+      ctx.translate(-width / 2, -height / 2);
+
       // Soft Grass / Pathway Floor Strip at Bottom
       const floorGrad = ctx.createLinearGradient(0, height - 36, 0, height);
       floorGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
@@ -1110,7 +1117,8 @@ export default function GameArena({
         ctx.restore();
       }
 
-      ctx.restore();
+      ctx.restore(); // camera zoom-out transform
+      ctx.restore(); // frame transform
       rafId = window.requestAnimationFrame(step);
     };
 
@@ -1308,7 +1316,6 @@ export default function GameArena({
           <WorldAtmosphereOverlay worldId={levelConfig.worldId} variant="arena" />
         )}
 
-        {!isPaused && !isGameOver && <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/15 bg-slate-950/35 px-4 py-2 text-xs font-semibold text-white/85 backdrop-blur-sm">اسحب بإصبعك للتحرك في كل الاتجاهات</div>}
 
         {/* Pause Overlay */}
         {isPaused && !isGameOver && (

@@ -130,10 +130,9 @@ export default function JoudyAdventureGame() {
       <div className="relative z-10 flex-1 flex items-stretch justify-center w-full">
         {gameState === 'HOME' && (
           <JoudyHome
-            animeImageSrc={animeImageSrc}
             soundEnabled={soundEnabled}
             onToggleSound={handleToggleSound}
-            onPlayArcade={() => setGameState('TITLE_MENU')}
+            onPlayArcade={handleOpenWorldMap}
           />
         )}
         <AnimatePresence mode="wait">

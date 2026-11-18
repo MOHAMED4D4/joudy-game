@@ -3,27 +3,25 @@
 import React, { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'motion/react';
-import { Coins, Shirt, Footprints, Settings, Gamepad2, X, Check, Eye } from 'lucide-react';
+import { Coins, Shirt, Footprints, Settings, X, Check } from 'lucide-react';
 import { SHOP_ITEMS, useWorldSave, saveWorld } from '@/lib/joudyWorld';
 
 interface Props {
-  animeImageSrc: string;
   soundEnabled: boolean;
   onToggleSound: () => void;
   onPlayArcade: () => void;
 }
 
-export default function JoudyHome({ animeImageSrc, soundEnabled, onToggleSound, onPlayArcade }: Props) {
+export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade }: Props) {
   const save = useWorldSave();
   const [category, setCategory] = useState<'outfit' | 'shoes'>('outfit');
   const [selectedId, setSelectedId] = useState(save.equippedOutfit);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [wardrobeOpen, setWardrobeOpen] = useState(false);
   const selected = useMemo(() => SHOP_ITEMS.find((item) => item.id === selectedId) ?? SHOP_ITEMS[0], [selectedId]);
-  const equipped = category === 'outfit' ? save.equippedOutfit : save.equippedShoes;
   const isOwned = save.owned.includes(selected.id);
   const isEquipped = equipped === selected.id;
-  const equippedOutfit = SHOP_ITEMS.find((item) => item.id === save.equippedOutfit) ?? SHOP_ITEMS[0];
-  const selectedFilter = category === 'outfit' ? selected.filter : equippedOutfit.filter;
+  const selectedFilter = selected.filter;
 
   const purchaseOrEquip = () => {
     if (isOwned) {
@@ -66,20 +64,25 @@ export default function JoudyHome({ animeImageSrc, soundEnabled, onToggleSound, 
 
       <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[1500px] flex-col p-2.5 sm:p-4">
         <header className="z-20 flex items-center justify-between gap-3 rounded-2xl border border-white/55 bg-white/65 px-3 py-2.5 shadow-sm backdrop-blur-md sm:px-5">
-          <div><p className="text-[10px] font-bold tracking-[.18em] text-amber-900/65">WARDROBE</p><h1 className="text-lg font-black sm:text-xl">ملابس جودي</h1></div>
+          <div><h1 className="text-base font-black sm:text-xl">مغامرة التجميع السريعة</h1><p className="mt-0.5 text-[10px] font-semibold text-amber-900/65 sm:text-xs">عالم جودي</p></div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 rounded-xl border border-amber-700/15 bg-amber-100/90 px-3 py-2 font-black text-amber-950"><Coins className="h-4 w-4"/><span>{save.coins}</span></div>
             <button onClick={() => setSettingsOpen(true)} aria-label="الإعدادات" className="rounded-xl border border-amber-900/10 bg-white/75 p-2.5 text-amber-950 hover:bg-white"><Settings className="h-5 w-5"/></button>
           </div>
         </header>
 
-        <section className="relative mt-3 grid flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(350px,410px)]">
+        <div className="relative z-20 mt-3 flex flex-wrap items-center justify-center gap-2">
+          <button onClick={() => setWardrobeOpen((v) => !v)} className="rounded-xl border border-amber-900/15 bg-white/85 px-5 py-3 text-sm font-black text-amber-950 shadow-sm hover:bg-white">{wardrobeOpen ? 'العودة إلى الواجهة' : 'تخصيص الملابس والأحذية'}</button>
+          <button onClick={onPlayArcade} className="rounded-xl bg-gradient-to-l from-rose-600 to-fuchsia-700 px-6 py-3 text-sm font-black text-white shadow-lg">ابدأ اللعب</button>
+        </div>
+
+        <section className={`relative mt-3 grid flex-1 gap-3 ${wardrobeOpen ? 'lg:grid-cols-[minmax(0,1fr)_minmax(350px,410px)]' : 'grid-cols-1'}`}>
           {/* Character stands in the same room, alone; pupils move continuously */}
           <div className="relative flex min-h-[54vh] items-end justify-center overflow-hidden rounded-[1.6rem] border border-white/45 bg-white/10 lg:min-h-[690px]">
             <div className="absolute bottom-0 h-[23%] w-full bg-gradient-to-t from-[#63452f]/35 via-[#79583f]/10 to-transparent" />
             <div className="absolute bottom-[4%] left-1/2 h-[4%] w-[25%] -translate-x-1/2 rounded-[50%] bg-[#38271d]/30 blur-xl" />
             <div className="relative mb-[2%] aspect-square w-[min(78vw,570px)]" style={{animation:'joudy-idle 4.2s ease-in-out infinite'}}>
-              <Image src="/images/joudy-home.png" alt="جودي" fill priority sizes="(max-width: 1024px) 76vw, 520px" className="object-contain drop-shadow-[0_18px_18px_rgba(25,20,16,.32)]" style={{filter:equippedOutfit.filter}} />
+              <Image src="/images/joudy-home.png" alt="جودي" fill priority sizes="(max-width: 1024px) 76vw, 520px" className="object-contain drop-shadow-[0_18px_18px_rgba(25,20,16,.32)]" style={{filter:selectedFilter}} />
               {/* Small animated pupils layered over the original eyes to give the character a living idle gaze. */}
               <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1024 1024" aria-hidden="true">
                 <g className="joudy-eye-blink">
@@ -90,7 +93,7 @@ export default function JoudyHome({ animeImageSrc, soundEnabled, onToggleSound, 
             </div>
           </div>
 
-          <aside className="flex min-h-0 flex-col gap-3 rounded-[1.6rem] border border-white/60 bg-[#fffaf2]/90 p-3 shadow-lg backdrop-blur-md sm:p-4">
+          {wardrobeOpen && <aside className="flex min-h-0 flex-col gap-3 rounded-[1.6rem] border border-white/60 bg-[#fffaf2]/90 p-3 shadow-lg backdrop-blur-md sm:p-4">
             <div className="flex items-center justify-between"><div><p className="text-xs font-bold text-amber-800">غرفة تغيير الملابس</p><h2 className="text-xl font-black">اختاري إطلالة جودي</h2></div><Shirt className="h-6 w-6 text-amber-800"/></div>
             <div className="grid grid-cols-2 gap-2 rounded-xl bg-amber-900/5 p-1">
               <button onClick={() => {setCategory('outfit');setSelectedId(save.equippedOutfit);}} className={`rounded-lg px-3 py-2.5 text-sm font-black ${category==='outfit'?'bg-amber-800 text-white':'text-amber-950/65'}`}><Shirt className="ml-1 inline h-4 w-4"/> الملابس</button>
@@ -100,25 +103,25 @@ export default function JoudyHome({ animeImageSrc, soundEnabled, onToggleSound, 
               {SHOP_ITEMS.filter((item)=>item.category===category).map((item)=>{
                 const owned=save.owned.includes(item.id); const active=category==='outfit'?save.equippedOutfit===item.id:save.equippedShoes===item.id;
                 return <button key={item.id} onClick={()=>setSelectedId(item.id)} className={`rounded-xl border p-2 text-right transition ${selectedId===item.id?'border-amber-700 bg-amber-100':'border-amber-900/10 bg-white hover:bg-amber-50'}`}>
-                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-amber-100 to-stone-100"><Image src={animeImageSrc} alt={`معاينة ${item.name}`} width={74} height={74} className="h-full w-auto object-contain" style={{filter:category==='outfit'?item.filter:equippedOutfit.filter}} /></div>
+                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-stone-100 to-amber-100"><div className={`h-12 w-12 rounded-xl border border-black/10 shadow-inner ${category === 'outfit' ? 'rotate-[-8deg]' : 'rounded-full'}`} style={{ background: category === 'outfit' ? 'linear-gradient(145deg,#fff9 0%,#fff2 35%,#0001 100%), #b98b75' : 'linear-gradient(145deg,#fff9,#0002), #7c8792', filter: item.filter }} />{category === 'shoes' && <Footprints className="-mr-3 h-6 w-6 text-slate-700" />}</div>
                   <div className="flex items-center justify-between gap-1"><b className="text-xs text-slate-900">{item.name}</b>{active&&<Check className="h-3.5 w-3.5 text-emerald-700"/>}</div>
                   <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500"><span>{item.rarity}</span><span className="font-black text-amber-800">{owned?'مملوك':`${item.price} 🪙`}</span></div>
                 </button>;
               })}
             </div>
-            <div className="grid grid-cols-[96px_1fr] gap-3 rounded-xl border border-amber-900/10 bg-white p-2.5">
-              <div className="relative flex min-h-[120px] items-end justify-center overflow-hidden rounded-lg bg-gradient-to-b from-amber-100 to-stone-100"><Image src={animeImageSrc} alt={`معاينة ${selected.name}`} fill sizes="96px" className="object-contain" style={{filter:selectedFilter}}/></div>
-              <div className="flex min-w-0 flex-col justify-between py-1"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-slate-900">{selected.name}</h3><span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-900">{selected.rarity}</span></div><p className="mt-1 text-xs leading-5 text-slate-600">{selected.description}</p><p className="mt-2 text-xs font-black text-amber-800">{selected.price} عملة</p></div>
-                <button onClick={purchaseOrEquip} disabled={!isOwned&&save.coins<selected.price || isEquipped} className="mt-2 rounded-lg bg-gradient-to-l from-amber-700 to-orange-700 px-3 py-2.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-45">{isEquipped?'مُجهّز بالفعل':isOwned?'تجهيز القطعة':save.coins<selected.price?'عملات غير كافية':'شراء وتجهيز'}</button>
+            <div className="grid grid-cols-[76px_1fr] gap-3 rounded-xl border border-amber-900/10 bg-white p-2.5">
+              <div className="flex min-h-[100px] items-center justify-center rounded-lg bg-gradient-to-b from-amber-100 to-stone-100"><div className={`h-12 w-12 rounded-xl border border-black/10 shadow-inner ${category === 'outfit' ? 'rotate-[-8deg]' : 'rounded-full'}`} style={{background: category === 'outfit' ? '#b98b75' : '#7c8792', filter: selected.filter}}>{category === 'shoes' && <Footprints className="m-auto mt-3 h-6 w-6 text-white"/>}</div></div>
+              <div className="flex min-w-0 flex-col justify-between py-1"><button onClick={purchaseOrEquip} disabled={!isOwned&&save.coins<selected.price || isEquipped} className="mb-2 rounded-lg bg-gradient-to-l from-amber-700 to-orange-700 px-3 py-2.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-45">{isEquipped?'مُجهّز بالفعل':isOwned?'تجهيز القطعة':save.coins<selected.price?'عملات غير كافية':'شراء وتجهيز'}</button><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-slate-900">{selected.name}</h3><span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-900">{selected.rarity}</span></div><p className="mt-1 text-xs leading-5 text-slate-600">{selected.description}</p><p className="mt-2 text-xs font-black text-amber-800">{selected.price} عملة</p></div>
+
               </div>
             </div>
-            <button onClick={onPlayArcade} className="mt-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-rose-600 to-fuchsia-700 px-4 py-3.5 font-black text-white shadow-lg"><Gamepad2 className="h-5 w-5"/> ابدأ اللعب · 30 مستوى</button>
-          </aside>
+            <button onClick={() => setWardrobeOpen(false)} className="mt-auto flex items-center justify-center gap-2 rounded-xl bg-amber-900 px-4 py-3.5 font-black text-white shadow-lg">حفظ الإطلالة والعودة</button>
+          </aside>}
         </section>
-        <p className="py-2 text-center text-[10px] text-amber-950/55">الإطلالة المختارة ترافق جودي أثناء اللعب</p>
+        <p className="py-2 text-center text-[10px] text-amber-950/55">يمكنك معاينة الإطلالة على الشخصية قبل الشراء أو التجهيز.</p>
       </div>
 
-      <AnimatePresence>{settingsOpen&&<motion.div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.div initial={{y:12,scale:.98}} animate={{y:0,scale:1}} className="w-full max-w-md rounded-2xl border border-white/30 bg-[#fffaf2] p-5 text-slate-900 shadow-2xl"><div className="mb-4 flex items-center justify-between"><h3 className="text-lg font-black">إعدادات التحكم</h3><button onClick={()=>setSettingsOpen(false)} className="rounded-lg bg-amber-900/10 p-2"><X className="h-4 w-4"/></button></div><p className="mb-3 text-sm text-slate-600">اسحب بإصبعك داخل مساحة اللعب للتحرك يمينًا ويسارًا ولأعلى ولأسفل.</p><button onClick={onToggleSound} className="mt-3 w-full rounded-xl border border-amber-900/10 bg-white p-3 text-sm font-bold">{soundEnabled?'كتم صوت اللعبة':'تشغيل صوت اللعبة'}</button></motion.div></motion.div>}</AnimatePresence>
+      <AnimatePresence>{settingsOpen&&<motion.div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.div initial={{y:12,scale:.98}} animate={{y:0,scale:1}} className="w-full max-w-md rounded-2xl border border-white/30 bg-[#fffaf2] p-5 text-slate-900 shadow-2xl"><div className="mb-4 flex items-center justify-between"><h3 className="text-lg font-black">إعدادات التحكم</h3><button onClick={()=>setSettingsOpen(false)} className="rounded-lg bg-amber-900/10 p-2"><X className="h-4 w-4"/></button></div><button onClick={onToggleSound} className="mt-3 w-full rounded-xl border border-amber-900/10 bg-white p-3 text-sm font-bold">{soundEnabled?'كتم صوت اللعبة':'تشغيل صوت اللعبة'}</button></motion.div></motion.div>}</AnimatePresence>
     </main>
   );
 }
