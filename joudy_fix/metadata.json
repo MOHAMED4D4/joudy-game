@@ -1,0 +1,6 @@
+{
+  "name": "عالم جودي الملكي",
+  "description": "لعبة تفاعلية باللغة العربية تضم عالمًا مفتوحًا، وقيادة سيارات، ومهامًا، وملابس ومكياجًا، وحفل تكريم ملكيًا.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

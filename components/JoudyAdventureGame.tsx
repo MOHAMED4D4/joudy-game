@@ -17,7 +17,7 @@ import {
 } from '@/lib/storage';
 import { soundEngine } from '@/lib/soundEffects';
 
-type GameState = 'HOME' | 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY';
+type GameState = 'HOME' | 'WARDROBE' | 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY';
 
 const REAL_IMAGE_SRC = '/images/joudy-real.png';
 const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
@@ -128,11 +128,13 @@ export default function JoudyAdventureGame() {
 
       {/* Active Screen State Machine (2D Arcade & Winding Map) */}
       <div className="relative z-10 flex-1 flex items-stretch justify-center w-full">
-        {gameState === 'HOME' && (
+        {(gameState === 'HOME' || gameState === 'WARDROBE') && (
           <JoudyHome
             soundEnabled={soundEnabled}
             onToggleSound={handleToggleSound}
             onPlayArcade={handleOpenWorldMap}
+            initialWardrobeOpen={gameState === 'WARDROBE'}
+            onCloseWardrobe={() => setGameState('WORLD_MAP')}
           />
         )}
         <AnimatePresence mode="wait">
@@ -153,6 +155,7 @@ export default function JoudyAdventureGame() {
               animeImageSrc={animeImageSrc}
               onSelectLevel={handleStartLevel}
               onBackToCharacter={() => setGameState('TITLE_MENU')}
+              onOpenWardrobe={() => setGameState('WARDROBE')}
             />
           )}
 

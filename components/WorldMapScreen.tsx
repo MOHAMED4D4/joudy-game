@@ -22,6 +22,7 @@ interface WorldMapScreenProps {
   animeImageSrc: string;
   onSelectLevel: (level: number) => void;
   onBackToCharacter: () => void;
+  onOpenWardrobe: () => void;
 }
 
 export default function WorldMapScreen({
@@ -30,6 +31,7 @@ export default function WorldMapScreen({
   animeImageSrc,
   onSelectLevel,
   onBackToCharacter,
+  onOpenWardrobe,
 }: WorldMapScreenProps) {
   const [animeBadgeSrc, setAnimeBadgeSrc] = useState(animeImageSrc);
 
@@ -105,14 +107,15 @@ export default function WorldMapScreen({
                 ·
               </span>
               <span className="text-xs font-semibold text-slate-400">
-                خريطة التحديات · أركيد 2D
+                مغامرة التجميع السريعة
               </span>
             </div>
+            <p className="text-xs sm:text-sm text-slate-300">اجمع العناصر، تفادَ العوائق، وحقق أعلى نتيجة. افتح المراحل التالية واصنع سجلك الخاص.</p>
             <h1
               className="text-2xl sm:text-3xl font-black text-white"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              مسار مغامرة جودي (30 مستوى)
+              STAGES · المراحل
             </h1>
             <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm font-semibold text-slate-300 tabular-nums pt-0.5">
               <span>المكتملة: {completedCount} / 30</span>
@@ -133,6 +136,8 @@ export default function WorldMapScreen({
           </div>
         </div>
 
+        <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={onOpenWardrobe} className="rounded-2xl border border-amber-300/30 bg-amber-500/15 px-5 py-3.5 text-sm font-black text-amber-100 hover:bg-amber-500/25">👗 الملابس والأحذية</button>
         <motion.button
           type="button"
           whileHover={{ scale: 1.02 }}
@@ -144,6 +149,14 @@ export default function WorldMapScreen({
           <span>العب المستوى {currentLevel}</span>
           <Sparkles className="w-4 h-4" />
         </motion.button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="rounded-xl border border-white/10 bg-[#101b2b]/80 p-3"><p className="text-[10px] text-slate-400">التقدم</p><p className="mt-1 text-sm font-black text-emerald-300">محفوظ تلقائيًا</p></div>
+        <div className="rounded-xl border border-white/10 bg-[#101b2b]/80 p-3"><p className="text-[10px] text-slate-400">نمط اللعب</p><p className="mt-1 text-sm font-black text-cyan-200">تحدي الأركيد</p></div>
+        <div className="rounded-xl border border-white/10 bg-[#101b2b]/80 p-3"><p className="text-[10px] text-slate-400">الشخصية الرئيسية</p><p className="mt-1 text-sm font-black text-rose-200">جودي</p></div>
+        <div className="rounded-xl border border-white/10 bg-[#101b2b]/80 p-3"><p className="text-[10px] text-slate-400">نظام التحدي</p><p className="mt-1 text-sm font-black text-amber-200">تقدم تدريجي</p></div>
       </div>
 
       {/* 6 Worlds Serpentine 2D Cartoon Path */}
@@ -341,6 +354,7 @@ export default function WorldMapScreen({
           );
         })}
       </div>
+      <div className="sticky bottom-3 z-40 flex justify-center pointer-events-none pb-2"><button type="button" onClick={() => onSelectLevel(currentLevel)} className="pointer-events-auto rounded-full bg-gradient-to-l from-rose-600 to-fuchsia-700 px-7 py-3.5 text-sm font-black text-white shadow-2xl ring-2 ring-white/20">ابدأ اللعب · المستوى {currentLevel}</button></div>
     </motion.section>
   );
 }

@@ -10,14 +10,16 @@ interface Props {
   soundEnabled: boolean;
   onToggleSound: () => void;
   onPlayArcade: () => void;
+  initialWardrobeOpen?: boolean;
+  onCloseWardrobe?: () => void;
 }
 
-export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade }: Props) {
+export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, initialWardrobeOpen = false, onCloseWardrobe }: Props) {
   const save = useWorldSave();
   const [category, setCategory] = useState<'outfit' | 'shoes'>('outfit');
   const [selectedId, setSelectedId] = useState(save.equippedOutfit);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [wardrobeOpen, setWardrobeOpen] = useState(false);
+  const [wardrobeOpen, setWardrobeOpen] = useState(initialWardrobeOpen);
   const selected = useMemo(() => SHOP_ITEMS.find((item) => item.id === selectedId) ?? SHOP_ITEMS[0], [selectedId]);
   const isOwned = save.owned.includes(selected.id);
   const equipped = category === 'outfit' ? save.equippedOutfit : save.equippedShoes;
@@ -73,13 +75,14 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade }:
         </header>
 
         <div className="relative z-20 mt-3 flex flex-wrap items-center justify-center gap-2">
-          <button onClick={() => setWardrobeOpen((v) => !v)} className="rounded-xl border border-amber-900/15 bg-white/85 px-5 py-3 text-sm font-black text-amber-950 shadow-sm hover:bg-white">{wardrobeOpen ? 'العودة إلى الواجهة' : 'تخصيص الملابس والأحذية'}</button>
-          <button onClick={onPlayArcade} className="rounded-xl bg-gradient-to-l from-rose-600 to-fuchsia-700 px-6 py-3 text-sm font-black text-white shadow-lg">ابدأ اللعب</button>
+          {!initialWardrobeOpen && <button onClick={onPlayArcade} className="rounded-xl bg-gradient-to-l from-rose-600 to-fuchsia-700 px-6 py-3 text-sm font-black text-white shadow-lg">ابدأ اللعب</button>}
+          {initialWardrobeOpen && <button onClick={() => onCloseWardrobe?.()} className="rounded-xl bg-amber-900 px-5 py-3 text-sm font-black text-white">العودة إلى المراحل</button>}
         </div>
 
         <section className={`relative mt-3 grid flex-1 gap-3 ${wardrobeOpen ? 'lg:grid-cols-[minmax(0,1fr)_minmax(350px,410px)]' : 'grid-cols-1'}`}>
           {/* Character stands in the same room, alone; pupils move continuously */}
           <div className="relative flex min-h-[54vh] items-end justify-center overflow-hidden rounded-[1.6rem] border border-white/45 bg-white/10 lg:min-h-[690px]">
+            {wardrobeOpen && <div className="absolute right-3 top-3 z-20 flex max-w-[230px] flex-col gap-1 rounded-xl border border-amber-900/15 bg-[#fffaf2]/95 p-2.5 shadow-xl backdrop-blur"><span className="text-[10px] font-bold text-amber-900">{selected.name} · {selected.price} عملة</span><button onClick={purchaseOrEquip} disabled={(!isOwned && save.coins < selected.price) || isEquipped} className="rounded-lg bg-gradient-to-l from-amber-700 to-orange-700 px-4 py-2.5 text-xs font-black text-white disabled:opacity-50">{isEquipped ? 'مُجهّز بالفعل' : isOwned ? 'تجهيز القطعة' : save.coins < selected.price ? 'عملات غير كافية' : 'شراء وتجهيز'}</button></div>}
             <div className="absolute bottom-0 h-[23%] w-full bg-gradient-to-t from-[#63452f]/35 via-[#79583f]/10 to-transparent" />
             <div className="absolute bottom-[4%] left-1/2 h-[4%] w-[25%] -translate-x-1/2 rounded-[50%] bg-[#38271d]/30 blur-xl" />
             <div className="relative mb-[2%] aspect-square w-[min(78vw,570px)]" style={{animation:'joudy-idle 4.2s ease-in-out infinite'}}>
@@ -104,19 +107,19 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade }:
               {SHOP_ITEMS.filter((item)=>item.category===category).map((item)=>{
                 const owned=save.owned.includes(item.id); const active=category==='outfit'?save.equippedOutfit===item.id:save.equippedShoes===item.id;
                 return <button key={item.id} onClick={()=>setSelectedId(item.id)} className={`rounded-xl border p-2 text-right transition ${selectedId===item.id?'border-amber-700 bg-amber-100':'border-amber-900/10 bg-white hover:bg-amber-50'}`}>
-                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-stone-100 to-amber-100"><div className={`h-12 w-12 rounded-xl border border-black/10 shadow-inner ${category === 'outfit' ? 'rotate-[-8deg]' : 'rounded-full'}`} style={{ background: category === 'outfit' ? 'linear-gradient(145deg,#fff9 0%,#fff2 35%,#0001 100%), #b98b75' : 'linear-gradient(145deg,#fff9,#0002), #7c8792', filter: item.filter }} />{category === 'shoes' && <Footprints className="-mr-3 h-6 w-6 text-slate-700" />}</div>
+                  <div className="mb-2 flex h-20 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-stone-100 to-amber-100">{category === 'outfit' ? <svg viewBox="0 0 100 100" className="h-16 w-16 drop-shadow-md" aria-hidden="true"><path d="M34 12 20 20 8 42l15 9 8-12-3 49h44l-3-49 8 12 15-9-12-22-14-8-8 9H42z" fill={item.id==='royal'?'#b58b35':item.id==='midnight'?'#27334d':item.id==='rose'?'#bd627c':item.id==='ocean'?'#397b9b':item.id==='lavender'?'#8c72b2':'#6b9b82'} stroke="#59483d" strokeWidth="2.5" strokeLinejoin="round"/><path d="M42 12q8 12 16 0M50 23v55" stroke="#fff" strokeOpacity=".65" strokeWidth="3" fill="none"/><path d="m20 20 10 13m40-13L70 33" stroke="#fff" strokeOpacity=".6" strokeWidth="3"/></svg> : <svg viewBox="0 0 100 100" className="h-16 w-16 drop-shadow-md" aria-hidden="true"><path d="M13 58q13 2 22-13l9-18q5-8 12-2l10 20q6 10 20 12l8 3q5 2 4 9l-2 9H15q-8-1-8-9 0-8 6-11z" fill={item.id==='gold-shoes'?'#c69a37':item.id==='cloud-shoes'?'#e9e5db':item.id==='lavender-shoes'?'#987fc0':item.id==='rose-shoes'?'#c87591':'#526d88'} stroke="#4b4650" strokeWidth="3"/><path d="M19 72h68M43 34l10 17 13 2" stroke="#fff" strokeOpacity=".8" strokeWidth="4" fill="none" strokeLinecap="round"/></svg>}</div>
                   <div className="flex items-center justify-between gap-1"><b className="text-xs text-slate-900">{item.name}</b>{active&&<Check className="h-3.5 w-3.5 text-emerald-700"/>}</div>
                   <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500"><span>{item.rarity}</span><span className="font-black text-amber-800">{owned?'مملوك':`${item.price} 🪙`}</span></div>
                 </button>;
               })}
             </div>
-            <div className="grid grid-cols-[76px_1fr] gap-3 rounded-xl border border-amber-900/10 bg-white p-2.5">
+            <div className="grid grid-cols-[76px_1fr] gap-3 rounded-xl border border-amber-900/10 bg-white p-2.5 shadow-sm">
               <div className="flex min-h-[100px] items-center justify-center rounded-lg bg-gradient-to-b from-amber-100 to-stone-100"><div className={`h-12 w-12 rounded-xl border border-black/10 shadow-inner ${category === 'outfit' ? 'rotate-[-8deg]' : 'rounded-full'}`} style={{background: category === 'outfit' ? '#b98b75' : '#7c8792', filter: selected.filter}}>{category === 'shoes' && <Footprints className="m-auto mt-3 h-6 w-6 text-white"/>}</div></div>
-              <div className="flex min-w-0 flex-col justify-between py-1"><button onClick={purchaseOrEquip} disabled={!isOwned&&save.coins<selected.price || isEquipped} className="mb-2 rounded-lg bg-gradient-to-l from-amber-700 to-orange-700 px-3 py-2.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-45">{isEquipped?'مُجهّز بالفعل':isOwned?'تجهيز القطعة':save.coins<selected.price?'عملات غير كافية':'شراء وتجهيز'}</button><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-slate-900">{selected.name}</h3><span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-900">{selected.rarity}</span></div><p className="mt-1 text-xs leading-5 text-slate-600">{selected.description}</p><p className="mt-2 text-xs font-black text-amber-800">{selected.price} عملة</p></div>
+              <div className="flex min-w-0 flex-col justify-between py-1"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-slate-900">{selected.name}</h3><span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-900">{selected.rarity}</span></div><p className="mt-1 text-xs leading-5 text-slate-600">{selected.description}</p><p className="mt-2 text-xs font-black text-amber-800">{selected.price} عملة</p></div>
 
               </div>
             </div>
-            <button onClick={() => setWardrobeOpen(false)} className="mt-auto flex items-center justify-center gap-2 rounded-xl bg-amber-900 px-4 py-3.5 font-black text-white shadow-lg">حفظ الإطلالة والعودة</button>
+            <button onClick={() => onCloseWardrobe ? onCloseWardrobe() : setWardrobeOpen(false)} className="mt-auto flex items-center justify-center gap-2 rounded-xl bg-amber-900 px-4 py-3.5 font-black text-white shadow-lg">حفظ الإطلالة والعودة</button>
           </aside>}
         </section>
         <p className="py-2 text-center text-[10px] text-amber-950/55">يمكنك معاينة الإطلالة على الشخصية قبل الشراء أو التجهيز.</p>

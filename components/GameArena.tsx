@@ -25,7 +25,7 @@ import {
 } from '@/lib/cartoonSvgSprites';
 import type { LevelConfig } from '@/lib/levels';
 import WorldAtmosphereOverlay from './WorldAtmosphereOverlay';
-import { saveWorld, useWorldSave } from '@/lib/joudyWorld';
+import { addWorldCoins, saveWorld, useWorldSave } from '@/lib/joudyWorld';
 
 export interface GameRunStats {
   level: number;
@@ -701,7 +701,9 @@ export default function GameArena({
 
               if (item.kind === 'cat') countsRef.current.cats += 1;
               if (item.kind === 'rose') countsRef.current.roses += 1;
-              if (item.kind === 'chocolate') countsRef.current.chocolates += 1;
+              if (item.kind === 'chocolate') { countsRef.current.chocolates += 1; addWorldCoins(2); }
+              if (item.kind === 'rose') addWorldCoins(3);
+              if (item.kind === 'cat') addWorldCoins(5);
 
               player.catchBounce = 1;
               player.happyTimer = 0.85;
@@ -1225,7 +1227,6 @@ export default function GameArena({
                 ))}
               </div>
 
-              <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 px-2 py-1 text-xs font-extrabold text-blue-100" title="المفاتيح الزرقاء"><KeyRound className="h-3.5 w-3.5" />{worldSave.blueKeys}</span>
               {combo >= 2 && (
                 <span className="inline-flex items-center gap-1 text-xs font-extrabold text-amber-700 tabular-nums">
                   <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
@@ -1264,6 +1265,8 @@ export default function GameArena({
 
         {/* Action Controls */}
         <div className="flex items-center gap-1.5 shrink-0">
+          <span className="inline-flex h-10 items-center gap-1 rounded-xl border border-amber-200/20 bg-amber-400/10 px-2 text-xs font-black text-amber-100" title="عملاتك">🪙 {worldSave.coins}</span>
+          <span className="inline-flex h-10 items-center gap-1 rounded-xl border border-blue-200/20 bg-blue-400/10 px-2 text-xs font-black text-blue-100" title="المفاتيح الزرقاء"><KeyRound className="h-4 w-4"/>{worldSave.blueKeys}</span>
           <button
             type="button"
             onClick={onToggleSound}

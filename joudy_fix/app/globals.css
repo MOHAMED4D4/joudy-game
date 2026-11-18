@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes glowBreath {
+  0%, 100% {
+    box-shadow: 0 0 24px rgba(244, 63, 94, 0.35), 0 0 48px rgba(251, 191, 36, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 34px rgba(244, 63, 94, 0.55), 0 0 64px rgba(251, 191, 36, 0.32);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 4.2s ease-in-out infinite;
+}
+
+.animate-glow-breath {
+  animation: glowBreath 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-glow-breath {
+    animation: none;
+  }
+}
+
+/* Premium arcade hub */
+.arcade-hub { color: #e2e8f0; isolation: isolate; }
+.hub-grid { position:absolute; inset:0; opacity:.13; background-image:linear-gradient(rgba(148,163,184,.22) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.22) 1px,transparent 1px); background-size:42px 42px; mask-image:linear-gradient(to bottom,black,transparent 85%); }
+.hub-orb { position:absolute; width:20rem; height:20rem; border-radius:9999px; filter:blur(80px); opacity:.22; animation:hubDrift 12s ease-in-out infinite alternate; }
+.hub-orb-one { top:-9rem; right:12%; background:#0891b2; }
+.hub-orb-two { bottom:-11rem; left:8%; background:#6d28d9; animation-delay:-5s; }
+@keyframes hubDrift { from { transform:translate3d(0,0,0) scale(.92); } to { transform:translate3d(24px,-18px,0) scale(1.12); } }
+@media (prefers-reduced-motion: reduce) { .hub-orb { animation:none; } }
+
+/* Joudy's home world */
+.joudy-world { color: #e5edf7; background: radial-gradient(circle at 14% 15%, rgba(30, 86, 120, .28), transparent 34%), radial-gradient(circle at 90% 85%, rgba(123, 67, 111, .24), transparent 36%), #080f1b; }
+.room-window { box-shadow: 0 18px 50px rgba(13, 28, 44, .18), inset 0 0 22px rgba(255,255,255,.35); }
+.room-floor { background-image: repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 72px), linear-gradient(0deg,rgba(22,18,28,.26),transparent); }
+.home-action { display:inline-flex; align-items:center; gap:.5rem; border:1px solid rgba(255,255,255,.25); border-radius:9999px; padding:.65rem 1rem; font-size:.78rem; font-weight:800; color:#fff; background:rgba(9,19,32,.48); backdrop-filter:blur(12px); transition:background .2s, transform .2s; }
+.home-action:hover { background:rgba(9,19,32,.72); transform:translateY(-1px); }
+.shop-tab { border:1px solid rgba(255,255,255,.12); border-radius:9999px; padding:.5rem .9rem; background:rgba(255,255,255,.04); color:#cbd5e1; font-size:.76rem; font-weight:800; }
+.shop-tab.active { border-color:rgba(103,232,249,.5); background:rgba(34,211,238,.14); color:#cffafe; }
+@media (max-width: 640px) {
+  .joudy-world { padding-bottom:1rem; }
+  .joudy-room { min-height:590px; }
+  .room-window { width:7rem; height:6rem; right:5%; top:13%; }
+}
