@@ -52,9 +52,18 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'moon', name: 'زي ضوء القمر', category: 'outfit', price: 160, rarity: 'نادر', description: 'إطلالة ليلية ولمسة حماية إضافية بسيطة', filter: 'hue-rotate(35deg) saturate(.9)', bonus: 'shield' },
   { id: 'royal', name: 'الزي الملكي', category: 'outfit', price: 300, rarity: 'أسطوري', description: 'إطلالة ملكية مع زيادة بسيطة في الحركة', filter: 'saturate(1.22) contrast(1.04)', bonus: 'speed' },
   { id: 'mint', name: 'زي النعناع', category: 'outfit', price: 120, rarity: 'مميز', description: 'ألوان هادئة ومظهر منعش', filter: 'hue-rotate(45deg) saturate(.9)' },
+  { id: 'lavender', name: 'فستان اللافندر', category: 'outfit', price: 180, rarity: 'نادر', description: 'إطلالة بنفسجية ناعمة', filter: 'hue-rotate(78deg) saturate(1.08)' },
+  { id: 'ocean', name: 'زي المحيط', category: 'outfit', price: 210, rarity: 'نادر', description: 'درجات زرقاء بلمعة باردة', filter: 'hue-rotate(155deg) saturate(.95)' },
+  { id: 'sunset', name: 'فستان الغروب', category: 'outfit', price: 240, rarity: 'نادر', description: 'ألوان دافئة مستوحاة من الغروب', filter: 'hue-rotate(-32deg) saturate(1.2)' },
+  { id: 'midnight', name: 'زي منتصف الليل', category: 'outfit', price: 330, rarity: 'أسطوري', description: 'إطلالة داكنة بلمسة لامعة', filter: 'brightness(.88) hue-rotate(205deg) saturate(1.15)' },
+  { id: 'pearl', name: 'الزي اللؤلؤي', category: 'outfit', price: 390, rarity: 'أسطوري', description: 'درجات فاتحة وناعمة', filter: 'brightness(1.12) saturate(.72)' },
+  { id: 'emerald', name: 'الزي الزمردي', category: 'outfit', price: 280, rarity: 'نادر', description: 'درجات خضراء ملكية', filter: 'hue-rotate(95deg) saturate(1.12)' },
   { id: 'sneakers', name: 'حذاء النجوم', category: 'shoes', price: 70, rarity: 'عادي', description: 'حذاء خفيف للرحلات', filter: 'none' },
   { id: 'rose-shoes', name: 'حذاء الورد', category: 'shoes', price: 140, rarity: 'نادر', description: 'حذاء أنيق مع زيادة بسيطة في العملات', filter: 'none', bonus: 'coins' },
   { id: 'swift-shoes', name: 'حذاء البرق', category: 'shoes', price: 220, rarity: 'أسطوري', description: 'يعزز سرعة الحركة قليلًا دون كسر توازن المراحل', filter: 'none', bonus: 'speed' },
+  { id: 'lavender-shoes', name: 'حذاء اللافندر', category: 'shoes', price: 110, rarity: 'مميز', description: 'حذاء بنفسجي أنيق', filter: 'hue-rotate(70deg)' },
+  { id: 'gold-shoes', name: 'حذاء الذهب', category: 'shoes', price: 280, rarity: 'نادر', description: 'حذاء بلون ذهبي لامع', filter: 'sepia(.38) saturate(1.35)' },
+  { id: 'cloud-shoes', name: 'حذاء السحاب', category: 'shoes', price: 350, rarity: 'أسطوري', description: 'حذاء فاتح وخفيف', filter: 'brightness(1.25) saturate(.65)' },
 ];
 
 export const PET_ITEMS = [
