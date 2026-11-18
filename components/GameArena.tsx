@@ -41,6 +41,8 @@ interface GameArenaProps {
   levelConfig: LevelConfig;
   realImageSrc?: string;
   animeImageSrc: string;
+  characterSpriteSrc?: string;
+  shoeSpriteSrc?: string;
   highScore: number;
   soundEnabled: boolean;
   onToggleSound: () => void;
@@ -168,6 +170,8 @@ export default function GameArena({
   levelConfig,
   realImageSrc,
   animeImageSrc,
+  characterSpriteSrc,
+  shoeSpriteSrc,
   highScore,
   soundEnabled,
   onToggleSound,
@@ -209,6 +213,7 @@ export default function GameArena({
   const reviveCountRef = useRef(worldSave.reviveCountsByLevel[levelConfig.level] ?? 0);
 
   const spriteRef = useRef<HTMLImageElement | null>(null);
+  const shoeSpriteRef = useRef<HTMLImageElement | null>(null);
   const bgRef = useRef<HTMLImageElement | null>(null);
   const cartoonSpritesRef = useRef<CartoonSpriteMap>({});
 
@@ -229,21 +234,27 @@ export default function GameArena({
   useEffect(() => {
     let active = true;
 
+    const activeSpriteSrc = characterSpriteSrc || animeImageSrc;
     const rawFallback = new window.Image();
     rawFallback.onload = () => {
-      if (active && !spriteRef.current) {
-        spriteRef.current = rawFallback;
-      }
+      if (active && !spriteRef.current) spriteRef.current = rawFallback;
     };
-    rawFallback.src = animeImageSrc;
+    rawFallback.src = activeSpriteSrc;
 
-    loadTransparentSprite(animeImageSrc)
+    loadTransparentSprite(activeSpriteSrc)
       .then(({ image }) => {
         if (active) spriteRef.current = image;
       })
       .catch(() => {
         if (active) spriteRef.current = rawFallback;
       });
+
+    shoeSpriteRef.current = null;
+    if (shoeSpriteSrc) {
+      const shoeImage = new window.Image();
+      shoeImage.onload = () => { if (active) shoeSpriteRef.current = shoeImage; };
+      shoeImage.src = shoeSpriteSrc;
+    }
 
     const cancelSvgLoad = loadCartoonSvgSprites((map) => {
       if (active) cartoonSpritesRef.current = map;
@@ -259,7 +270,7 @@ export default function GameArena({
       active = false;
       cancelSvgLoad();
     };
-  }, [animeImageSrc, levelConfig.bgImage]);
+  }, [animeImageSrc, characterSpriteSrc, shoeSpriteSrc, levelConfig.bgImage]);
 
   useEffect(() => {
     if (soundEnabled && !isPaused && !isGameOver) {
@@ -1011,6 +1022,10 @@ export default function GameArena({
           ctx.filter = characterFilter || 'none';
           ctx.drawImage(sImg, -drawW / 2, -drawH / 2, drawW, drawH);
           ctx.filter = 'none';
+          const shoes = shoeSpriteRef.current;
+          if (shoes && shoes.complete && shoes.naturalWidth > 0) {
+            ctx.drawImage(shoes, -drawW / 2, -drawH / 2, drawW, drawH);
+          }
         } else {
           ctx.fillStyle = '#FB7185';
           ctx.beginPath();

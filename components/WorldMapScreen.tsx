@@ -1,60 +1,39 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import {
-  ArrowRight,
   Crown,
   Lock,
   Play,
   Sparkles,
   Star,
+  Coins,
 } from 'lucide-react';
 import { LEVELS, WORLD_THEMES } from '@/lib/levels';
 import type { JoudyGameProgress } from '@/lib/storage';
-import { loadTransparentSprite } from '@/lib/spriteUtils';
 import WorldAtmosphereOverlay from './WorldAtmosphereOverlay';
+import WardrobeShopPanel from './WardrobeShopPanel';
+import { useWorldSave } from '@/lib/joudyWorld';
 
 interface WorldMapScreenProps {
   progress: JoudyGameProgress;
   realImageSrc: string;
-  animeImageSrc: string;
   onSelectLevel: (level: number) => void;
-  onBackToCharacter: () => void;
-  onOpenWardrobe: () => void;
 }
 
 export default function WorldMapScreen({
   progress,
   realImageSrc,
-  animeImageSrc,
   onSelectLevel,
-  onBackToCharacter,
-  onOpenWardrobe,
 }: WorldMapScreenProps) {
-  const [animeBadgeSrc, setAnimeBadgeSrc] = useState(animeImageSrc);
+  const [wardrobeOpen, setWardrobeOpen] = useState(false);
+  const worldSave = useWorldSave();
 
-  useEffect(() => {
-    let active = true;
-    loadTransparentSprite(animeImageSrc)
-      .then(({ dataUrl }) => {
-        if (active) setAnimeBadgeSrc(dataUrl);
-      })
-      .catch(() => {
-        if (active) setAnimeBadgeSrc(animeImageSrc);
-      });
-    return () => {
-      active = false;
-    };
-  }, [animeImageSrc]);
 
-  const currentLevelRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => currentLevelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120);
-    return () => window.clearTimeout(timer);
-  }, [progress.highestUnlockedLevel]);
+
 
   const completedCount = Object.keys(progress.completedLevels).length;
   const totalStars = Object.values(progress.completedLevels).reduce(
@@ -73,12 +52,13 @@ export default function WorldMapScreen({
   ];
 
   return (
+    <>
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.28 }}
-      className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5 text-slate-100"
+      className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5 pb-32 text-slate-100"
     >
       {/* Map Header & Quick Launch */}
       <div className="bg-[#101b2b]/95 backdrop-blur-xl border border-white/10 rounded-3xl p-5 sm:p-6 shadow-[0_20px_55px_rgba(0,0,0,.32)] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -95,20 +75,8 @@ export default function WorldMapScreen({
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onBackToCharacter}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer"
-              >
-                <ArrowRight className="w-4 h-4" />
-                <span>القائمة الرئيسية</span>
-              </button>
-              <span className="text-slate-600" aria-hidden="true">
-                ·
-              </span>
-              <span className="text-xs font-semibold text-slate-400">
-                مغامرة التجميع السريعة
-              </span>
+              <span className="text-xs font-semibold text-slate-400">مغامرة التجميع السريعة</span>
+              <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-bold text-emerald-200">تقدم محفوظ</span>
             </div>
             <p className="text-xs sm:text-sm text-slate-300">اجمع العناصر، تفادَ العوائق، وحقق أعلى نتيجة. افتح المراحل التالية واصنع سجلك الخاص.</p>
             <h1
@@ -136,19 +104,12 @@ export default function WorldMapScreen({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-        <button type="button" onClick={onOpenWardrobe} className="rounded-2xl border border-amber-300/30 bg-amber-500/15 px-5 py-3.5 text-sm font-black text-amber-100 hover:bg-amber-500/25">👗 الملابس والأحذية</button>
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onSelectLevel(currentLevel)}
-          className="py-3.5 px-6 rounded-2xl bg-gradient-to-l from-cyan-400 via-sky-500 to-blue-600 text-white font-bold text-base shadow-[0_10px_28px_-6px_rgba(34,211,238,0.28)] hover:shadow-[0_14px_34px_-6px_rgba(34,211,238,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
-        >
-          <Play className="w-4 h-4 fill-white" />
-          <span>العب المستوى {currentLevel}</span>
-          <Sparkles className="w-4 h-4" />
-        </motion.button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex items-center gap-1.5 rounded-2xl border border-amber-300/20 bg-amber-400/10 px-4 py-3.5 text-sm font-black text-amber-200">
+            <Coins className="h-4 w-4" />
+            <span>{worldSave.coins}</span>
+          </div>
+          <button type="button" onClick={() => setWardrobeOpen(true)} className="rounded-2xl border border-amber-300/30 bg-amber-500/15 px-5 py-3.5 text-sm font-black text-amber-100 hover:bg-amber-500/25">👗 الملابس والأحذية</button>
         </div>
       </div>
 
@@ -253,7 +214,6 @@ export default function WorldMapScreen({
                       return (
                         <div
                           key={lvl.level}
-                          ref={isCurrent ? currentLevelRef : undefined}
                           className={`relative flex flex-col items-center gap-1.5 ${waveClass} ${isCurrent ? 'scroll-mt-24' : ''}`}
                         >
                           <motion.button
@@ -354,7 +314,23 @@ export default function WorldMapScreen({
           );
         })}
       </div>
-      <div className="sticky bottom-3 z-40 flex justify-center pointer-events-none pb-2"><button type="button" onClick={() => onSelectLevel(currentLevel)} className="pointer-events-auto rounded-full bg-gradient-to-l from-rose-600 to-fuchsia-700 px-7 py-3.5 text-sm font-black text-white shadow-2xl ring-2 ring-white/20">ابدأ اللعب · المستوى {currentLevel}</button></div>
     </motion.section>
+
+    {/* يبقى الزر ملازمًا للشاشة حتى أثناء تمرير قائمة المراحل الطويلة */}
+    <div className="pointer-events-none fixed inset-x-0 bottom-3 z-50 flex justify-center px-3">
+      <motion.button
+        type="button"
+        whileHover={{ scale: 1.025, y: -2 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={() => onSelectLevel(currentLevel)}
+        className="pointer-events-auto flex min-w-[min(92vw,360px)] items-center justify-center gap-2 rounded-2xl border border-cyan-100/35 bg-gradient-to-l from-cyan-400 via-sky-500 to-blue-600 px-7 py-4 text-base font-black text-white shadow-[0_12px_38px_rgba(0,0,0,.48)]"
+      >
+        <Play className="h-5 w-5 fill-white" />
+        <span>ابدأ اللعب · المستوى {currentLevel}</span>
+        <Sparkles className="h-4 w-4" />
+      </motion.button>
+    </div>
+    {wardrobeOpen && <WardrobeShopPanel onClose={() => setWardrobeOpen(false)} />}
+    </>
   );
 }

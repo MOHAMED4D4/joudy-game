@@ -3,9 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
-import JoudyHome from './JoudyHome';
 import { addWorldCoins, loadWorldSave, saveWorld, useWorldSave, SHOP_ITEMS } from '@/lib/joudyWorld';
-import CharacterSelectScreen from './CharacterSelectScreen';
 import WorldMapScreen from './WorldMapScreen';
 import GameArena, { type GameRunStats } from './GameArena';
 import VictoryScreen from './VictoryScreen';
@@ -17,7 +15,7 @@ import {
 } from '@/lib/storage';
 import { soundEngine } from '@/lib/soundEffects';
 
-type GameState = 'HOME' | 'WARDROBE' | 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY';
+type GameState = 'WORLD_MAP' | 'PLAYING' | 'VICTORY';
 
 const REAL_IMAGE_SRC = '/images/joudy-real.png';
 const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
@@ -25,7 +23,7 @@ const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
 export default function JoudyAdventureGame() {
   const progress = useJoudyProgress();
 
-  const [gameState, setGameState] = useState<GameState>('HOME');
+  const [gameState, setGameState] = useState<GameState>('WORLD_MAP');
   const worldSave = useWorldSave();
   const equippedOutfit = SHOP_ITEMS.find((item) => item.id === worldSave.equippedOutfit) ?? SHOP_ITEMS[0];
   const equippedShoes = SHOP_ITEMS.find((item) => item.id === worldSave.equippedShoes) ?? SHOP_ITEMS.find((item) => item.id === 'sneakers')!;
@@ -58,13 +56,6 @@ export default function JoudyAdventureGame() {
       soundEngine.setMusicEnabled(next);
       return next;
     });
-  }, []);
-
-  const handleOpenWorldMap = useCallback(() => {
-    soundEngine.stopBackgroundMusic();
-    soundEngine.stopCarEngineSound();
-    soundEngine.playStartAdventure();
-    setGameState('WORLD_MAP');
   }, []);
 
   const handleStartLevel = useCallback(
@@ -116,9 +107,9 @@ export default function JoudyAdventureGame() {
   const activeLevelConfig = getLevelConfig(activeLevel);
 
   return (
-    <main className="relative min-h-dvh w-full overflow-x-hidden bg-[#080f1b] flex flex-col">
+    <main className="relative min-h-dvh w-full overflow-x-clip bg-[#080f1b] flex flex-col">
       {/* Minimal audio control */}
-      {gameState !== 'PLAYING' && gameState !== 'HOME' && (
+      {gameState !== 'PLAYING' && (
         <div className="absolute left-4 top-4 z-30">
           <button type="button" onClick={handleToggleSound} aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'} className="rounded-full border border-white/10 bg-slate-950/70 p-3 text-slate-200 shadow-lg backdrop-blur">
             {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
@@ -128,34 +119,13 @@ export default function JoudyAdventureGame() {
 
       {/* Active Screen State Machine (2D Arcade & Winding Map) */}
       <div className="relative z-10 flex-1 flex items-stretch justify-center w-full">
-        {(gameState === 'HOME' || gameState === 'WARDROBE') && (
-          <JoudyHome
-            soundEnabled={soundEnabled}
-            onToggleSound={handleToggleSound}
-            onPlayArcade={handleOpenWorldMap}
-            initialWardrobeOpen={gameState === 'WARDROBE'}
-            onCloseWardrobe={() => setGameState('WORLD_MAP')}
-          />
-        )}
         <AnimatePresence mode="wait">
-          {gameState === 'TITLE_MENU' && (
-            <CharacterSelectScreen
-              key="title-menu"
-              realImageSrc={realImageSrc}
-              onStartAdventure={handleOpenWorldMap}
-              onBackToHome={() => setGameState('HOME')}
-            />
-          )}
-
           {gameState === 'WORLD_MAP' && (
             <WorldMapScreen
               key="world-map-2d"
               progress={progress}
               realImageSrc={realImageSrc}
-              animeImageSrc={animeImageSrc}
               onSelectLevel={handleStartLevel}
-              onBackToCharacter={() => setGameState('TITLE_MENU')}
-              onOpenWardrobe={() => setGameState('WARDROBE')}
             />
           )}
 
@@ -165,6 +135,8 @@ export default function JoudyAdventureGame() {
               levelConfig={activeLevelConfig}
               realImageSrc={realImageSrc}
               animeImageSrc={animeImageSrc}
+              characterSpriteSrc={equippedOutfit.spriteSrc}
+              shoeSpriteSrc={equippedShoes.shoeSrc}
               highScore={progress.highScore}
               soundEnabled={soundEnabled}
               onToggleSound={handleToggleSound}

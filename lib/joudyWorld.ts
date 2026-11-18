@@ -23,8 +23,8 @@ const EVENT = 'joudy-world-save-change';
 const DEFAULT_SAVE: WorldSave = {
   coins: 180,
   blueKeys: 0,
-  owned: ['classic', 'sneakers'],
-  equippedOutfit: 'classic',
+  owned: ['look-forest', 'sneakers'],
+  equippedOutfit: 'look-forest',
   equippedShoes: 'sneakers',
   decorOwned: ['bedroom-default', 'kitchen-default', 'living-default'],
   decorEquipped: { bedroom: 'bedroom-default', kitchen: 'kitchen-default', living: 'living-default' },
@@ -44,26 +44,23 @@ export interface ShopItem {
   description: string;
   filter: string;
   bonus?: 'coins' | 'speed' | 'shield';
+  spriteSrc?: string;
+  shoeSrc?: string;
+  artId?: string;
 }
 
 export const SHOP_ITEMS: ShopItem[] = [
-  { id: 'classic', name: 'الزي الأصلي', category: 'outfit', price: 0, rarity: 'عادي', description: 'مظهر جودي الأساسي', filter: 'none' },
-  { id: 'rose', name: 'فستان الورود', category: 'outfit', price: 90, rarity: 'مميز', description: 'هالة وردية ومكافأة عملات إضافية 5%', filter: 'hue-rotate(-15deg) saturate(1.12)', bonus: 'coins' },
-  { id: 'moon', name: 'زي ضوء القمر', category: 'outfit', price: 160, rarity: 'نادر', description: 'إطلالة ليلية ولمسة حماية إضافية بسيطة', filter: 'hue-rotate(35deg) saturate(.9)', bonus: 'shield' },
-  { id: 'royal', name: 'الزي الملكي', category: 'outfit', price: 300, rarity: 'أسطوري', description: 'إطلالة ملكية مع زيادة بسيطة في الحركة', filter: 'saturate(1.22) contrast(1.04)', bonus: 'speed' },
-  { id: 'mint', name: 'زي النعناع', category: 'outfit', price: 120, rarity: 'مميز', description: 'ألوان هادئة ومظهر منعش', filter: 'hue-rotate(45deg) saturate(.9)' },
-  { id: 'lavender', name: 'فستان اللافندر', category: 'outfit', price: 180, rarity: 'نادر', description: 'إطلالة بنفسجية ناعمة', filter: 'hue-rotate(78deg) saturate(1.08)' },
-  { id: 'ocean', name: 'زي المحيط', category: 'outfit', price: 210, rarity: 'نادر', description: 'درجات زرقاء بلمعة باردة', filter: 'hue-rotate(155deg) saturate(.95)' },
-  { id: 'sunset', name: 'فستان الغروب', category: 'outfit', price: 240, rarity: 'نادر', description: 'ألوان دافئة مستوحاة من الغروب', filter: 'hue-rotate(-32deg) saturate(1.2)' },
-  { id: 'midnight', name: 'زي منتصف الليل', category: 'outfit', price: 330, rarity: 'أسطوري', description: 'إطلالة داكنة بلمسة لامعة', filter: 'brightness(.88) hue-rotate(205deg) saturate(1.15)' },
-  { id: 'pearl', name: 'الزي اللؤلؤي', category: 'outfit', price: 390, rarity: 'أسطوري', description: 'درجات فاتحة وناعمة', filter: 'brightness(1.12) saturate(.72)' },
-  { id: 'emerald', name: 'الزي الزمردي', category: 'outfit', price: 280, rarity: 'نادر', description: 'درجات خضراء ملكية', filter: 'hue-rotate(95deg) saturate(1.12)' },
-  { id: 'sneakers', name: 'حذاء النجوم', category: 'shoes', price: 70, rarity: 'عادي', description: 'حذاء خفيف للرحلات', filter: 'none' },
-  { id: 'rose-shoes', name: 'حذاء الورد', category: 'shoes', price: 140, rarity: 'نادر', description: 'حذاء أنيق مع زيادة بسيطة في العملات', filter: 'none', bonus: 'coins' },
-  { id: 'swift-shoes', name: 'حذاء البرق', category: 'shoes', price: 220, rarity: 'أسطوري', description: 'يعزز سرعة الحركة قليلًا دون كسر توازن المراحل', filter: 'none', bonus: 'speed' },
-  { id: 'lavender-shoes', name: 'حذاء اللافندر', category: 'shoes', price: 110, rarity: 'مميز', description: 'حذاء بنفسجي أنيق', filter: 'hue-rotate(70deg)' },
-  { id: 'gold-shoes', name: 'حذاء الذهب', category: 'shoes', price: 280, rarity: 'نادر', description: 'حذاء بلون ذهبي لامع', filter: 'sepia(.38) saturate(1.35)' },
-  { id: 'cloud-shoes', name: 'حذاء السحاب', category: 'shoes', price: 350, rarity: 'أسطوري', description: 'حذاء فاتح وخفيف', filter: 'brightness(1.25) saturate(.65)' },
+  // Four separate illustrated outfits. These replace the earlier colour-filter-only skins.
+  { id: 'look-forest', name: 'معطف الغابة', category: 'outfit', price: 0, rarity: 'عادي', description: 'معطف طويل داكن بتطريز نباتي وحزام أنيق', filter: 'none', spriteSrc: '/images/outfits/look-1.png', artId: 'coat' },
+  { id: 'look-explorer', name: 'إطلالة المستكشفة', category: 'outfit', price: 180, rarity: 'مميز', description: 'سترة عملية وبنطال واسع بجيوب جانبية', filter: 'none', spriteSrc: '/images/outfits/look-2.png', artId: 'utility', bonus: 'speed' },
+  { id: 'look-mauve', name: 'الفستان البنفسجي المطرز', category: 'outfit', price: 240, rarity: 'نادر', description: 'فستان متعدد الطبقات بتطريز ناعم', filter: 'none', spriteSrc: '/images/outfits/look-3.png', artId: 'layered', bonus: 'coins' },
+  { id: 'look-burgundy', name: 'معطف المساء', category: 'outfit', price: 320, rarity: 'أسطوري', description: 'معطف خمري طويل مع بنطال داكن', filter: 'none', spriteSrc: '/images/outfits/look-4.png', artId: 'longcoat', bonus: 'shield' },
+  // Shoes are independent overlays, so changing them keeps the selected outfit.
+  { id: 'sneakers', name: 'حذاء رياضي كلاسيكي', category: 'shoes', price: 0, rarity: 'عادي', description: 'حذاء رياضي منخفض بنعل مريح', filter: 'none', shoeSrc: '/images/shoes/sneakers.svg', artId: 'sneakers' },
+  { id: 'rose-boots', name: 'جزمة جلد وردية', category: 'shoes', price: 110, rarity: 'مميز', description: 'جزمة قصيرة بكعب منخفض وتفاصيل ناعمة', filter: 'none', shoeSrc: '/images/shoes/rose-boots.svg', artId: 'rose-boots', bonus: 'coins' },
+  { id: 'high-top', name: 'حذاء برق مرتفع', category: 'shoes', price: 170, rarity: 'نادر', description: 'حذاء مرتفع برباط جانبي ونعل قوي', filter: 'none', shoeSrc: '/images/shoes/high-top.svg', artId: 'high-top', bonus: 'speed' },
+  { id: 'trail-boots', name: 'جزمة الرحلات', category: 'shoes', price: 230, rarity: 'أسطوري', description: 'جزمة متينة برقبة أعلى ورباط أمامي', filter: 'none', shoeSrc: '/images/shoes/trail-boots.svg', artId: 'trail-boots', bonus: 'shield' },
+  { id: 'cloud', name: 'حذاء السحاب', category: 'shoes', price: 145, rarity: 'مميز', description: 'حذاء خفيف بتصميم أبيض وأزرق', filter: 'none', shoeSrc: '/images/shoes/cloud.svg', artId: 'cloud' },
 ];
 
 export const PET_ITEMS = [
@@ -91,9 +88,23 @@ function parse(raw: string | null): WorldSave {
     return {
       coins: Math.max(0, Number(value.coins ?? DEFAULT_SAVE.coins) || 0),
       blueKeys: Math.max(0, Number(value.blueKeys ?? 0) || 0),
-      owned: Array.isArray(value.owned) ? value.owned : DEFAULT_SAVE.owned,
-      equippedOutfit: typeof value.equippedOutfit === 'string' ? value.equippedOutfit : (typeof (value as Partial<WorldSave> & { equipped?: string }).equipped === 'string' && SHOP_ITEMS.some((item) => item.id === (value as Partial<WorldSave> & { equipped?: string }).equipped && item.category === 'outfit') ? (value as Partial<WorldSave> & { equipped?: string }).equipped! : 'classic'),
-      equippedShoes: typeof value.equippedShoes === 'string' ? value.equippedShoes : (typeof (value as Partial<WorldSave> & { equipped?: string }).equipped === 'string' && SHOP_ITEMS.some((item) => item.id === (value as Partial<WorldSave> & { equipped?: string }).equipped && item.category === 'shoes') ? (value as Partial<WorldSave> & { equipped?: string }).equipped! : 'sneakers'),
+      owned: Array.isArray(value.owned) ? value.owned.map((id) => {
+        const migration: Record<string, string> = { classic: 'look-forest', royal: 'look-forest', mint: 'look-forest', pearl: 'look-forest', emerald: 'look-forest', rose: 'look-mauve', lavender: 'look-mauve', moon: 'look-burgundy', midnight: 'look-burgundy', ocean: 'look-explorer', sunset: 'look-mauve', 'rose-shoes': 'rose-boots', 'swift-shoes': 'high-top', 'lavender-shoes': 'cloud', 'gold-shoes': 'trail-boots', 'cloud-shoes': 'cloud' };
+        const migrated = migration[id] ?? id;
+        return SHOP_ITEMS.some((item) => item.id === migrated) ? migrated : id;
+      }).filter((id) => SHOP_ITEMS.some((item) => item.id === id)) : DEFAULT_SAVE.owned,
+      equippedOutfit: (() => {
+        const old = typeof value.equippedOutfit === 'string' ? value.equippedOutfit : (value as Partial<WorldSave> & { equipped?: string }).equipped;
+        const migration: Record<string, string> = { classic: 'look-forest', royal: 'look-forest', mint: 'look-forest', pearl: 'look-forest', emerald: 'look-forest', rose: 'look-mauve', lavender: 'look-mauve', moon: 'look-burgundy', midnight: 'look-burgundy', ocean: 'look-explorer', sunset: 'look-mauve' };
+        const candidate = typeof old === 'string' ? (migration[old] ?? old) : 'look-forest';
+        return SHOP_ITEMS.some((item) => item.id === candidate && item.category === 'outfit') ? candidate : 'look-forest';
+      })(),
+      equippedShoes: (() => {
+        const old = typeof value.equippedShoes === 'string' ? value.equippedShoes : (value as Partial<WorldSave> & { equipped?: string }).equipped;
+        const migration: Record<string, string> = { 'rose-shoes': 'rose-boots', 'swift-shoes': 'high-top', 'lavender-shoes': 'cloud', 'gold-shoes': 'trail-boots', 'cloud-shoes': 'cloud' };
+        const candidate = typeof old === 'string' ? (migration[old] ?? old) : 'sneakers';
+        return SHOP_ITEMS.some((item) => item.id === candidate && item.category === 'shoes') ? candidate : 'sneakers';
+      })(),
       decorOwned: Array.isArray(value.decorOwned) ? value.decorOwned : DEFAULT_SAVE.decorOwned,
       decorEquipped: value.decorEquipped && typeof value.decorEquipped === 'object' ? value.decorEquipped : DEFAULT_SAVE.decorEquipped,
       lastDaily: typeof value.lastDaily === 'string' ? value.lastDaily : '',
