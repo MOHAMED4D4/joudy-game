@@ -95,15 +95,7 @@ export default function JoudyAdventureGame() {
       reviveCountsByLevel: remainingRevives,
       highestAchievement: Math.max(latest.highestAchievement, stats.level >= 30 ? 3 : stats.level >= 15 ? 2 : stats.level >= 5 ? 1 : 0),
     });
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const cheer = new SpeechSynthesisUtterance('جودي!');
-      cheer.lang = 'ar-EG'; cheer.pitch = 1.25; cheer.rate = 0.82; cheer.volume = 0.9;
-      const voices = window.speechSynthesis.getVoices();
-      const female = voices.find((voice) => /female|woman|zira|samantha|aria|salma|laila/i.test(voice.name)) ?? voices.find((voice) => voice.lang.toLowerCase().startsWith('ar'));
-      if (female) cheer.voice = female;
-      window.speechSynthesis.speak(cheer);
-    }
+
     const { isNewHighScore: beatRecord } = recordLevelCompletion(
       stats.level,
       stats.score,

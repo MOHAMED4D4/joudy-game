@@ -17,7 +17,6 @@ import {
   Volume2,
   VolumeX,
   Zap,
-  Waves,
   KeyRound,
 } from 'lucide-react';
 import { soundEngine } from '@/lib/soundEffects';
@@ -199,7 +198,6 @@ export default function GameArena({
   const [isGameOver, setIsGameOver] = useState(false);
   const [dashActive, setDashActive] = useState(false);
   const [jumpActive, setJumpActive] = useState(false);
-  const [slideActive, setSlideActive] = useState(false);
 
   const isPausedRef = useRef(false);
   const isGameOverRef = useRef(false);
@@ -218,7 +216,6 @@ export default function GameArena({
   const resetSignalRef = useRef(0);
   const dashTimerRef = useRef(0);
   const jumpTimerRef = useRef(0);
-  const slideTimerRef = useRef(0);
   const reviveRequestRef = useRef(false);
   const reviveCountRef = useRef(worldSave.reviveCountsByLevel[levelConfig.level] ?? 0);
 
@@ -344,10 +341,8 @@ export default function GameArena({
     magnetTimerRef.current = 0;
     dashTimerRef.current = 0;
     jumpTimerRef.current = 0;
-    slideTimerRef.current = 0;
     reviveRequestRef.current = false;
     setDashActive(false);
-    setSlideActive(false);
     victoryFiredRef.current = false;
     isGameOverRef.current = false;
     shakeRef.current = 0;
@@ -569,8 +564,7 @@ export default function GameArena({
         const normalPlayerSize = Math.min(138, Math.max(96, width * 0.145));
         if (dashTimerRef.current > 0) dashTimerRef.current = Math.max(0, dashTimerRef.current - dt);
         if (jumpTimerRef.current > 0) jumpTimerRef.current = Math.max(0, jumpTimerRef.current - dt);
-        if (slideTimerRef.current > 0) slideTimerRef.current = Math.max(0, slideTimerRef.current - dt);
-        player.size = slideTimerRef.current > 0 ? normalPlayerSize * 0.76 : normalPlayerSize;
+        player.size = normalPlayerSize;
 
         // Timers
         if (comboRef.current > 0) {
@@ -803,17 +797,6 @@ export default function GameArena({
               setScore(scoreRef.current);
               setCombo(comboRef.current);
               setCounts({ ...countsRef.current });
-
-              const totalCollected = countsRef.current.cats + countsRef.current.roses + countsRef.current.chocolates;
-              if (totalCollected > 0 && totalCollected % 10 === 0 && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-                const shout = new SpeechSynthesisUtterance('جودي!');
-                shout.lang = 'ar-EG'; shout.pitch = 1.2; shout.rate = 0.9;
-                const voices = window.speechSynthesis.getVoices();
-                const female = voices.find((voice) => /female|woman|zira|samantha|aria|salma|laila/i.test(voice.name)) ?? voices.find((voice) => voice.lang.toLowerCase().startsWith('ar'));
-                if (female) shout.voice = female;
-                window.speechSynthesis.cancel();
-                window.speechSynthesis.speak(shout);
-              }
 
               if (scoreRef.current >= levelConfig.targetScore && !victoryFiredRef.current) {
                 victoryFiredRef.current = true;
@@ -1244,11 +1227,7 @@ export default function GameArena({
     reviveRequestRef.current = true;
     isGameOverRef.current = false;
     setIsGameOver(false);
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      const shout = new SpeechSynthesisUtterance('جودي!');
-      shout.lang = 'ar-EG'; shout.pitch = 1.2; shout.rate = 0.9;
-      window.speechSynthesis.cancel(); window.speechSynthesis.speak(shout);
-    }
+
   }, [worldSave, levelConfig.level]);
 
   const handleJoystickChange = useCallback((vector: JoystickVector) => {
@@ -1274,12 +1253,7 @@ export default function GameArena({
     window.setTimeout(() => setJumpActive(false), 700);
   }, []);
 
-  const triggerSlide = useCallback(() => {
-    if (isPausedRef.current || isGameOverRef.current || slideTimerRef.current > 0) return;
-    slideTimerRef.current = 1.35;
-    setSlideActive(true);
-    window.setTimeout(() => setSlideActive(false), 1380);
-  }, []);
+
 
   const progressPct = Math.min(100, Math.round((score / levelConfig.targetScore) * 100));
   const displayedHighScore = Math.max(highScore, score);
@@ -1410,7 +1384,7 @@ export default function GameArena({
       {/* Main 2D Canvas Playfield + Circular Translucent Touch D-Pad */}
       <div
         ref={stageRef}
-        className={`relative flex-1 min-h-[360px] rounded-none sm:rounded-2xl overflow-hidden border-0 shadow-none sm:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.35)] select-none touch-none ${
+        className={`relative flex-1 min-h-[360px] mb-5 rounded-none sm:rounded-2xl overflow-visible border-0 shadow-none sm:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.35)] select-none touch-none ${
           levelConfig.worldId === 2
             ? 'border-emerald-300/90 bg-emerald-50'
             : levelConfig.isNight
@@ -1436,19 +1410,18 @@ export default function GameArena({
         {!isPaused && !isGameOver && (
           <>
             {controlMode === 'joystick' ? (
-              <div className="absolute bottom-3 left-3 z-20">
+              <div className="absolute bottom-[-22px] left-3 z-30">
                 <VirtualJoystick onChange={handleJoystickChange} disabled={isPaused || isGameOver} />
               </div>
             ) : (
               <>
-                <button type="button" aria-label="التحرك لليسار" onContextMenu={(e) => e.preventDefault()} onPointerDown={(e) => handleTouchPress('left', e)} onPointerUp={(e) => handleTouchRelease('left', e)} onPointerCancel={(e) => handleTouchRelease('left', e)} onLostPointerCapture={(e) => handleTouchRelease('left', e)} className={`absolute left-3 bottom-3 z-20 flex h-14 w-14 items-center justify-center rounded-full border border-white/30 text-white backdrop-blur-md transition ${activeControl === 'left' ? 'scale-90 bg-cyan-400/80' : 'bg-slate-950/35 hover:bg-slate-950/55'}`}><ChevronLeft className="h-8 w-8" /></button>
-                <button type="button" aria-label="التحرك لليمين" onContextMenu={(e) => e.preventDefault()} onPointerDown={(e) => handleTouchPress('right', e)} onPointerUp={(e) => handleTouchRelease('right', e)} onPointerCancel={(e) => handleTouchRelease('right', e)} onLostPointerCapture={(e) => handleTouchRelease('right', e)} className={`absolute right-3 bottom-3 z-20 flex h-14 w-14 items-center justify-center rounded-full border border-white/30 text-white backdrop-blur-md transition ${activeControl === 'right' ? 'scale-90 bg-cyan-400/80' : 'bg-slate-950/35 hover:bg-slate-950/55'}`}><ChevronRight className="h-8 w-8" /></button>
+                <button type="button" aria-label="التحرك لليسار" onContextMenu={(e) => e.preventDefault()} onPointerDown={(e) => handleTouchPress('left', e)} onPointerUp={(e) => handleTouchRelease('left', e)} onPointerCancel={(e) => handleTouchRelease('left', e)} onLostPointerCapture={(e) => handleTouchRelease('left', e)} className={`absolute left-3 bottom-[-22px] z-30 flex h-14 w-14 items-center justify-center rounded-full border border-white/30 text-white backdrop-blur-md transition ${activeControl === 'left' ? 'scale-90 bg-cyan-400/80' : 'bg-slate-950/35 hover:bg-slate-950/55'}`}><ChevronLeft className="h-8 w-8" /></button>
+                <button type="button" aria-label="التحرك لليمين" onContextMenu={(e) => e.preventDefault()} onPointerDown={(e) => handleTouchPress('right', e)} onPointerUp={(e) => handleTouchRelease('right', e)} onPointerCancel={(e) => handleTouchRelease('right', e)} onLostPointerCapture={(e) => handleTouchRelease('right', e)} className={`absolute right-3 bottom-[-22px] z-30 flex h-14 w-14 items-center justify-center rounded-full border border-white/30 text-white backdrop-blur-md transition ${activeControl === 'right' ? 'scale-90 bg-cyan-400/80' : 'bg-slate-950/35 hover:bg-slate-950/55'}`}><ChevronRight className="h-8 w-8" /></button>
               </>
             )}
-            <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+            <div className="absolute bottom-[-18px] left-1/2 z-30 flex -translate-x-1/2 gap-2">
               <button type="button" onClick={triggerJump} disabled={jumpActive} title="قفزة لتفادي العقبات" className={`flex h-11 items-center gap-1.5 rounded-full border border-white/25 px-3 text-xs font-black text-white shadow-lg backdrop-blur ${jumpActive ? 'bg-amber-400/65' : 'bg-slate-950/45 hover:bg-amber-500/40'}`}><span aria-hidden="true">↟</span> قفز</button>
               <button type="button" onClick={triggerDash} disabled={dashActive} title="اندفاع سريع" className={`flex h-11 items-center gap-1.5 rounded-full border border-white/25 px-3 text-xs font-black text-white shadow-lg backdrop-blur ${dashActive ? 'bg-cyan-400/65' : 'bg-slate-950/45 hover:bg-cyan-500/40'}`}><Zap className="h-4 w-4" /> اندفاع</button>
-              <button type="button" onClick={triggerSlide} disabled={slideActive} title="انزلاق مؤقت لتقليل مساحة الاصطدام" className={`flex h-11 items-center gap-1.5 rounded-full border border-white/25 px-3 text-xs font-black text-white shadow-lg backdrop-blur ${slideActive ? 'bg-violet-400/65' : 'bg-slate-950/45 hover:bg-violet-500/40'}`}><Waves className="h-4 w-4" /> انزلاق</button>
             </div>
           </>
         )}

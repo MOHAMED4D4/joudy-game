@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import {
@@ -46,6 +46,13 @@ export default function WorldMapScreen({
       active = false;
     };
   }, [animeImageSrc]);
+
+  const currentLevelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => currentLevelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120);
+    return () => window.clearTimeout(timer);
+  }, [progress.highestUnlockedLevel]);
 
   const completedCount = Object.keys(progress.completedLevels).length;
   const totalStars = Object.values(progress.completedLevels).reduce(
@@ -233,7 +240,8 @@ export default function WorldMapScreen({
                       return (
                         <div
                           key={lvl.level}
-                          className={`relative flex flex-col items-center gap-1.5 ${waveClass}`}
+                          ref={isCurrent ? currentLevelRef : undefined}
+                          className={`relative flex flex-col items-center gap-1.5 ${waveClass} ${isCurrent ? 'scroll-mt-24' : ''}`}
                         >
                           <motion.button
                             type="button"
