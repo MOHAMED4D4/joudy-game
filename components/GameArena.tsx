@@ -532,7 +532,7 @@ export default function GameArena({
       }
 
       const cfg = ITEM_CONFIG[kind];
-      const radius = (kind === 'obstacle' || kind === 'enemyCloud' ? 31 : kind === 'enemyShot' ? 15 : kind === 'magnet' ? 28 : kind === 'blueKey' ? 22 : 27) * 0.9;
+      const radius = (kind === 'obstacle' || kind === 'enemyCloud' ? 31 : kind === 'magnet' ? 28 : kind === 'blueKey' ? 22 : 27) * 0.9;
       const baseSpeed =
         kind === 'cat'
           ? 245
