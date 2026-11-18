@@ -121,14 +121,16 @@ const ITEM_CONFIG: Record<
   coin: { points: 0, halo: 'rgba(250, 204, 21, 0.42)', fallbackColor: '#FACC15' },
   obstacle: { points: -15, halo: 'rgba(71, 85, 105, 0.48)', fallbackColor: '#475569' },
   monster: { points: -18, halo: 'rgba(45, 212, 191, 0.42)', fallbackColor: '#0F766E' },
+  runner: { points: -16, halo: 'rgba(249, 115, 22, 0.46)', fallbackColor: '#EA580C' },
+  fierceMonster: { points: -24, halo: 'rgba(244, 63, 94, 0.62)', fallbackColor: '#BE123C' },
   boss: { points: -30, halo: 'rgba(244, 63, 94, 0.58)', fallbackColor: '#BE123C' },
   projectile: { points: -12, halo: 'rgba(139, 92, 246, 0.48)', fallbackColor: '#7C3AED' },
 };
 
 function isHazardKind(
   kind: CartoonSpriteKind,
-): kind is 'obstacle' | 'monster' | 'boss' | 'projectile' {
-  return kind === 'obstacle' || kind === 'monster' || kind === 'boss' || kind === 'projectile';
+): kind is 'obstacle' | 'monster' | 'runner' | 'fierceMonster' | 'boss' | 'projectile' {
+  return kind === 'obstacle' || kind === 'monster' || kind === 'runner' || kind === 'fierceMonster' || kind === 'boss' || kind === 'projectile';
 }
 
 function drawStarShape(
@@ -413,23 +415,40 @@ export default function GameArena({
       const roll = Math.random();
       const stageNumber = levelConfig.level;
       const isSecondSeason = stageNumber >= 16;
+      const firstSeasonProgress = Math.max(0, Math.min(1, (stageNumber - 2) / 12));
+      // The first stage has only mischievous clouds. From stage 2 onward,
+      // hazards grow gradually; stage 15 introduces the stronger red enemies.
+      const hazardChance = stageNumber === 1
+        ? 0.16
+        : stageNumber < 15
+          ? 0.11 + firstSeasonProgress * 0.09
+          : stageNumber === 15
+            ? 0.25
+            : levelConfig.obstacleChance;
       let kind: CartoonSpriteKind = 'chocolate';
+
       if (roll < 0.085) {
         kind = 'coin';
       } else if (roll < 0.097) {
         kind = 'blueKey';
-      } else if (stageNumber >= 2 && roll < levelConfig.obstacleChance + 0.012) {
-        // Stages 2–14 use slower, fewer clouds. The two boss stages use their own
-        // larger enemies, while season two adds strange creatures and their shots.
-        if (stageNumber === 15) {
-          kind = Math.random() < 0.78 ? 'boss' : 'projectile';
+      } else if (roll < 0.097 + hazardChance) {
+        if (stageNumber === 1) {
+          kind = 'obstacle';
+        } else if (stageNumber >= 2 && stageNumber < 15) {
+          const enemyRoll = Math.random();
+          if (enemyRoll < 0.42) kind = 'monster';
+          else if (enemyRoll < 0.70) kind = 'runner';
+          else kind = 'projectile';
+        } else if (stageNumber === 15) {
+          const enemyRoll = Math.random();
+          if (enemyRoll < 0.36) kind = 'fierceMonster';
+          else if (enemyRoll < 0.60) kind = 'boss';
+          else if (enemyRoll < 0.82) kind = 'runner';
+          else kind = 'projectile';
         } else if (stageNumber === 30) {
           kind = Math.random() < 0.7 ? 'boss' : 'projectile';
         } else if (isSecondSeason) {
           kind = Math.random() < 0.68 ? 'monster' : 'projectile';
-        } else {
-          // Small, slower creatures and occasional clouds begin appearing from stage 2.
-          kind = Math.random() < 0.58 ? 'monster' : 'obstacle';
         }
       } else if (!magnetAlreadyPresent && Math.random() < 0.08) {
         kind = 'magnet';
@@ -443,12 +462,14 @@ export default function GameArena({
       const cfg = ITEM_CONFIG[kind];
       const radius = (
         kind === 'boss' ? 46
-          : kind === 'monster' ? (stageNumber < 15 ? 24 : 35)
-            : kind === 'projectile' ? (stageNumber < 15 ? 16 : 21)
-              : kind === 'obstacle' ? 30
-                : kind === 'magnet' ? 28
-                  : kind === 'blueKey' ? 22
-                    : kind === 'coin' ? 17 : 27
+          : kind === 'fierceMonster' ? 34
+            : kind === 'monster' ? (stageNumber < 15 ? 24 : 35)
+              : kind === 'runner' ? (stageNumber < 15 ? 25 : 30)
+                : kind === 'projectile' ? (stageNumber < 15 ? 16 : 21)
+                  : kind === 'obstacle' ? 30
+                    : kind === 'magnet' ? 28
+                      : kind === 'blueKey' ? 22
+                        : kind === 'coin' ? 17 : 27
       ) * 0.9;
       const baseSpeed =
         kind === 'cat'
@@ -464,15 +485,19 @@ export default function GameArena({
                   : kind === 'coin'
                     ? 175
                     : kind === 'boss'
-                      ? 335
-                      : kind === 'monster'
-                        ? (stageNumber < 15 ? 155 : 275)
-                        : kind === 'projectile'
-                          ? (stageNumber < 15 ? 205 : 365)
-                          : 245;
+                      ? (stageNumber < 16 ? 300 : 335)
+                      : kind === 'fierceMonster'
+                        ? 285
+                        : kind === 'runner'
+                          ? (stageNumber < 15 ? 175 + firstSeasonProgress * 70 : 270)
+                          : kind === 'monster'
+                            ? (stageNumber < 15 ? 155 + firstSeasonProgress * 55 : 275)
+                            : kind === 'projectile'
+                              ? (stageNumber < 15 ? 205 + firstSeasonProgress * 65 : 365)
+                              : 245;
 
       const x = radius + 16 + Math.random() * Math.max(40, width - (radius + 16) * 2);
-      const hasZigzag = Math.random() < (kind === 'boss' || kind === 'projectile' ? 0.68 : 0.42);
+      const hasZigzag = kind !== 'runner' && Math.random() < (kind === 'boss' || kind === 'projectile' ? 0.68 : 0.42);
 
       entities.push({
         id: nextEntityId++,
@@ -480,28 +505,35 @@ export default function GameArena({
         baseX: x,
         x,
         y: -radius - 12,
-        vy: (baseSpeed + Math.random() * (isHazardKind(kind) ? 70 : 55)) * levelConfig.speedMultiplier,
+        vy: (baseSpeed + Math.random() * (isHazardKind(kind) ? 55 : 55)) * levelConfig.speedMultiplier,
         vx: (Math.random() - 0.5) * (30 + levelConfig.windStrength),
         zigzagAmp: hasZigzag
-          ? (kind === 'boss' ? 35 : isHazardKind(kind) ? 68 : 58) + Math.random() * 28
+          ? (kind === 'boss' ? 35 : isHazardKind(kind) ? 54 : 58) + Math.random() * 24
           : 0,
         zigzagFreq: 2.2 + Math.random() * 1.6,
         zigzagPhase: Math.random() * Math.PI * 2,
         radius,
         rotation: 0,
         vr: (Math.random() - 0.5) * 2.1,
-        points: kind === 'monster' && stageNumber < 15 ? -8 : kind === 'projectile' && stageNumber < 15 ? -6 : cfg.points,
+        points: kind === 'monster' && stageNumber < 15 ? -8
+          : kind === 'runner' ? -10
+            : kind === 'fierceMonster' ? -22
+              : kind === 'projectile' && stageNumber < 15 ? -6 : cfg.points,
       });
 
-      // Monsters and bosses occasionally fire an energy bolt toward Joudy's
-      // current position, making the hazard feel like an intentional attack.
-      if ((kind === 'monster' || kind === 'boss') && Math.random() < (stageNumber < 15 ? 0.28 : 0.68)) {
+      // Monsters and bosses sometimes launch arrows aimed toward Joudy's
+      // current position. Their frequency rises toward the level-15 challenge.
+      const canShoot = kind === 'monster' || kind === 'fierceMonster' || kind === 'boss';
+      const shootChance = stageNumber < 15
+        ? 0.12 + firstSeasonProgress * 0.10
+        : stageNumber === 15 ? 0.34 : 0.68;
+      if (canShoot && Math.random() < shootChance) {
         const shotRadius = (stageNumber < 15 ? 16 : 21) * 0.9;
         const shotX = Math.max(shotRadius + 8, Math.min(width - shotRadius - 8, x + (Math.random() - 0.5) * 34));
         const shotY = -shotRadius - 18;
-        const shotSpeed = (stageNumber < 15 ? 205 : stageNumber === 15 || stageNumber === 30 ? 420 : 365) * levelConfig.speedMultiplier;
-        const flightSeconds = Math.max(0.45, (player.y - shotY) / shotSpeed);
-        const maxHorizontalSpeed = stageNumber < 15 ? 150 : 290;
+        const shotSpeed = (stageNumber < 15 ? 205 + firstSeasonProgress * 65 : stageNumber === 15 ? 345 : 365) * levelConfig.speedMultiplier;
+        const flightSeconds = Math.max(0.55, (player.y - shotY) / shotSpeed);
+        const maxHorizontalSpeed = stageNumber < 15 ? 135 + firstSeasonProgress * 45 : stageNumber === 15 ? 230 : 290;
         const shotVx = Math.max(-maxHorizontalSpeed, Math.min(maxHorizontalSpeed, (player.x - shotX) / flightSeconds));
         entities.push({
           id: nextEntityId++,
@@ -516,7 +548,7 @@ export default function GameArena({
           zigzagPhase: 0,
           radius: shotRadius,
           rotation: 0,
-          vr: 2.4,
+          vr: 0,
           points: stageNumber < 15 ? -6 : -12,
         });
       }
@@ -532,11 +564,13 @@ export default function GameArena({
               ? ['#D97706', '#FBBF24', '#F472B6']
               : kind === 'magnet'
                 ? ['#38BDF8', '#06B6D4', '#FDE047']
-                : kind === 'boss'
+                : kind === 'boss' || kind === 'fierceMonster'
                   ? ['#F43F5E', '#FBBF24', '#7C3AED']
-                  : kind === 'monster'
-                    ? ['#2DD4BF', '#A78BFA', '#FDE047']
-                    : kind === 'projectile'
+                  : kind === 'runner'
+                    ? ['#F97316', '#FDE68A', '#7C2D12']
+                    : kind === 'monster'
+                      ? ['#2DD4BF', '#A78BFA', '#FDE047']
+                      : kind === 'projectile'
                       ? ['#8B5CF6', '#F97316', '#E0E7FF']
                       : ['#94A3B8', '#64748B', '#FACC15'];
 
@@ -683,6 +717,13 @@ export default function GameArena({
         const surviving: FallingEntity[] = [];
         for (const item of entities) {
           item.y += item.vy * dt;
+          if (item.kind === 'runner') {
+            const chaseLimit = levelConfig.level < 15
+              ? 78 + Math.max(0, Math.min(1, (levelConfig.level - 2) / 12)) * 58
+              : 150;
+            const chaseSpeed = (player.x - item.baseX) * 1.05;
+            item.vx = Math.max(-chaseLimit, Math.min(chaseLimit, chaseSpeed));
+          }
           item.baseX += item.vx * dt;
           item.rotation += item.vr * dt;
 
@@ -998,7 +1039,7 @@ export default function GameArena({
 
         ctx.save();
         ctx.translate(item.x, item.y);
-        ctx.rotate(item.rotation * 0.45);
+        ctx.rotate(item.kind === 'projectile' ? Math.atan2(item.vx, item.vy) : item.rotation * 0.45);
 
         // Soft glowing halo behind item
         ctx.fillStyle = cfg.halo;
@@ -1378,13 +1419,13 @@ export default function GameArena({
       >
         {/* Detached in-game HUD: level and lives sit on the play screen, not in the top bar. */}
         <div
-          className="pointer-events-none absolute left-3 top-[9.5rem] z-40 text-sm font-black text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.95)] sm:left-5 sm:top-[8.25rem] sm:text-base"
+          className="pointer-events-none absolute left-3 top-[9.5rem] z-40 rounded-full border border-white/20 bg-slate-950/45 px-3 py-1.5 text-xs font-black text-white shadow-lg backdrop-blur-sm drop-shadow-[0_2px_5px_rgba(0,0,0,0.95)] sm:left-5 sm:top-[8.25rem] sm:text-sm"
           aria-label={`المستوى ${levelConfig.level}`}
         >
           المستوى {levelConfig.level}
         </div>
         <div
-          className="pointer-events-none absolute bottom-6 right-3 z-40 inline-flex items-center gap-1 rounded-full border border-white/15 bg-slate-950/35 px-2 py-1 shadow-lg backdrop-blur-sm sm:bottom-7 sm:right-5"
+          className="pointer-events-none absolute right-3 top-[9.5rem] z-40 inline-flex items-center gap-1 rounded-full border border-white/20 bg-slate-950/45 px-2.5 py-1.5 shadow-lg backdrop-blur-sm sm:right-5 sm:top-[8.25rem]"
           aria-label={`قلوب الحياة: ${hearts} من ${MAX_HEARTS}`}
         >
           {[1, 2, 3].map((idx) => (

@@ -1,6 +1,6 @@
 'use client';
 
-export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'monster' | 'boss' | 'projectile' | 'blueKey' | 'coin';
+export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'monster' | 'runner' | 'fierceMonster' | 'boss' | 'projectile' | 'blueKey' | 'coin';
 
 const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
   cat: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -98,6 +98,29 @@ const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
     <circle cx="20" cy="72" r="5" fill="#A78BFA"/><circle cx="80" cy="72" r="5" fill="#A78BFA"/>
   </svg>`,
 
+  runner: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs><linearGradient id="runnerHide" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FDE68A"/><stop offset=".5" stop-color="#EA580C"/><stop offset="1" stop-color="#7C2D12"/></linearGradient></defs>
+    <path d="M28 39 L12 20 L38 28 M72 39 L88 20 L62 28" fill="#F97316" stroke="#7C2D12" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M20 57 C18 32 34 22 51 25 C74 24 86 41 80 64 C76 84 62 91 45 87 C27 84 18 73 20 57 Z" fill="url(#runnerHide)" stroke="#431407" stroke-width="5"/>
+    <path d="M27 45 L43 50 M73 45 L57 50" stroke="#431407" stroke-width="7" stroke-linecap="round"/>
+    <path d="M30 53 Q40 46 46 57 Q39 65 30 59 Z M70 53 Q60 46 54 57 Q61 65 70 59 Z" fill="#FDE047"/>
+    <circle cx="39" cy="56" r="3.5" fill="#111827"/><circle cx="61" cy="56" r="3.5" fill="#111827"/>
+    <path d="M39 74 Q50 68 61 74 L55 83 L45 83 Z" fill="#7F1D1D" stroke="#431407" stroke-width="2.5"/>
+    <path d="M24 83 L8 91 M76 83 L92 91" stroke="#FCD34D" stroke-width="6" stroke-linecap="round"/>
+  </svg>`,
+
+  fierceMonster: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs><radialGradient id="fierceArmor" cx="48%" cy="28%"><stop stop-color="#FDA4AF"/><stop offset=".48" stop-color="#BE123C"/><stop offset="1" stop-color="#450A0A"/></radialGradient></defs>
+    <path d="M25 38 Q4 23 10 3 Q33 10 42 28 L50 20 L58 28 Q67 10 90 3 Q96 23 75 38" fill="#7F1D1D" stroke="#FCA5A5" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M17 54 C16 30 31 19 50 20 C71 19 86 34 83 58 L77 80 Q50 98 23 80 Z" fill="url(#fierceArmor)" stroke="#450A0A" stroke-width="5"/>
+    <path d="M25 43 L44 50 M75 43 L56 50" stroke="#450A0A" stroke-width="8" stroke-linecap="round"/>
+    <path d="M29 52 Q40 43 47 56 L40 64 L29 59 Z M71 52 Q60 43 53 56 L60 64 L71 59 Z" fill="#FDE047" stroke="#F97316" stroke-width="2"/>
+    <circle cx="39" cy="56" r="4" fill="#7F1D1D"/><circle cx="61" cy="56" r="4" fill="#7F1D1D"/>
+    <path d="M33 73 Q50 87 67 73 L61 89 L54 82 L50 93 L45 82 L39 89 Z" fill="#FFF7ED" stroke="#7F1D1D" stroke-width="3"/>
+    <path d="M16 64 L4 73 L20 77 M84 64 L96 73 L80 77" fill="none" stroke="#FCA5A5" stroke-width="5" stroke-linecap="round"/>
+    <path d="M50 3 L55 15 L68 18 L55 22 L50 35 L45 22 L32 18 L45 15 Z" fill="#FDE68A" stroke="#92400E" stroke-width="2"/>
+  </svg>`,
+
   boss: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
     <defs><radialGradient id="bossAura" cx="50%" cy="35%"><stop stop-color="#FCA5A5"/><stop offset=".55" stop-color="#BE123C"/><stop offset="1" stop-color="#3B0764"/></radialGradient></defs>
     <path d="M27 40 Q4 26 12 5 Q34 12 42 27 M73 40 Q96 26 88 5 Q66 12 58 27" fill="#7F1D1D" stroke="#FCA5A5" stroke-width="4" stroke-linejoin="round"/>
@@ -110,11 +133,12 @@ const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
   </svg>`,
 
   projectile: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-    <defs><radialGradient id="orbCore"><stop stop-color="#FDE68A"/><stop offset=".35" stop-color="#F97316"/><stop offset="1" stop-color="#7C2D12"/></radialGradient></defs>
-    <path d="M48 4 C72 22 97 27 88 54 C83 80 59 99 43 91 C20 81 6 66 16 44 C25 26 34 15 48 4 Z" fill="#7C3AED" stroke="#312E81" stroke-width="5"/>
-    <path d="M49 17 C66 33 79 39 71 57 C65 73 51 84 39 74 C26 65 26 52 36 41 C42 34 45 25 49 17 Z" fill="url(#orbCore)" stroke="#FBBF24" stroke-width="3"/>
-    <path d="M21 30 L6 19 M18 50 L3 48 M27 70 L14 84" stroke="#A5B4FC" stroke-width="6" stroke-linecap="round"/>
-    <path d="M47 33 L54 46 L67 50 L54 56 L49 70 L43 56 L31 51 L43 46 Z" fill="#FFF7ED" opacity=".9"/>
+    <defs><linearGradient id="arrowSteel" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#E0F2FE"/><stop offset=".5" stop-color="#64748B"/><stop offset="1" stop-color="#F8FAFC"/></linearGradient></defs>
+    <path d="M50 9 L50 84" stroke="#312E81" stroke-width="11" stroke-linecap="round"/>
+    <path d="M50 9 L50 84" stroke="url(#arrowSteel)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M50 98 L25 62 L45 69 L50 53 L55 69 L75 62 Z" fill="#F97316" stroke="#7C2D12" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M50 17 L25 3 L31 29 Z M50 17 L75 3 L69 29 Z" fill="#8B5CF6" stroke="#312E81" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M50 15 L50 76" stroke="#FFFFFF" stroke-width="1.8" opacity=".8"/>
   </svg>`,
 
   magnet: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
