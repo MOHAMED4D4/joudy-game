@@ -293,7 +293,7 @@ export default function VictoryScreen3D({
           >
             {isGrandFinale
               ? 'ألف مبروك يا جودي ختمتي اللعبة الـ 3D! 🏆✨'
-              : 'مبروك يا أجمل جودي في العالم! كسبتي المرحلة 🎉✨'}
+              : 'تم اجتياز المرحلة'}
           </h1>
         </motion.div>
 

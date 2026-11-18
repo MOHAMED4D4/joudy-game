@@ -1,276 +1,98 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
-import { Compass, Crown, Heart, Rocket, Sparkles, Trophy } from 'lucide-react';
-import { loadTransparentSprite } from '@/lib/spriteUtils';
+import { ArrowUpRight, Heart, Play, ShieldCheck, Star, Trophy, Zap } from 'lucide-react';
 
 interface CharacterSelectScreenProps {
   realImageSrc: string;
-  animeImageSrc: string;
   onStartAdventure: () => void;
-  onStartOpenWorld: () => void;
-  onStartRoyalEvent: () => void;
 }
 
-export default function CharacterSelectScreen({
-  realImageSrc,
-  animeImageSrc,
-  onStartAdventure,
-  onStartOpenWorld,
-  onStartRoyalEvent,
-}: CharacterSelectScreenProps) {
-  const [realImgFailed, setRealImgFailed] = useState(false);
-  const [animeImgFailed, setAnimeImgFailed] = useState(false);
-  const [transparentAnimeSrc, setTransparentAnimeSrc] = useState(animeImageSrc);
+const scoring = [
+  { icon: '🐈', name: 'جمع القطط', points: '+20 نقطة' },
+  { icon: '🌹', name: 'جمع الورود', points: '+15 نقطة' },
+  { icon: '🍫', name: 'جمع الشوكولاتة', points: '+10 نقاط' },
+  { icon: '🧲', name: 'المغناطيس', points: 'جذب العناصر' },
+  { icon: '⚡', name: 'تجنب العوائق', points: 'حافظ على القلوب' },
+];
 
-  useEffect(() => {
-    let active = true;
-    loadTransparentSprite(animeImageSrc)
-      .then(({ dataUrl }) => {
-        if (active) setTransparentAnimeSrc(dataUrl);
-      })
-      .catch(() => {
-        if (active) setTransparentAnimeSrc(animeImageSrc);
-      });
-    return () => {
-      active = false;
-    };
-  }, [animeImageSrc]);
-
+export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }: CharacterSelectScreenProps) {
   return (
     <motion.section
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -14 }}
-      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8"
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.45 }}
+      className="arcade-hub relative mx-auto w-full max-w-6xl px-4 py-7 sm:px-7 sm:py-10"
     >
-      {/* Hero Title */}
-      <div className="text-center mb-6 sm:mb-8">
-        <p className="text-sm font-semibold text-rose-600 mb-1.5 tracking-wide">
-          عالم جودي · مغامرات ومراسم ملكية
-        </p>
-        <h1
-          className="text-3xl sm:text-5xl font-bold text-[#2D1824] leading-tight"
-          style={{ fontFamily: 'var(--font-display)', textWrap: 'balance' }}
-        >
-          عالم جودي الملكي
-        </h1>
-        <p className="mt-2 text-sm sm:text-base text-[#6A4558] max-w-2xl mx-auto leading-relaxed">
-          تجربة تفاعلية تجمع بين تحديات الأركيد، واستكشاف المملكة، وقيادة السيارات، وحضور حفل التكريم الرسمي لجودي.
-        </p>
+      <div className="absolute inset-0 -z-10 overflow-hidden rounded-[2rem]" aria-hidden="true">
+        <div className="hub-orb hub-orb-one" />
+        <div className="hub-orb hub-orb-two" />
+        <div className="hub-grid" />
       </div>
 
-      {/* Main Character Select Card (Single Elevation) */}
-      <div className="bg-white/95 backdrop-blur-sm border border-rose-200/80 rounded-3xl shadow-[0_20px_50px_-15px_rgba(225,29,72,0.16)] overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
-          {/* Portrait Showcase Column */}
-          <div className="lg:col-span-5 bg-gradient-to-br from-[#F2F7F4] via-[#FFF4F8] to-[#F9F3EC] p-6 sm:p-8 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-l border-rose-100">
-            <div className="relative w-full max-w-[300px] aspect-square">
-              {/* Luminous Sage-Rose-Gold Aura Frame */}
-              <div className="absolute -inset-1.5 rounded-[28px] bg-gradient-to-tr from-emerald-600/55 via-rose-400 to-amber-300 opacity-90 blur-[2px] animate-glow-breath" />
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[.22em] text-cyan-300">
+            <span className="h-px w-7 bg-cyan-300" /> ARCADE / 30 STAGES
+          </p>
+          <h1 className="text-3xl font-black tracking-tight text-white sm:text-5xl">مغامرة التجميع السريعة</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
+            اجمع العناصر، تفادَ العوائق، وحقق أعلى نتيجة. افتح المراحل التالية واصنع سجلّك الخاص.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-4 py-2 text-sm text-slate-200 backdrop-blur">
+          <ShieldCheck className="h-4 w-4 text-emerald-300" /> تقدم محفوظ
+        </div>
+      </div>
 
-              <div className="relative w-full h-full rounded-[24px] overflow-hidden border-[3px] border-white bg-rose-50 shadow-inner">
-                {!realImgFailed ? (
-                  <Image
-                    src={realImageSrc}
-                    alt="الصورة الحقيقية للبطلة جودي"
-                    fill
-                    sizes="(max-width: 1024px) 300px, 340px"
-                    priority
-                    referrerPolicy="no-referrer"
-                    onError={() => setRealImgFailed(true)}
-                    className="object-cover object-center"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-rose-100 to-pink-50 text-rose-700 p-4 text-center">
-                    <Heart className="w-12 h-12 mb-2 text-rose-500" />
-                    <span className="font-bold text-lg">جودي</span>
-                    <span className="text-xs text-rose-500 mt-1">الشخصية الرئيسية</span>
-                  </div>
-                )}
+      <div className="grid overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#101b2b]/90 shadow-[0_30px_90px_rgba(0,0,0,.4)] lg:grid-cols-[.9fr_1.1fr]">
+        <div className="relative min-h-[280px] overflow-hidden bg-[radial-gradient(circle_at_50%_40%,#26445c_0%,#17283b_48%,#101a2a_100%)] sm:min-h-[390px]">
+          <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px)', backgroundSize: '34px 34px' }} />
+          <div className="absolute left-8 top-8 h-28 w-28 rounded-full bg-cyan-400/20 blur-3xl" />
+          <div className="absolute bottom-8 right-8 h-32 w-32 rounded-full bg-violet-500/20 blur-3xl" />
+          <Image src={realImageSrc} alt="جودي" fill priority sizes="(max-width: 1024px) 100vw, 45vw" className="relative z-10 object-contain object-bottom drop-shadow-[0_20px_35px_rgba(0,0,0,.45)]" />
+          <div className="absolute bottom-5 left-5 z-20 rounded-xl border border-white/10 bg-black/35 px-3 py-2 text-xs font-semibold text-white backdrop-blur">الشخصية الرئيسية</div>
+        </div>
 
-                {/* Subtle Anime Companion Inset (Transparent Chibi) */}
-                <div
-                  className="absolute -bottom-1 left-2 w-24 h-24 sm:w-28 sm:h-28 pointer-events-none animate-float-slow"
-                  title="شخصية جودي الأنمي"
-                >
-                  {!animeImgFailed ? (
-                    <div className="relative w-full h-full">
-                      <Image
-                        src={transparentAnimeSrc}
-                        alt="شخصية جودي الكرتونية"
-                        fill
-                        sizes="112px"
-                        referrerPolicy="no-referrer"
-                        onError={() => setAnimeImgFailed(true)}
-                        className="object-contain drop-shadow-[0_8px_14px_rgba(45,24,36,0.32)]"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-rose-500 font-bold text-xl">
-                      ✨
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <p className="mt-4 text-xs font-medium text-[#5C4550] text-center">
-              شخصية جودي وصورتها الأصلية داخل اللعبة
-            </p>
-          </div>
-
-          {/* Character Profile & Controls Column */}
-          <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between gap-6">
+        <div className="p-5 sm:p-8 lg:p-9">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              {/* Character Header */}
-              <div className="flex flex-wrap items-baseline justify-between gap-2 pb-4 border-b border-rose-100">
-                <div>
-                  <span className="text-xs font-semibold text-rose-600 block mb-0.5">
-                    ملف الشخصية
-                  </span>
-                  <h2
-                    className="text-2xl sm:text-3xl font-bold text-[#2D1824]"
-                    style={{ fontFamily: 'var(--font-display)' }}
-                  >
-                    جودي
-                  </h2>
-                </div>
-                <span className="text-sm font-semibold text-amber-700 tabular-nums">
-                  30 مستوى · عالم مفتوح · حفل تكريم
-                </span>
-              </div>
-
-              {/* Character Metadata List (Clean Unboxed Typography) */}
-              <dl className="divide-y divide-rose-100/80 text-sm sm:text-base">
-                <div className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                  <dt className="font-semibold text-[#6A4558]">الاسم</dt>
-                  <dd className="font-bold text-[#2D1824]">جودي</dd>
-                </div>
-                <div className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                  <dt className="font-semibold text-[#6A4558]">الفئة</dt>
-                  <dd className="font-bold text-rose-700">الشخصية الرئيسية</dd>
-                </div>
-                <div className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                  <dt className="font-semibold text-[#6A4558]">الأشياء المفضلة</dt>
-                  <dd className="font-semibold text-[#2D1824]">
-                    القطط 🐱 <span className="text-rose-300 mx-1">·</span> الورد 🌹{' '}
-                    <span className="text-rose-300 mx-1">·</span> الشوكولاتة 🍫
-                  </dd>
-                </div>
-              </dl>
-
-              {/* Gameplay Scoring Guide */}
-              <div className="mt-4 pt-4 border-t border-rose-100">
-                <h3 className="text-xs font-bold text-[#6A4558] mb-3">
-                  دليل النقاط والتحدي داخل المراحل
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
-                  <div className="rounded-2xl bg-[#FFF6F8] border border-rose-100 py-2.5 px-2">
-                    <div className="text-2xl leading-none mb-1" aria-hidden="true">
-                      🐱
-                    </div>
-                    <div className="text-xs font-bold text-[#2D1824]">قطة</div>
-                    <div className="text-xs font-extrabold text-emerald-700 tabular-nums mt-0.5">
-                      +20 نقطة
-                    </div>
-                  </div>
-                  <div className="rounded-2xl bg-[#FFF6F8] border border-rose-100 py-2.5 px-2">
-                    <div className="text-2xl leading-none mb-1" aria-hidden="true">
-                      🌹
-                    </div>
-                    <div className="text-xs font-bold text-[#2D1824]">وردة حمراء</div>
-                    <div className="text-xs font-extrabold text-rose-600 tabular-nums mt-0.5">
-                      +15 نقطة
-                    </div>
-                  </div>
-                  <div className="rounded-2xl bg-[#FFF6F8] border border-rose-100 py-2.5 px-2">
-                    <div className="text-2xl leading-none mb-1" aria-hidden="true">
-                      🍫
-                    </div>
-                    <div className="text-xs font-bold text-[#2D1824]">شوكولاتة</div>
-                    <div className="text-xs font-extrabold text-amber-700 tabular-nums mt-0.5">
-                      +10 نقاط
-                    </div>
-                  </div>
-                  <div className="rounded-2xl bg-sky-50 border border-sky-200/80 py-2.5 px-2">
-                    <div className="text-2xl leading-none mb-1" aria-hidden="true">
-                      🧲
-                    </div>
-                    <div className="text-xs font-bold text-sky-900">مغناطيس سحري</div>
-                    <div className="text-xs font-extrabold text-sky-700 mt-0.5">
-                      جذب تلقائي
-                    </div>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 border border-slate-200/80 py-2.5 px-2 col-span-2 sm:col-span-1">
-                    <div className="text-2xl leading-none mb-1" aria-hidden="true">
-                      ⚡
-                    </div>
-                    <div className="text-xs font-bold text-slate-800">غيمة مشاكسة</div>
-                    <div className="text-xs font-extrabold text-slate-600 tabular-nums mt-0.5">
-                      -1 قلب / -15
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <p className="text-xs font-bold tracking-widest text-cyan-300">نمط اللعب</p>
+              <h2 className="mt-1 text-2xl font-extrabold text-white sm:text-3xl">تحدي الأركيد</h2>
             </div>
-
-            {/* Dual-Mode Game Hub CTAs */}
-            <div className="pt-2 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.015 }}
-                  whileTap={{ scale: 0.985 }}
-                  onClick={onStartAdventure}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-l from-rose-500 via-pink-500 to-rose-600 text-white shadow-[0_12px_30px_-6px_rgba(244,63,94,0.52)] hover:shadow-[0_16px_36px_-6px_rgba(244,63,94,0.68)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-300 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer text-center"
-                >
-                  <span className="flex items-center justify-center gap-2 font-bold text-sm sm:text-base whitespace-nowrap">
-                    <Rocket className="w-4 h-4 shrink-0" />
-                    <span>مغامرة التجميع السريعة</span>
-                    <Sparkles className="w-4 h-4 shrink-0" />
-                  </span>
-                  <span className="text-[11px] font-semibold text-rose-100 tabular-nums">
-                    نمط الأركيد · 30 مستوى
-                  </span>
-                </motion.button>
-
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.015 }}
-                  whileTap={{ scale: 0.985 }}
-                  onClick={onStartOpenWorld}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-l from-amber-500 via-rose-500 to-fuchsia-600 text-white shadow-[0_12px_30px_-6px_rgba(217,119,6,0.42)] hover:shadow-[0_16px_36px_-6px_rgba(217,119,6,0.58)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer text-center"
-                >
-                  <span className="flex items-center justify-center gap-2 font-bold text-sm sm:text-base whitespace-nowrap">
-                    <Crown className="w-4 h-4 shrink-0 fill-amber-200" />
-                    <span>العالم المفتوح لمملكة جودي</span>
-                    <Compass className="w-4 h-4 shrink-0" />
-                  </span>
-                  <span className="text-[11px] font-semibold text-amber-50">
-                    عالم مفتوح · قيادة واستكشاف ومهام
-                  </span>
-                </motion.button>
-              </div>
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                onClick={onStartRoyalEvent}
-                className="w-full rounded-2xl border border-amber-300 bg-gradient-to-l from-slate-900 via-[#4A2148] to-rose-900 px-4 py-3.5 text-white shadow-[0_12px_28px_rgba(30,20,45,.28)] transition-all hover:brightness-110"
-              >
-                <span className="flex items-center justify-center gap-2 text-sm font-black sm:text-base">
-                  <Trophy className="h-4 w-4 text-amber-300" />
-                  حفل تكريم جودي الملكي
-                  <Sparkles className="h-4 w-4 text-amber-200" />
-                </span>
-                <span className="mt-1 block text-[11px] font-semibold text-amber-100">بوابة ملكية · جمهور · تصوير · تسليم الكأس · موكب العودة</span>
-              </motion.button>
-            </div>
+            <div className="rounded-2xl bg-cyan-300/10 p-3 text-cyan-200"><Zap className="h-6 w-6" /></div>
           </div>
+
+          <div className="mt-6 grid grid-cols-3 gap-2">
+            <div className="rounded-xl border border-white/10 bg-white/[.04] p-3"><p className="text-[11px] text-slate-400">المراحل</p><p className="mt-1 text-2xl font-black text-white">30</p></div>
+            <div className="rounded-xl border border-white/10 bg-white/[.04] p-3"><p className="text-[11px] text-slate-400">نظام اللعب</p><p className="mt-1 text-sm font-bold text-white">تحدي</p></div>
+            <div className="rounded-xl border border-white/10 bg-white/[.04] p-3"><p className="text-[11px] text-slate-400">التقدم</p><p className="mt-1 text-sm font-bold text-emerald-300">تدريجي</p></div>
+          </div>
+
+          <div className="mt-7">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white">نظام النقاط والتحدي</h3>
+              <span className="text-[11px] text-slate-400">داخل كل مرحلة</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {scoring.map((item) => (
+                <div key={item.name} className="rounded-xl border border-white/10 bg-[#0b1421]/70 p-3">
+                  <div className="flex items-center gap-2"><span className="text-xl">{item.icon}</span><span className="text-xs font-bold text-slate-200">{item.name}</span></div>
+                  <p className="mt-2 text-[11px] font-bold text-cyan-300">{item.points}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 flex items-center gap-2 text-xs leading-6 text-slate-400"><Heart className="h-3.5 w-3.5 shrink-0 text-rose-400" /> لديك عدد محدود من القلوب؛ الاصطدام بالعوائق يقلل فرصتك في إكمال المرحلة.</p>
+          </div>
+
+          <motion.button type="button" whileHover={{ scale: 1.015, y: -2 }} whileTap={{ scale: .98 }} onClick={onStartAdventure} className="mt-7 flex w-full items-center justify-between rounded-2xl bg-gradient-to-l from-cyan-400 to-blue-500 px-5 py-4 text-right text-base font-black text-[#071321] shadow-[0_12px_35px_rgba(34,211,238,.2)] transition">
+            <span className="flex items-center gap-3"><Play className="h-5 w-5 fill-current" /> ابدأ اللعب</span>
+            <ArrowUpRight className="h-5 w-5" />
+          </motion.button>
+          <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-slate-500"><Trophy className="h-3.5 w-3.5" /><Star className="h-3 w-3" /> اجمع النقاط وارفع رقمك القياسي</div>
         </div>
       </div>
     </motion.section>

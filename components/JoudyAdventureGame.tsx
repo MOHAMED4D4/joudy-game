@@ -2,13 +2,11 @@
 
 import React, { useCallback, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
-import { Trophy, Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX } from 'lucide-react';
 import CharacterSelectScreen from './CharacterSelectScreen';
 import WorldMapScreen from './WorldMapScreen';
 import GameArena, { type GameRunStats } from './GameArena';
 import VictoryScreen from './VictoryScreen';
-import OpenWorldArena from './OpenWorldArena';
-import RoyalHonorsEvent from './RoyalHonorsEvent';
 import { getLevelConfig } from '@/lib/levels';
 import {
   recordLevelCompletion,
@@ -17,9 +15,9 @@ import {
 } from '@/lib/storage';
 import { soundEngine } from '@/lib/soundEffects';
 
-type GameState = 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY' | 'OPEN_WORLD' | 'ROYAL_EVENT';
+type GameState = 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY';
 
-const REAL_IMAGE_SRC = '/assets/aistudio/Screenshot_________________Gallery_94dde710.png';
+const REAL_IMAGE_SRC = '/images/joudy-real.png';
 const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
 
 export default function JoudyAdventureGame() {
@@ -30,7 +28,6 @@ export default function JoudyAdventureGame() {
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [runId, setRunId] = useState(1);
   const [isNewHighScore, setIsNewHighScore] = useState(false);
-  const [royalPhotoBonus, setRoyalPhotoBonus] = useState(0);
 
   const [lastStats, setLastStats] = useState<GameRunStats>({
     level: 1,
@@ -61,24 +58,6 @@ export default function JoudyAdventureGame() {
     soundEngine.playStartAdventure();
     setGameState('WORLD_MAP');
   }, []);
-
-  const handleOpenFreeWorld = useCallback(() => {
-    soundEngine.setSfxEnabled(soundEnabled);
-    soundEngine.setMusicEnabled(soundEnabled);
-    soundEngine.playStartAdventure();
-    setGameState('OPEN_WORLD');
-  }, [soundEnabled]);
-
-  const handleRoyalPhotoReward = useCallback((amount: number) => {
-    setRoyalPhotoBonus((total) => total + amount);
-  }, []);
-
-  const handleOpenRoyalEvent = useCallback(() => {
-    soundEngine.setSfxEnabled(soundEnabled);
-    soundEngine.setMusicEnabled(soundEnabled);
-    soundEngine.playStartAdventure();
-    setGameState('ROYAL_EVENT');
-  }, [soundEnabled]);
 
   const handleStartLevel = useCallback(
     (levelNumber: number) => {
@@ -120,53 +99,13 @@ export default function JoudyAdventureGame() {
   const activeLevelConfig = getLevelConfig(activeLevel);
 
   return (
-    <main className="relative min-h-dvh w-full overflow-x-hidden bg-gradient-to-b from-[#FFF5F8] via-[#FFF9FB] to-[#FEF2F6] flex flex-col">
-      {/* Subtle Pastel Ambient Glow Background */}
-      <div
-        className="pointer-events-none fixed inset-0 overflow-hidden"
-        aria-hidden="true"
-      >
-        <div className="absolute -top-28 -right-24 w-96 h-96 rounded-full bg-rose-200/35 blur-3xl" />
-        <div className="absolute top-1/3 -left-24 w-80 h-80 rounded-full bg-emerald-200/20 blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-amber-200/25 blur-3xl" />
-      </div>
-
-      {/* Persistent Top Bar (Brand + High Score + Audio) outside Active Arenas */}
-      {gameState !== 'PLAYING' && gameState !== 'OPEN_WORLD' && gameState !== 'ROYAL_EVENT' && (
-        <div className="relative z-20 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-3 pb-1 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => setGameState('TITLE_MENU')}
-            className="text-base sm:text-lg font-bold text-rose-700 hover:text-rose-900 transition-colors whitespace-nowrap cursor-pointer"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
-            عالم جودي الملكي
+    <main className="relative min-h-dvh w-full overflow-x-hidden bg-[#080f1b] flex flex-col">
+      {/* Minimal audio control */}
+      {gameState !== 'PLAYING' && (
+        <div className="absolute left-4 top-4 z-30">
+          <button type="button" onClick={handleToggleSound} aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'} className="rounded-full border border-white/10 bg-slate-950/70 p-3 text-slate-200 shadow-lg backdrop-blur">
+            {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
           </button>
-
-          <div className="flex items-center gap-2.5 sm:gap-4">
-            <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-amber-800 tabular-nums whitespace-nowrap">
-              <Trophy className="w-4 h-4 text-amber-500" />
-              <span>الرقم القياسي لجودي: {progress.highScore}</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleToggleSound}
-              className="inline-flex items-center gap-1.5 py-2 px-3 rounded-xl bg-white/95 border border-rose-200 text-xs sm:text-sm font-semibold text-[#2D1824] hover:bg-rose-50 transition-colors shadow-xs cursor-pointer whitespace-nowrap"
-            >
-              {soundEnabled ? (
-                <>
-                  <Volume2 className="w-4 h-4 text-rose-500" />
-                  <span className="hidden sm:inline">الصوت مفعّل</span>
-                </>
-              ) : (
-                <>
-                  <VolumeX className="w-4 h-4 text-slate-500" />
-                  <span className="hidden sm:inline">الصوت مكتوم</span>
-                </>
-              )}
-            </button>
-          </div>
         </div>
       )}
 
@@ -177,10 +116,7 @@ export default function JoudyAdventureGame() {
             <CharacterSelectScreen
               key="title-menu"
               realImageSrc={realImageSrc}
-              animeImageSrc={animeImageSrc}
               onStartAdventure={handleOpenWorldMap}
-              onStartOpenWorld={handleOpenFreeWorld}
-              onStartRoyalEvent={handleOpenRoyalEvent}
             />
           )}
 
@@ -228,31 +164,6 @@ export default function JoudyAdventureGame() {
             />
           )}
 
-          {gameState === 'OPEN_WORLD' && (
-            <OpenWorldArena
-              key="open-world-rpg"
-              realImageSrc={realImageSrc}
-              animeImageSrc={animeImageSrc}
-              soundEnabled={soundEnabled}
-              onToggleSound={handleToggleSound}
-              bonusCoins={royalPhotoBonus}
-              onExitToHub={() => {
-                soundEngine.stopCarEngineSound();
-                soundEngine.stopBackgroundMusic();
-                setGameState('TITLE_MENU');
-              }}
-            />
-          )}
-
-          {gameState === 'ROYAL_EVENT' && (
-            <RoyalHonorsEvent
-              key="royal-honors-event"
-              portraitSrc={realImageSrc}
-              onBackToHub={() => setGameState('TITLE_MENU')}
-              onEnterKingdom={handleOpenFreeWorld}
-              onPhotoReward={handleRoyalPhotoReward}
-            />
-          )}
         </AnimatePresence>
       </div>
     </main>

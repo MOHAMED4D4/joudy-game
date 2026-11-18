@@ -69,10 +69,10 @@ export default function WorldMapScreen({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.28 }}
-      className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5"
+      className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5 text-slate-100"
     >
       {/* Map Header & Quick Launch */}
-      <div className="bg-white/95 backdrop-blur-sm border border-rose-200/90 rounded-3xl p-5 sm:p-6 shadow-[0_16px_40px_-15px_rgba(225,29,72,0.14)] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="bg-[#101b2b]/95 backdrop-blur-xl border border-white/10 rounded-3xl p-5 sm:p-6 shadow-[0_20px_55px_rgba(0,0,0,.32)] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-rose-300 shadow-sm shrink-0 bg-rose-50">
             <Image
@@ -89,37 +89,37 @@ export default function WorldMapScreen({
               <button
                 type="button"
                 onClick={onBackToCharacter}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 hover:text-rose-900 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-300 hover:text-cyan-100 transition-colors cursor-pointer"
               >
                 <ArrowRight className="w-4 h-4" />
-                <span>ملف البطلة</span>
+                <span>القائمة الرئيسية</span>
               </button>
-              <span className="text-rose-300" aria-hidden="true">
+              <span className="text-slate-600" aria-hidden="true">
                 ·
               </span>
-              <span className="text-xs font-semibold text-[#6A4558]">
-                خريطة المراحل السحرية · أركيد 2D
+              <span className="text-xs font-semibold text-slate-400">
+                خريطة التحديات · أركيد 2D
               </span>
             </div>
             <h1
-              className="text-2xl sm:text-3xl font-bold text-[#2D1824]"
+              className="text-2xl sm:text-3xl font-black text-white"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               مسار مغامرة جودي (30 مستوى)
             </h1>
-            <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm font-semibold text-[#5C3D4E] tabular-nums pt-0.5">
+            <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm font-semibold text-slate-300 tabular-nums pt-0.5">
               <span>المكتملة: {completedCount} / 30</span>
-              <span className="text-rose-300" aria-hidden="true">
+              <span className="text-slate-600" aria-hidden="true">
                 ·
               </span>
-              <span className="inline-flex items-center gap-1 text-amber-700">
+              <span className="inline-flex items-center gap-1 text-amber-300">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
                 <span>{totalStars} / 90</span>
               </span>
-              <span className="text-rose-300" aria-hidden="true">
+              <span className="text-slate-600" aria-hidden="true">
                 ·
               </span>
-              <span className="text-rose-700 font-bold">
+              <span className="text-cyan-300 font-bold">
                 الرقم القياسي لجودي: {progress.highScore}
               </span>
             </div>
@@ -131,7 +131,7 @@ export default function WorldMapScreen({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onSelectLevel(currentLevel)}
-          className="py-3.5 px-6 rounded-2xl bg-gradient-to-l from-rose-500 via-pink-500 to-rose-600 text-white font-bold text-base shadow-[0_10px_28px_-6px_rgba(244,63,94,0.5)] hover:shadow-[0_14px_34px_-6px_rgba(244,63,94,0.65)] transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
+          className="py-3.5 px-6 rounded-2xl bg-gradient-to-l from-cyan-400 via-sky-500 to-blue-600 text-white font-bold text-base shadow-[0_10px_28px_-6px_rgba(34,211,238,0.28)] hover:shadow-[0_14px_34px_-6px_rgba(34,211,238,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
         >
           <Play className="w-4 h-4 fill-white" />
           <span>العب المستوى {currentLevel}</span>
@@ -144,14 +144,14 @@ export default function WorldMapScreen({
         {WORLD_THEMES.map((world, worldIdx) => {
           const worldLevels = LEVELS.filter((l) => l.worldId === world.id);
           const isEvenRow = worldIdx % 2 === 1;
-          const orderedLevels = isEvenRow ? [...worldLevels].reverse() : worldLevels;
+          const orderedLevels = [...worldLevels].sort((a, b) => a.level - b.level);
           const worldUnlocked = worldLevels.some((l) => l.level <= currentLevel);
           const hasNextWorld = worldIdx < WORLD_THEMES.length - 1;
 
           return (
             <React.Fragment key={world.id}>
               <div
-                className={`relative rounded-3xl overflow-hidden border-2 ${world.borderClass} bg-gradient-to-br ${world.cardBgClass} shadow-sm`}
+                className={`relative rounded-3xl overflow-hidden border border-white/10 bg-[#101b2b]/90 shadow-[0_18px_50px_rgba(0,0,0,.28)]`}
               >
                 {/* Animated Framer Motion Biome Atmosphere */}
                 <WorldAtmosphereOverlay worldId={world.id} variant="card" />
@@ -235,27 +235,6 @@ export default function WorldMapScreen({
                           key={lvl.level}
                           className={`relative flex flex-col items-center gap-1.5 ${waveClass}`}
                         >
-                          {/* Pulsing Joudy Mini Avatar Floating on Current Level */}
-                          {isCurrent && (
-                            <motion.div
-                              initial={{ y: -4 }}
-                              animate={{ y: [-4, -11, -4] }}
-                              transition={{ repeat: Infinity, duration: 2.1, ease: 'easeInOut' }}
-                              className="absolute -top-11 sm:-top-12 z-20 flex flex-col items-center pointer-events-none"
-                            >
-                              <div className="relative w-12 h-12 sm:w-14 sm:h-14 overflow-hidden">
-                                <Image
-                                  src={animeBadgeSrc}
-                                  alt="جودي هنا"
-                                  fill
-                                  sizes="56px"
-                                  referrerPolicy="no-referrer"
-                                  className="object-contain"
-                                />
-                              </div>
-                            </motion.div>
-                          )}
-
                           <motion.button
                             type="button"
                             disabled={isLocked}
@@ -267,12 +246,12 @@ export default function WorldMapScreen({
                                 ? `المستوى ${lvl.level} مقفول`
                                 : `بدء المستوى ${lvl.level} — الهدف ${lvl.targetScore} نقطة`
                             }
-                            className={`relative w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full flex flex-col items-center justify-center transition-all border-[3px] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-300 ${
+                            className={`relative w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-2xl flex flex-col items-center justify-center transition-all border focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300 ${
                               isCurrent
-                                ? 'bg-gradient-to-br from-rose-500 via-pink-500 to-amber-400 text-white border-white shadow-[0_0_28px_rgba(244,63,94,0.62)] cursor-pointer animate-glow-breath ring-4 ring-rose-300/60'
+                                ? 'bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 text-slate-950 border-cyan-200 shadow-[0_0_28px_rgba(34,211,238,0.38)] cursor-pointer animate-glow-breath ring-2 ring-cyan-300/40'
                                 : completed
-                                  ? 'bg-white text-[#2D1824] border-amber-400 shadow-md hover:border-rose-400 cursor-pointer'
-                                  : 'bg-slate-100/90 text-slate-400 border-slate-200 cursor-not-allowed opacity-80'
+                                  ? 'bg-slate-800 text-white border-emerald-400/70 shadow-md hover:border-cyan-300 cursor-pointer'
+                                  : 'bg-slate-900 text-slate-500 border-white/10 cursor-not-allowed opacity-80'
                             }`}
                           >
                             {isFinalBoss && !isLocked && (
@@ -311,11 +290,11 @@ export default function WorldMapScreen({
                               ))}
                             </div>
                           ) : isCurrent ? (
-                            <span className="text-xs font-extrabold text-rose-600 whitespace-nowrap">
+                            <span className="text-xs font-extrabold text-cyan-300 whitespace-nowrap">
                               جودي هنا · العب!
                             </span>
                           ) : (
-                            <span className="text-[11px] font-medium text-slate-400 tabular-nums whitespace-nowrap">
+                            <span className="text-[11px] font-medium text-slate-500 tabular-nums whitespace-nowrap">
                               {isFinalBoss ? 'النهاية الكبرى' : `هدف ${lvl.targetScore}`}
                             </span>
                           )}

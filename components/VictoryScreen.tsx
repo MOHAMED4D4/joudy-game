@@ -231,7 +231,7 @@ export default function VictoryScreen({
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-5"
         >
-          <div className="inline-flex items-center gap-2 text-amber-700 font-bold text-sm mb-1.5">
+          <div className="inline-flex items-center gap-2 text-cyan-300 font-bold text-sm mb-1.5">
             {isGrandFinale ? (
               <Crown className="w-5 h-5 text-amber-500 fill-amber-400" />
             ) : (
@@ -244,12 +244,12 @@ export default function VictoryScreen({
             </span>
           </div>
           <h1
-            className="text-3xl sm:text-5xl font-bold text-[#2D1824] leading-tight"
+            className="text-3xl sm:text-5xl font-bold text-white leading-tight"
             style={{ fontFamily: 'var(--font-display)', textWrap: 'balance' }}
           >
             {isGrandFinale
-              ? 'ألف مبروك يا جودي ختمتي المغامرة الكبرى! 🏆✨'
-              : 'مبروك يا أجمل جودي في العالم! كسبتي المرحلة 🎉✨'}
+              ? 'اكتملت المغامرة'
+              : 'تم اجتياز المرحلة'}
           </h1>
         </motion.div>
 
@@ -258,7 +258,7 @@ export default function VictoryScreen({
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.12 }}
-          className="bg-white/95 backdrop-blur-md border-2 border-rose-300 rounded-3xl shadow-[0_24px_60px_-15px_rgba(225,29,72,0.25)] p-5 sm:p-8 ring-4 ring-emerald-50/70"
+          className="bg-[#101b2b]/95 backdrop-blur-md border border-white/10 rounded-3xl shadow-[0_24px_60px_-15px_rgba(0,0,0,0.55)] p-5 sm:p-8 text-slate-100"
         >
           {/* Side-by-Side Character Showcase + VN Text */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
@@ -295,7 +295,7 @@ export default function VictoryScreen({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="inline-flex items-center gap-2 bg-gradient-to-l from-rose-500 to-pink-500 text-white font-bold text-sm px-4 py-1.5 rounded-2xl shadow-sm">
                   <Heart className="w-4 h-4 fill-white" />
-                  <span>جودي — بطلة الأنمي الأسطورية</span>
+                  <span>جودي</span>
                 </div>
 
                 {/* Stars Earned */}
@@ -314,14 +314,14 @@ export default function VictoryScreen({
               </div>
 
               {/* Main Message */}
-              <p className="text-base sm:text-xl font-bold text-[#2D1824] leading-relaxed">
+              <p className="text-base sm:text-xl font-bold text-slate-100 leading-relaxed">
                 {isGrandFinale
-                  ? GRAND_VICTORY_MESSAGE
-                  : `رائعة يا جودي! أنهيتِ المستوى ${levelConfig.level} (${levelConfig.worldName}) وحققتِ ${stats.score} نقطة!`}
+                  ? 'تم إنهاء جميع المستويات الثلاثين.'
+                  : `تم إنهاء المستوى ${levelConfig.level} — ${levelConfig.worldName}. النتيجة: ${stats.score} نقطة.`}
               </p>
 
               {/* Run Summary */}
-              <div className="pt-3 border-t border-rose-100 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm font-semibold text-[#6A4558] tabular-nums">
+              <div className="pt-3 border-t border-white/10 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm font-semibold text-slate-300 tabular-nums">
                 <span className="text-rose-700 font-extrabold">النقاط: {stats.score}</span>
                 <span aria-hidden="true">·</span>
                 <span className="text-amber-700 font-bold">
@@ -335,7 +335,7 @@ export default function VictoryScreen({
           </div>
 
           {/* Dedicated Secret Gift / Special Message Box */}
-          <div className="mt-6 pt-5 border-t border-rose-100">
+          <div className="mt-6 pt-5 border-t border-white/10">
             {!giftOpened ? (
               <motion.button
                 type="button"
@@ -359,7 +359,7 @@ export default function VictoryScreen({
                   <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
                   <span>رسالة سرية خاصة إلى جودي</span>
                 </div>
-                <p className="text-base sm:text-lg font-bold text-[#2D1824] leading-relaxed">
+                <p className="text-base sm:text-lg font-bold text-slate-100 leading-relaxed">
                   {isGrandFinale
                     ? 'شكراً لكِ يا جودي على مشاركتكِ في هذه الرحلة. نتمنى لكِ استمرار النجاح والتقدم.'
                     : levelConfig.secretNote}

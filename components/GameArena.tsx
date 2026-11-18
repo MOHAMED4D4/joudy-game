@@ -1161,7 +1161,7 @@ export default function GameArena({
       className="w-full max-w-5xl mx-auto px-3 sm:px-6 py-2.5 sm:py-4 flex flex-col gap-2.5 h-[calc(100dvh-0.5rem)] max-h-[860px]"
     >
       {/* Compact Top Arcade HUD */}
-      <header className="bg-white/95 backdrop-blur-sm border border-rose-200/80 rounded-2xl px-3 sm:px-5 py-2.5 shadow-sm flex items-center justify-between gap-3 shrink-0">
+      <header className="bg-slate-950/75 backdrop-blur-xl border border-white/10 rounded-2xl px-3 sm:px-5 py-2.5 shadow-sm flex items-center justify-between gap-3 shrink-0">
         {realImageSrc && (
           <div className="hidden sm:block relative w-11 h-11 rounded-xl overflow-hidden border-2 border-amber-300 bg-rose-50 shrink-0 shadow-xs">
             <Image
@@ -1250,7 +1250,7 @@ export default function GameArena({
             type="button"
             onClick={onToggleSound}
             aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'}
-            className="w-10 h-10 rounded-xl border border-rose-200 bg-[#FFF7FA] hover:bg-rose-100 text-[#2D1824] flex items-center justify-center transition-colors cursor-pointer"
+            className="w-10 h-10 rounded-xl border border-white/10 bg-slate-900/80 hover:bg-rose-100 text-[#2D1824] flex items-center justify-center transition-colors cursor-pointer"
           >
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
@@ -1258,7 +1258,7 @@ export default function GameArena({
             type="button"
             onClick={() => setIsPaused((p) => !p)}
             aria-label={isPaused ? 'استئناف اللعب' : 'إيقاف مؤقت'}
-            className="w-10 h-10 rounded-xl border border-rose-200 bg-[#FFF7FA] hover:bg-rose-100 text-[#2D1824] flex items-center justify-center transition-colors cursor-pointer"
+            className="w-10 h-10 rounded-xl border border-white/10 bg-slate-900/80 hover:bg-rose-100 text-[#2D1824] flex items-center justify-center transition-colors cursor-pointer"
           >
             {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </button>
@@ -1266,7 +1266,7 @@ export default function GameArena({
             type="button"
             onClick={onExitToMap}
             aria-label="العودة لخريطة المستويات"
-            className="w-10 h-10 rounded-xl border border-rose-200 bg-[#FFF7FA] hover:bg-rose-100 text-[#2D1824] flex items-center justify-center transition-colors cursor-pointer"
+            className="w-10 h-10 rounded-xl border border-white/10 bg-slate-900/80 hover:bg-rose-100 text-[#2D1824] flex items-center justify-center transition-colors cursor-pointer"
           >
             <MapIcon className="w-4 h-4" />
           </button>
@@ -1276,7 +1276,7 @@ export default function GameArena({
       {/* Main 2D Canvas Playfield + Circular Translucent Touch D-Pad */}
       <div
         ref={stageRef}
-        className={`relative flex-1 min-h-[360px] rounded-3xl overflow-hidden border-2 shadow-[0_20px_50px_-15px_rgba(225,29,72,0.2)] select-none touch-none ${
+        className={`relative flex-1 min-h-[360px] rounded-none sm:rounded-2xl overflow-hidden border-0 shadow-none sm:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.35)] select-none touch-none ${
           levelConfig.worldId === 2
             ? 'border-emerald-300/90 bg-emerald-50'
             : levelConfig.isNight
@@ -1309,7 +1309,7 @@ export default function GameArena({
               onPointerUp={(e) => handleTouchRelease('left', e)}
               onPointerCancel={(e) => handleTouchRelease('left', e)}
               onLostPointerCapture={(e) => handleTouchRelease('left', e)}
-              className={`absolute left-4 bottom-4 sm:left-6 sm:bottom-6 z-20 w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full backdrop-blur-md flex items-center justify-center border-2 transition-all duration-100 select-none touch-none cursor-pointer ${
+              className={`absolute left-4 bottom-4 sm:left-6 sm:bottom-6 z-20 w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full backdrop-blur-md flex items-center justify-center border-0 transition-all duration-100 select-none touch-none cursor-pointer ${
                 activeControl === 'left'
                   ? 'scale-90 bg-rose-500/85 border-white text-white shadow-[0_0_28px_rgba(244,63,94,0.8)]'
                   : 'bg-white/45 border-white/80 text-[#2D1824] shadow-[0_8px_24px_rgba(45,24,36,0.18)] hover:bg-white/65'
@@ -1326,7 +1326,7 @@ export default function GameArena({
               onPointerUp={(e) => handleTouchRelease('right', e)}
               onPointerCancel={(e) => handleTouchRelease('right', e)}
               onLostPointerCapture={(e) => handleTouchRelease('right', e)}
-              className={`absolute right-4 bottom-4 sm:right-6 sm:bottom-6 z-20 w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full backdrop-blur-md flex items-center justify-center border-2 transition-all duration-100 select-none touch-none cursor-pointer ${
+              className={`absolute right-4 bottom-4 sm:right-6 sm:bottom-6 z-20 w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full backdrop-blur-md flex items-center justify-center border-0 transition-all duration-100 select-none touch-none cursor-pointer ${
                 activeControl === 'right'
                   ? 'scale-90 bg-rose-500/85 border-white text-white shadow-[0_0_28px_rgba(244,63,94,0.8)]'
                   : 'bg-white/45 border-white/80 text-[#2D1824] shadow-[0_8px_24px_rgba(45,24,36,0.18)] hover:bg-white/65'
