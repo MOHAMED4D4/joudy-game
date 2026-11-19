@@ -1,6 +1,22 @@
 'use client';
 
-type CollectibleSoundType = 'cat' | 'rose' | 'chocolate' | 'coin';
+type CollectibleSoundType =
+  | 'cat'
+  | 'rose'
+  | 'chocolate'
+  | 'coin'
+  | 'shadowHunter'
+  | 'shadowRunner'
+  | 'shadowBrute'
+  | 'shadowBoss'
+  | 'crystalHunter'
+  | 'crystalRunner'
+  | 'crystalBrute'
+  | 'crystalBoss'
+  | 'emberHunter'
+  | 'emberRunner'
+  | 'emberBrute'
+  | 'emberBoss';
 
 class MagicalSoundEngine {
   private ctx: AudioContext | null = null;

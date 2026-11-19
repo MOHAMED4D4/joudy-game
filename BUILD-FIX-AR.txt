@@ -1,0 +1,7 @@
+إصلاح خطأ بناء Vercel في V4.0.3
+
+الملف: lib/soundEffects.ts
+السبب: playCollect كان يقبل أنواع المقتنيات الأساسية فقط، بينما GameArena يمرر أيضًا أنواع الوحوش الجديدة الخاصة بالفصول.
+الإصلاح: توسيع نوع CollectibleSoundType ليشمل shadowHunter/shadowRunner/shadowBrute/shadowBoss و crystalHunter/crystalRunner/crystalBrute/crystalBoss و emberHunter/emberRunner/emberBrute/emberBoss.
+
+لم يتم تغيير منطق اللعب أو أسعار المتجر أو الفصول. لم يُشغّل Build كامل محليًا لعدم توفر node_modules في بيئة التعديل.
