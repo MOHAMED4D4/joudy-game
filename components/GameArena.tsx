@@ -288,6 +288,7 @@ export default function GameArena({
   const cameraZoom = levelConfig.level >= 30 ? 0.72 : levelConfig.level >= 15 ? 0.78 : levelConfig.level >= 5 ? 0.84 : 0.90;
 
   const [score, setScore] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hearts, setHearts] = useState(MAX_HEARTS);
   const [bonusHearts, setBonusHearts] = useState(() => Math.min(MAX_EXTRA_HEARTS, worldSave.extraHearts));
@@ -329,6 +330,8 @@ export default function GameArena({
   const slowMonsterTimerRef = useRef(0);
   const doubleScoreTimerRef = useRef(0);
   const startTimeRef = useRef<number>(0);
+  const elapsedAccumulatedMsRef = useRef(0);
+  const activeSegmentStartRef = useRef<number | null>(null);
   const shakeRef = useRef(0);
   const resetSignalRef = useRef(0);
   const reviveRequestRef = useRef(false);
@@ -432,6 +435,43 @@ export default function GameArena({
   useEffect(() => {
     isGameOverRef.current = isGameOver;
   }, [isGameOver]);
+
+  // Count only active gameplay time; pauses and result screens do not add time.
+  useEffect(() => {
+    if (!isPaused && !isGameOver) {
+      if (activeSegmentStartRef.current === null) activeSegmentStartRef.current = Date.now();
+      const timer = window.setInterval(() => {
+        const activeMs = activeSegmentStartRef.current === null
+          ? 0
+          : Date.now() - activeSegmentStartRef.current;
+        setElapsedSeconds(Math.floor((elapsedAccumulatedMsRef.current + activeMs) / 1000));
+      }, 250);
+      return () => window.clearInterval(timer);
+    }
+
+    if (activeSegmentStartRef.current !== null) {
+      elapsedAccumulatedMsRef.current += Date.now() - activeSegmentStartRef.current;
+      activeSegmentStartRef.current = null;
+      setElapsedSeconds(Math.floor(elapsedAccumulatedMsRef.current / 1000));
+    }
+  }, [isPaused, isGameOver]);
+
+  const getElapsedRunSeconds = useCallback(() => {
+    const activeMs = activeSegmentStartRef.current === null
+      ? 0
+      : Date.now() - activeSegmentStartRef.current;
+    return Math.floor((elapsedAccumulatedMsRef.current + activeMs) / 1000);
+  }, []);
+
+  const formatRunTime = (totalSeconds: number) => {
+    const safeSeconds = Math.max(0, totalSeconds);
+    const hours = Math.floor(safeSeconds / 3600);
+    const minutes = Math.floor((safeSeconds % 3600) / 60);
+    const seconds = safeSeconds % 60;
+    return hours > 0
+      ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      : `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
 
   // Load Joudy's clean Chibi Anime Heroine sprite, cartoon SVG sprites & world backdrop
   useEffect(() => {
@@ -588,6 +628,9 @@ export default function GameArena({
     isGameOverRef.current = false;
     shakeRef.current = 0;
     startTimeRef.current = Date.now();
+    elapsedAccumulatedMsRef.current = 0;
+    activeSegmentStartRef.current = null;
+    setElapsedSeconds(0);
     resetSignalRef.current += 1;
     setScore(0);
     setHearts(MAX_HEARTS);
@@ -1008,6 +1051,7 @@ export default function GameArena({
       setCombo(0);
       setCounts({ ...countsRef.current });
       if (heartsRef.current <= 0 && bonusHeartsRef.current <= 0 && !isGameOverRef.current) {
+        setElapsedSeconds(getElapsedRunSeconds());
         isGameOverRef.current = true;
         soundEngine.stopBackgroundMusic();
         setIsGameOver(true);
@@ -1409,10 +1453,8 @@ export default function GameArena({
                 victoryFiredRef.current = true;
                 soundEngine.stopBackgroundMusic();
                 soundEngine.playVictoryFanfare();
-                const elapsedSeconds = Math.max(
-                  1,
-                  Math.round((Date.now() - startTimeRef.current) / 1000),
-                );
+                const elapsedSeconds = Math.max(1, getElapsedRunSeconds());
+                setElapsedSeconds(elapsedSeconds);
                 callbacksRef.current.onVictory({
                   level: levelConfig.level,
                   score: scoreRef.current,
@@ -2081,6 +2123,9 @@ export default function GameArena({
                 <div className="flex min-w-0 items-baseline gap-1.5">
                   <span className="text-base font-black leading-none tabular-nums text-white sm:text-lg">{score.toLocaleString('ar-EG')}</span>
                   <span className="text-[10px] font-semibold text-slate-400 sm:text-xs">/ {levelConfig.targetScore.toLocaleString('ar-EG')} نقطة</span>
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-300/20 bg-emerald-400/10 px-1.5 py-1 text-[10px] font-black tabular-nums text-emerald-100 sm:text-xs" aria-label={`وقت اللعب ${formatRunTime(elapsedSeconds)}`} title="وقت اللعب">
+                    <span aria-hidden="true">⏱</span> {formatRunTime(elapsedSeconds)}
+                  </span>
                   {combo >= 2 && (
                     <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-400/10 px-1.5 py-0.5 text-[10px] font-black text-amber-200">
                       <Flame className="h-3 w-3 fill-amber-400 text-amber-400" /> ×{comboMultiplier}
@@ -2161,7 +2206,7 @@ export default function GameArena({
             >
               المستوى {levelConfig.level}
             </div>
-            <div className="absolute right-1 top-[9.1rem] z-40 flex flex-col items-end gap-1.5 sm:right-2 sm:top-[8.1rem]">
+            <div className="absolute right-4 top-[9.1rem] z-40 flex flex-col items-end gap-1.5 sm:right-6 sm:top-[8.1rem]">
               <div className="pointer-events-none flex flex-col items-end gap-1 rounded-2xl border border-white/20 bg-slate-950/65 px-2 py-1.5 shadow-lg backdrop-blur-sm" aria-label={`القلوب الأساسية: ${hearts} من 3، القلوب الإضافية: ${bonusHearts} من 5`}>
                 <div className="flex items-center gap-0.5" aria-label="القلوب الأساسية">
                   {[1, 2, 3].map((idx) => (
@@ -2351,6 +2396,11 @@ export default function GameArena({
                   <motion.div initial={{ width: 0 }} animate={{ width: `${progressPct}%` }} transition={{ duration: .65, ease: 'easeOut' }} className="h-full rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-400 to-violet-300 shadow-[0_0_14px_rgba(232,121,249,.5)]" />
                 </div>
                 <div className="mt-2 flex justify-between text-[10px] font-bold text-slate-400"><span>{progressPct}% من الهدف</span><span>باقي {(Math.max(0, levelConfig.targetScore - score)).toLocaleString('ar-EG')} نقطة</span></div>
+              </div>
+
+              <div className="relative mt-2 flex items-center justify-between rounded-xl border border-emerald-200/15 bg-emerald-300/[.07] px-3 py-2.5">
+                <span className="text-[11px] font-bold text-emerald-100/80">الوقت المستغرق في الجولة</span>
+                <span className="text-base font-black tabular-nums text-emerald-100">⏱ {formatRunTime(elapsedSeconds)}</span>
               </div>
 
               <div className="relative mt-2 grid grid-cols-3 gap-1.5">

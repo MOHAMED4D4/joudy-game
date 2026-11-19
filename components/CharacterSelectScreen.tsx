@@ -30,6 +30,27 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
   const [lockedNotice, setLockedNotice] = useState('');
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [installHelp, setInstallHelp] = useState(false);
+  const [isInstalledApp, setIsInstalledApp] = useState(false);
+  const [hasInstalledApp, setHasInstalledApp] = useState(false);
+  const [appLaunchHelp, setAppLaunchHelp] = useState(false);
+  useEffect(() => {
+    const standaloneQuery = window.matchMedia('(display-mode: standalone)');
+    const updateDisplayMode = () => setIsInstalledApp(standaloneQuery.matches || (navigator as Navigator & { standalone?: boolean }).standalone === true);
+    updateDisplayMode();
+    // A PWA cannot reliably query its own installation state from every browser.
+    // Remember successful installs observed by this browser, then reveal the entry button.
+    try { setHasInstalledApp(window.localStorage.getItem('joudy-pwa-installed') === '1'); } catch {}
+    const onAppInstalled = () => {
+      try { window.localStorage.setItem('joudy-pwa-installed', '1'); } catch {}
+      setHasInstalledApp(true);
+    };
+    window.addEventListener('appinstalled', onAppInstalled);
+    standaloneQuery.addEventListener?.('change', updateDisplayMode);
+    return () => {
+      standaloneQuery.removeEventListener?.('change', updateDisplayMode);
+      window.removeEventListener('appinstalled', onAppInstalled);
+    };
+  }, []);
   useEffect(() => {
     const onInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event); };
     window.addEventListener('beforeinstallprompt', onInstall);
@@ -219,6 +240,19 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
           </div>}
         </motion.section>
       )}
+
+      {guidePage === 'home' && !isInstalledApp && hasInstalledApp && <div className="fixed inset-x-0 bottom-[5.6rem] z-40 flex justify-center px-3 pb-[env(safe-area-inset-bottom)]">
+        <button type="button" onClick={() => setAppLaunchHelp(true)} className="flex w-full max-w-2xl items-center justify-center gap-2 rounded-xl border border-violet-200/30 bg-gradient-to-l from-violet-500/90 to-indigo-500/90 px-4 py-3 text-sm font-black text-white shadow-lg transition hover:brightness-110 active:scale-[.99]">
+          <Smartphone className="h-5 w-5" /> الدخول للتطبيق
+        </button>
+      </div>}
+      {appLaunchHelp && <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 px-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="app-launch-title">
+        <div className="w-full max-w-sm rounded-2xl border border-violet-200/20 bg-slate-900 p-5 text-right text-white shadow-2xl" dir="rtl">
+          <div className="mb-3 flex items-center gap-2 text-violet-200"><Smartphone className="h-6 w-6"/><h2 id="app-launch-title" className="text-lg font-black">فتح تطبيق جودي</h2></div>
+          <p className="text-sm leading-7 text-slate-200">للحفاظ على فتح روابط اللعبة في الموقع، لا يستطيع المتصفح تشغيل نسخة PWA المثبّتة مباشرةً من هذا الزر. ارجع للشاشة الرئيسية واضغط أيقونة <b className="text-white">joudy game</b> لفتح التطبيق.</p>
+          <button type="button" onClick={() => setAppLaunchHelp(false)} className="mt-4 w-full rounded-xl bg-violet-500 px-4 py-3 text-sm font-black text-white">حسنًا</button>
+        </div>
+      </div>}
 
       {guidePage === 'home' && <div className="pointer-events-none fixed inset-x-0 bottom-3 z-50 flex justify-center px-3 pb-[env(safe-area-inset-bottom)]">
         <motion.button type="button" whileHover={{ scale: 1.015, y: -2 }} whileTap={{ scale: .98 }} onClick={onStartAdventure} className="pointer-events-auto flex w-full max-w-2xl items-center justify-between rounded-2xl border border-cyan-100/35 bg-gradient-to-l from-cyan-300 via-cyan-400 to-blue-500 px-5 py-4 text-right text-base font-black text-[#071321] shadow-[0_12px_40px_rgba(0,0,0,.5),0_0_28px_rgba(34,211,238,.16)] backdrop-blur transition">

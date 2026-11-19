@@ -46,7 +46,7 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
   };
 
   return (
-    <main dir="rtl" className="relative min-h-[100dvh] w-full overflow-hidden bg-[#d9c8ae] text-slate-900">
+    <motion.main dir="rtl" initial={{ opacity: 0, y: 7, scale: 0.995 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} className="relative min-h-[100dvh] w-full overflow-hidden bg-[#d9c8ae] text-slate-900">
       <style jsx global>{`
         @keyframes joudy-idle { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
         @keyframes joudy-eyes-look { 0%,18%,100% { transform: translate(0,0) } 30%,44% { transform: translate(2px,-1px) } 58%,72% { transform: translate(-2px,0) } 84% { transform: translate(1px,1px) } }
@@ -151,6 +151,6 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
       </div>
 
       <AnimatePresence>{settingsOpen&&<motion.div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.div initial={{y:12,scale:.98}} animate={{y:0,scale:1}} className="w-full max-w-md rounded-2xl border border-white/30 bg-[#fffaf2] p-5 text-slate-900 shadow-2xl"><div className="mb-4 flex items-center justify-between"><h3 className="text-lg font-black">إعدادات التحكم</h3><button onClick={()=>setSettingsOpen(false)} className="rounded-lg bg-amber-900/10 p-2"><X className="h-4 w-4"/></button></div><button onClick={onToggleSound} className="mt-3 w-full rounded-xl border border-amber-900/10 bg-white p-3 text-sm font-bold">{soundEnabled?'كتم صوت اللعبة':'تشغيل صوت اللعبة'}</button></motion.div></motion.div>}</AnimatePresence>
-    </main>
+    </motion.main>
   );
 }
