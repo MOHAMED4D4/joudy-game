@@ -81,7 +81,15 @@ export default function JoudyAdventureGame() {
   );
 
   const handleGameOver = useCallback(() => {
-    // Loss voice is intentionally independent from the game's mute controls.
+    // The voice and the original melancholy game-over cue play together.
+    // Both are intentionally independent from the regular game mute toggle.
+    const lossMusic = new Audio('/audio/joudy-loss-music.mp3');
+    lossMusic.volume = 0.24;
+    lossMusic.loop = false;
+    void lossMusic.play().catch(() => {
+      // Playback is attempted directly at the game-over event.
+    });
+
     const lossVoice = new Audio('/audio/joudy-loss.mp3');
     lossVoice.volume = 1;
     void lossVoice.play().catch(() => {
