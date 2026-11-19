@@ -24,6 +24,7 @@ export interface WorldSave {
   totalBosses: number;
   extraHearts: number;
   shieldCharges: number;
+  magnetCharges: number;
   shieldFreeGranted: boolean;
 }
 
@@ -50,6 +51,7 @@ const DEFAULT_SAVE: WorldSave = {
   totalBosses: 0,
   extraHearts: 0,
   shieldCharges: 0,
+  magnetCharges: 0,
   shieldFreeGranted: false,
 };
 
@@ -138,6 +140,7 @@ function parse(raw: string | null): WorldSave {
       totalBosses: Math.max(0, Number(value.totalBosses ?? 0) || 0),
       extraHearts: Math.max(0, Number(value.extraHearts ?? 0) || 0),
       shieldCharges: Math.max(0, Number(value.shieldCharges ?? 0) || 0),
+      magnetCharges: Math.max(0, Number(value.magnetCharges ?? 0) || 0),
       shieldFreeGranted: value.shieldFreeGranted === true,
     };
   } catch {

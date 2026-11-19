@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 190" fill="none">
+  <defs>
+    <linearGradient id="gold" x1="60" y1="35" x2="190" y2="160" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF3B0"/><stop offset=".32" stop-color="#FBBF24"/><stop offset=".68" stop-color="#D97706"/><stop offset="1" stop-color="#92400E"/></linearGradient>
+    <linearGradient id="blue" x1="65" y1="40" x2="205" y2="150" gradientUnits="userSpaceOnUse"><stop stop-color="#BAE6FD"/><stop offset=".5" stop-color="#38BDF8"/><stop offset="1" stop-color="#1D4ED8"/></linearGradient>
+    <filter id="glow" x="12" y="5" width="236" height="180" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="9"/></filter>
+    <filter id="shadow" x="20" y="15" width="220" height="165" filterUnits="userSpaceOnUse"><feDropShadow dx="0" dy="10" stdDeviation="7" flood-color="#020617" flood-opacity=".55"/></filter>
+  </defs>
+  <circle cx="130" cy="95" r="62" fill="#38BDF8" opacity=".18" filter="url(#glow)"/>
+  <circle cx="130" cy="95" r="68" stroke="#BAE6FD" stroke-opacity=".22" stroke-width="1.5" stroke-dasharray="3 9"/>
+  <g transform="rotate(-32 130 95)" filter="url(#shadow)">
+    <circle cx="88" cy="79" r="31" stroke="url(#gold)" stroke-width="15"/>
+    <circle cx="88" cy="79" r="13" fill="#0F2740" stroke="#FDE68A" stroke-opacity=".5" stroke-width="2"/>
+    <path d="M111 100L184 173L204 153L188 137L201 124L183 106L171 118L137 84" fill="url(#gold)" stroke="#FFF1B7" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M131 112L145 98M150 131L164 117M170 151L184 137" stroke="#FFF7D6" stroke-opacity=".75" stroke-width="4" stroke-linecap="round"/>
+    <path d="M69 55C78 46 93 44 104 51" stroke="#FFFBEA" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+  </g>
+  <path d="M194 35l4 10 10 4-10 4-4 10-4-10-10-4 10-4 4-10Z" fill="#BAE6FD"/>
+  <circle cx="54" cy="139" r="4" fill="#FDE68A"/><circle cx="215" cy="112" r="3" fill="#7DD3FC"/>
+</svg>

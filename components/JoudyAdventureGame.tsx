@@ -63,7 +63,7 @@ export default function JoudyAdventureGame() {
   const handleStartLevel = useCallback(
     (levelNumber: number) => {
       // Never allow a direct start into season two before the first city is
-      // completed and its 10,000-coin gate has been purchased.
+      // completed and its 40,000-point gate has been purchased.
       if (levelNumber > progress.highestUnlockedLevel || (levelNumber >= 16 && !loadWorldSave().coastalRegionUnlocked)) {
         setSelectedLevel(null);
         setGameState('WORLD_MAP');

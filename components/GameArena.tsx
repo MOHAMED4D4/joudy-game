@@ -123,8 +123,8 @@ const FIRST_LEVEL_TUTORIAL = [
   { title: 'أولًا: تحريك جودي', text: 'اسحبي صباعك على مساحة اللعب لتحريك جودي يمين وشمال. جرّبي تغيّري اتجاهك علشان توصلي للعناصر.' },
   { title: 'اجمعي العناصر', text: 'اجمعي القطط والورود والشوكولاتة علشان تزودي نقاطك. القطط تمنح 20 نقطة، والوردة 15، والشوكولاتة 10 نقاط.' },
   { title: 'خلي بالك من العوائق', text: 'العوائق والوحوش ممكن تخصم نقاط وتقلل قلوبك. ابعدي عنها، ولو ظهر وحش جديد لأول مرة هوقف اللعب وأشرحلك طريقته.' },
-  { title: 'المتجر والمفاتيح', text: 'من خريطة المراحل افتحي «المتجر». المفتاح الأزرق سعره 100 عملة، وبيُستخدم لإنقاذ جودي ومواصلة المرحلة بعد نفاد القلوب، بتكلفة مفاتيح متزايدة حسب مرات الإنقاذ.' },
-  { title: 'القلوب والدرع', text: 'القلب الإضافي سعره 100 عملة وبيتحفظ في المخزون، ويضيف فرصة حياة للمحاولة. وعند فتح المستوى الخامس هتاخدي 20 درعًا دائريًا مجانًا؛ كل درع يحمي جودي من الوحوش لمدة دقيقتين، وبعدها تقدري تشتري شحنات إضافية بـ100 عملة.' },
+  { title: 'المتجر والمفاتيح', text: 'من خريطة المراحل افتحي «المتجر». المفتاح الأزرق سعره 500 عملة، وبيُستخدم لإنقاذ جودي ومواصلة المرحلة بعد نفاد القلوب، بتكلفة مفاتيح متزايدة حسب مرات الإنقاذ. تقدري كمان تشتري المغناطيس بـ500 عملة وتستخدميه من زرّه أثناء اللعب.' },
+  { title: 'القلوب والدرع', text: 'القلب الإضافي سعره 500 عملة وبيتحفظ في المخزون، ويضيف فرصة حياة للمحاولة. وعند فتح المستوى الخامس هتاخدي 20 درعًا دائريًا مجانًا؛ كل درع يحمي جودي من الوحوش لمدة دقيقتين، وبعدها تقدري تشتري شحنات إضافية بـ500 عملة.' },
   { title: 'هدفك في المستوى الأول', text: 'اجمعي 500 نقطة علشان تكملي المستوى. تقدري ترجعي للمتجر من الخريطة في أي وقت. يلا نبدأ! 🌸' },
 ];
 
@@ -132,7 +132,7 @@ const LEVEL_INTROS: Record<number, { title: string; text: string }> = {
   2: { title: 'الوحوش المطاردة 🏹', text: 'بدأت تظهر وحوش الرماية والعدّاؤون اللي بيطاردوا جودي. غيّري اتجاهك باستمرار، وابعدي عن مسارهم.' },
   3: { title: 'خليكي أسرع في الحركة', text: 'العوائق بقت أكتر. تابعي العناصر وهي نازلة، وسيبي لنفسك مساحة آمنة للهروب.' },
   4: { title: 'اختبار التركيز', text: 'وازني بين جمع العناصر وتفادي الأعداء. مش لازم تخاطري علشان تجمعي كل عنصر.' },
-  5: { title: 'قوة جديدة اتفتحت! 🛡️', text: 'مبروك! وصلتي للمستوى الخامس. اتفتح الدرع الدائري وخدتي 20 شحنة مجانية. كل شحنة بتحمي جودي من الوحوش لمدة دقيقتين. هتلاقي زر الدرع جنب القلوب أثناء اللعب، وتقدري تشتري شحنات إضافية من المتجر بـ100 عملة.' },
+  5: { title: 'قوة جديدة اتفتحت! 🛡️', text: 'مبروك! وصلتي للمستوى الخامس. اتفتح الدرع الدائري وخدتي 20 شحنة مجانية. كل شحنة بتحمي جودي من الوحوش لمدة دقيقتين. هتلاقي زر الدرع في أدوات الحماية أثناء اللعب، وتقدري تشتري شحنات إضافية من المتجر بـ500 عملة.' },
   6: { title: 'غابة الزمرد 🌿', text: 'دخلتي عالم جديد، والسرعة بتزيد تدريجيًا. اجمعي العناصر واستفيدي من المغناطيس لما يظهر.' },
   7: { title: 'المغناطيس 🧲', text: 'المغناطيس بيجذب العناصر القريبة لمدة 6.5 ثانية. استغلي مدته واجمعي أكبر عدد من المكافآت.' },
   8: { title: 'حافظي على قلوبك ❤️', text: 'كل اصطدام خطر ممكن يخصم قلبًا. لو ظهر قلب إضافي اجمعيه لاستعادة قلب مفقود.' },
@@ -143,7 +143,7 @@ const LEVEL_INTROS: Record<number, { title: string; text: string }> = {
   13: { title: 'انتبهي للانفجارات 💥', text: 'الوحش المتفجر بيجهز انفجارًا بعد ظهوره. ابعدي عنه فورًا لما تلاحظي الوميض أو علامة التحذير.' },
   14: { title: 'استعدي للزعيم', text: 'دي مرحلة الاستعداد للمواجهة الكبيرة. حافظي على القلوب واستفيدي من الأدوات المتاحة.' },
   15: { title: 'زعيم المدينة الأولى 👑', text: 'دي مواجهة الزعيم الأول. تفادي هجماته والمقذوفات، واجمعي النقاط المطلوبة من غير ما تسيبيه يحاصرك.' },
-  16: { title: 'مدينة الظلال 🌙', text: 'بدأ الفصل الثاني. هتلاحظي أعداء أسرع ومسارات أصعب، فاستخدمي المساحة كلها للحركة.' },
+  16: { title: 'مدينة الظلال 🌙 · تحدّي المحترفين', text: 'بدأ الفصل الثاني، ومستوى الصعوبة ارتفع بشكل واضح. اعتمدي على الدروع الدائرية كوسيلة حماية أساسية، وفعّلي الدرع قبل دخول مناطق الخطر أو عند زيادة عدد الوحوش. استخدمي كل مساحة اللعب للمراوغة، واحتفظي بشحنات الدرع للمواجهات الأصعب؛ التوقيت الصح لاستخدامه ممكن يفرق بين إكمال المرحلة وخسارة المحاولة.' },
   17: { title: 'الحركة الذكية', text: 'توقعي مسار العناصر قبل ما توصلي لها. أحيانًا تفادي الخطر أهم من جمع مكافأة صغيرة.' },
   18: { title: 'اجمعي الكنوز', text: 'العملات والمفاتيح والعناصر الخاصة بتساعدك. اجمعيها واستفيدي منها في المتجر أو عند الحاجة.' },
   19: { title: 'وحوش أسرع', text: 'المطاردون أسرع في المرحلة دي. غيري اتجاهك باستمرار ومتخليش الوحوش تحاصرك.' },
@@ -285,6 +285,8 @@ export default function GameArena({
   const [enemyTipTop, setEnemyTipTop] = useState<number>(48);
   const seenEnemyTipsRef = useRef<Set<string>>(new Set());
   const [isGameOver, setIsGameOver] = useState(false);
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
+  const exitWasPausedRef = useRef(true);
 
   const isPausedRef = useRef(true);
   const isGameOverRef = useRef(false);
@@ -440,7 +442,40 @@ export default function GameArena({
     soundEngine.playMagnetCollect();
   }, [levelConfig.level]);
 
+  const activateMagnet = useCallback(() => {
+    if (magnetTimerRef.current > 0 || isPausedRef.current || isGameOverRef.current) return;
+    let activated = false;
+    saveWorld((current) => {
+      if (current.magnetCharges <= 0) return current;
+      activated = true;
+      return { ...current, magnetCharges: current.magnetCharges - 1 };
+    });
+    if (!activated) return;
+    magnetTimerRef.current = MAGNET_DURATION_SEC;
+    setMagnetSecondsLeft(Math.ceil(MAGNET_DURATION_SEC));
+    soundEngine.playMagnetCollect();
+  }, []);
+
+  const requestExitToMap = useCallback(() => {
+    exitWasPausedRef.current = isPausedRef.current;
+    isPausedRef.current = true;
+    setIsPaused(true);
+    setExitConfirmOpen(true);
+  }, []);
+  const cancelExitToMap = useCallback(() => {
+    setExitConfirmOpen(false);
+    if (!exitWasPausedRef.current && !isGameOverRef.current) {
+      isPausedRef.current = false;
+      setIsPaused(false);
+    }
+  }, []);
+  const confirmExitToMap = useCallback(() => {
+    setExitConfirmOpen(false);
+    onExitToMap();
+  }, [onExitToMap]);
+
   const resetRun = useCallback(() => {
+    setExitConfirmOpen(false);
     scoreRef.current = 0;
     heartsRef.current = MAX_HEARTS;
     const remainingBonusHearts = Math.min(MAX_EXTRA_HEARTS, loadWorldSave().extraHearts);
@@ -1903,8 +1938,8 @@ export default function GameArena({
       transition={{ duration: 0.25 }}
       className="relative left-1/2 w-screen max-w-none -translate-x-1/2 px-0 py-0 flex flex-col gap-1.5 h-[100dvh] max-h-none min-h-[520px]"
     >
-      {/* Premium two-row HUD: score, record, wallet and controls each have their own space. */}
-      <header className="absolute left-2 right-2 top-2 z-30 flex flex-col gap-2 rounded-[1.35rem] border border-white/15 bg-[#071426]/95 px-2.5 py-2.5 text-white shadow-[0_14px_40px_rgba(0,0,0,.48)] backdrop-blur-2xl sm:left-4 sm:right-4 sm:rounded-[1.6rem] sm:px-4 sm:py-3">
+      {/* Premium two-row HUD is visible only during active gameplay. */}
+      {!isPaused && !isGameOver && <header className="absolute left-2 right-2 top-2 z-30 flex flex-col gap-2 rounded-[1.35rem] border border-white/15 bg-[#071426]/95 px-2.5 py-2.5 text-white shadow-[0_14px_40px_rgba(0,0,0,.48)] backdrop-blur-2xl sm:left-4 sm:right-4 sm:rounded-[1.6rem] sm:px-4 sm:py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           {realImageSrc && (
             <div className="relative hidden h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-amber-200/50 bg-slate-900 shadow-lg sm:block">
@@ -1971,12 +2006,12 @@ export default function GameArena({
             <button type="button" onClick={() => setIsPaused((p) => !p)} aria-label={isPaused ? 'استئناف اللعب' : 'إيقاف مؤقت'} title={isPaused ? 'استئناف اللعب' : 'إيقاف مؤقت'} className="grid h-9 w-9 place-items-center rounded-xl border border-amber-200/25 bg-gradient-to-br from-amber-400/20 to-orange-700/20 text-amber-100 shadow-inner transition hover:border-amber-200/50 hover:bg-amber-400/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
               {isPaused ? <Play className="h-[18px] w-[18px] fill-current" /> : <Pause className="h-[18px] w-[18px]" />}
             </button>
-            <button type="button" onClick={onExitToMap} aria-label="الخروج إلى خريطة المراحل" title="الخروج إلى خريطة المراحل" className="grid h-9 w-9 place-items-center rounded-xl border border-rose-200/25 bg-gradient-to-br from-rose-400/20 to-violet-700/20 text-rose-100 shadow-inner transition hover:border-rose-200/50 hover:bg-rose-400/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300">
+            <button type="button" onClick={requestExitToMap} aria-label="الخروج إلى خريطة المراحل" title="الخروج إلى خريطة المراحل" className="grid h-9 w-9 place-items-center rounded-xl border border-rose-200/25 bg-gradient-to-br from-rose-400/20 to-violet-700/20 text-rose-100 shadow-inner transition hover:border-rose-200/50 hover:bg-rose-400/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300">
               <DoorOpen className="h-[18px] w-[18px]" />
             </button>
           </div>
         </div>
-      </header>
+      </header>}
 
       {/* Full-width 2D flight arena — touch and drag to move in every direction */}
       <div
@@ -1989,43 +2024,50 @@ export default function GameArena({
               : 'border-rose-200/90 bg-pink-50'
         }`}
       >
-        {/* Detached in-game HUD: level and lives sit on the play screen, not in the top bar. */}
-        <div
-          className="pointer-events-none absolute left-3 top-[9.5rem] z-40 rounded-full border border-white/20 bg-slate-950/45 px-3 py-1.5 text-xs font-black text-white shadow-lg backdrop-blur-sm drop-shadow-[0_2px_5px_rgba(0,0,0,0.95)] sm:left-5 sm:top-[8.25rem] sm:text-sm"
-          aria-label={`المستوى ${levelConfig.level}`}
-        >
-          المستوى {levelConfig.level}
-        </div>
-        <div className="absolute right-3 top-[9.5rem] z-40 flex items-center gap-1.5 sm:right-5 sm:top-[8.25rem]">
-        <div
-          className="pointer-events-none inline-flex items-center gap-1 rounded-full border border-white/20 bg-slate-950/55 px-2 py-1.5 shadow-lg backdrop-blur-sm"
-          aria-label={`القلوب الأساسية: ${hearts} من 3، القلوب الإضافية: ${bonusHearts} من 5`}
-        >
-          <div className="flex items-center gap-0.5">
-            {[1, 2, 3].map((idx) => (
-              <Heart key={`base-${idx}`} className={`h-6 w-6 sm:h-7 sm:w-7 drop-shadow-[0_3px_5px_rgba(0,0,0,.65)] ${idx <= hearts ? 'fill-[#ff315d] text-[#ffe4eb] [filter:drop-shadow(0_0_5px_rgba(244,63,94,.65))]' : 'fill-slate-600/80 text-slate-300/70'}`} />
-            ))}
-          </div>
-          {bonusHearts > 0 && <div className="mx-1 h-6 w-px bg-white/25" />}
-          <div className="flex items-center gap-0.5">
-            <AnimatePresence initial={false}>
-              {Array.from({ length: bonusHearts }, (_, idx) => (
-                <motion.div key={`bonus-${idx}`} initial={{ scale: .5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0, rotate: 35, y: -8 }} transition={{ duration: .22 }}>
-                  <Heart className="h-6 w-6 fill-sky-400 text-cyan-50 drop-shadow-[0_0_7px_rgba(56,189,248,.85)] sm:h-7 sm:w-7" />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-          {worldSave.extraHearts > bonusHearts && <span className="mr-1 rounded-full border border-sky-200/25 bg-sky-400/15 px-1.5 py-0.5 text-[9px] font-black text-cyan-100" title="قلوب إضافية محفوظة للمحاولات القادمة">+{worldSave.extraHearts - bonusHearts}</span>}
-        </div>
-        {levelConfig.level >= 5 && (
-          <button type="button" onClick={activateShield} disabled={shieldSecondsLeft > 0 || worldSave.shieldCharges <= 0 || isPaused || isGameOver} className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-2 text-[9px] font-black shadow-lg backdrop-blur-sm transition sm:px-2.5 sm:text-[10px] ${shieldSecondsLeft > 0 ? 'border-emerald-200/50 bg-emerald-950/80 text-emerald-100' : 'border-emerald-200/30 bg-slate-950/65 text-emerald-100 disabled:opacity-50'}`} aria-label={shieldSecondsLeft > 0 ? `الدرع نشط ${shieldSecondsLeft} ثانية` : `تفعيل الدرع، ${worldSave.shieldCharges} شحنة متبقية`}>
-            <Shield className="h-4 w-4"/>{shieldSecondsLeft > 0 ? `${Math.floor(shieldSecondsLeft / 60)}:${String(shieldSecondsLeft % 60).padStart(2,'0')}` : `×${worldSave.shieldCharges}`}
-          </button>
+        {/* Detached in-game HUD: hearts are stacked to keep the level label and power-ups clear. */}
+        {!isPaused && !isGameOver && (
+          <>
+            <div
+              className="pointer-events-none absolute left-3 top-[9.5rem] z-40 rounded-full border border-white/20 bg-slate-950/55 px-3 py-1.5 text-xs font-black text-white shadow-lg backdrop-blur-sm drop-shadow-[0_2px_5px_rgba(0,0,0,0.95)] sm:left-5 sm:top-[8.25rem] sm:text-sm"
+              aria-label={`المستوى ${levelConfig.level}`}
+            >
+              المستوى {levelConfig.level}
+            </div>
+            <div className="absolute right-3 top-[9.1rem] z-40 flex flex-col items-end gap-1.5 sm:right-5 sm:top-[8.1rem]">
+              <div className="pointer-events-none flex flex-col items-end gap-1 rounded-2xl border border-white/20 bg-slate-950/65 px-2 py-1.5 shadow-lg backdrop-blur-sm" aria-label={`القلوب الأساسية: ${hearts} من 3، القلوب الإضافية: ${bonusHearts} من 5`}>
+                <div className="flex items-center gap-0.5" aria-label="القلوب الأساسية">
+                  {[1, 2, 3].map((idx) => (
+                    <Heart key={`base-${idx}`} className={`h-6 w-6 sm:h-7 sm:w-7 drop-shadow-[0_3px_5px_rgba(0,0,0,.65)] ${idx <= hearts ? 'fill-[#ff315d] text-[#ffe4eb] [filter:drop-shadow(0_0_5px_rgba(244,63,94,.65))]' : 'fill-slate-600/80 text-slate-300/70'}`} />
+                  ))}
+                </div>
+                {bonusHearts > 0 && (
+                  <div className="flex items-center gap-0.5 border-t border-white/10 pt-1" aria-label="القلوب الإضافية">
+                    <AnimatePresence initial={false}>
+                      {Array.from({ length: bonusHearts }, (_, idx) => (
+                        <motion.div key={`bonus-${idx}`} initial={{ scale: .5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0, rotate: 35, y: -8 }} transition={{ duration: .22 }}>
+                          <Heart className="h-5 w-5 fill-sky-400 text-cyan-50 drop-shadow-[0_0_7px_rgba(56,189,248,.85)] sm:h-6 sm:w-6" />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                    {worldSave.extraHearts > bonusHearts && <span className="mr-1 rounded-full border border-sky-200/25 bg-sky-400/15 px-1.5 py-0.5 text-[9px] font-black text-cyan-100" title="قلوب إضافية محفوظة للمحاولات القادمة">+{worldSave.extraHearts - bonusHearts}</span>}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                {levelConfig.level >= 5 && (
+                  <button type="button" onClick={activateShield} disabled={shieldSecondsLeft > 0 || worldSave.shieldCharges <= 0 || isPaused || isGameOver} className={`inline-flex min-h-9 items-center gap-1 rounded-full border px-2.5 py-2 text-[9px] font-black shadow-lg backdrop-blur-sm transition sm:text-[10px] ${shieldSecondsLeft > 0 ? 'border-emerald-200/50 bg-emerald-950/90 text-emerald-100' : 'border-emerald-200/30 bg-slate-950/75 text-emerald-100 disabled:opacity-50'}`} aria-label={shieldSecondsLeft > 0 ? `الدرع نشط ${shieldSecondsLeft} ثانية` : `تفعيل الدرع، ${worldSave.shieldCharges} شحنة متبقية`} title="تفعيل الدرع الدائري">
+                    <Shield className="h-4 w-4" />{shieldSecondsLeft > 0 ? `${Math.floor(shieldSecondsLeft / 60)}:${String(shieldSecondsLeft % 60).padStart(2,'0')}` : `×${worldSave.shieldCharges}`}
+                  </button>
+                )}
+                <button type="button" onClick={activateMagnet} disabled={magnetSecondsLeft > 0 || worldSave.magnetCharges <= 0 || isPaused || isGameOver} className={`inline-flex min-h-9 items-center gap-1 rounded-full border px-2.5 py-2 text-[9px] font-black shadow-lg backdrop-blur-sm transition sm:text-[10px] ${magnetSecondsLeft > 0 ? 'border-sky-200/50 bg-sky-950/90 text-sky-100' : 'border-sky-200/30 bg-slate-950/75 text-sky-100 disabled:opacity-50'}`} aria-label={magnetSecondsLeft > 0 ? `المغناطيس نشط ${magnetSecondsLeft} ثانية` : `تفعيل المغناطيس، ${worldSave.magnetCharges} شحنة متبقية`} title="تفعيل المغناطيس">
+                  <Magnet className="h-4 w-4" />{magnetSecondsLeft > 0 ? `${magnetSecondsLeft}ث` : `×${worldSave.magnetCharges}`}
+                </button>
+              </div>
+            </div>
+          </>
         )}
-        </div>
 
-        {(levelConfig.level === 15 || levelConfig.level === 30) && showBossBanner && (
+        {!isPaused && !isGameOver && (levelConfig.level === 15 || levelConfig.level === 30) && showBossBanner && (
           <div className={`pointer-events-none absolute left-1/2 top-[9.2rem] z-40 -translate-x-1/2 rounded-full border px-4 py-1.5 text-center text-[10px] font-black shadow-xl backdrop-blur-md sm:top-[8.2rem] sm:text-xs ${levelConfig.level === 15 ? 'border-amber-200/60 bg-gradient-to-r from-rose-950/90 via-red-700/90 to-amber-700/90 text-amber-100 shadow-rose-950/30' : 'border-fuchsia-200/60 bg-gradient-to-r from-slate-950/90 via-violet-800/90 to-rose-900/90 text-fuchsia-100 shadow-violet-950/40'}`}>
             {levelConfig.level === 15 ? '⚔ المعركة الكبرى · زعيم المدينة الأولى' : '👑 المواجهة النهائية · زعيم المستوى 30'}
           </div>
@@ -2125,7 +2167,7 @@ export default function GameArena({
                 <button type="button" onClick={resetRun} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-bold text-slate-100 transition hover:bg-white/10">
                   <RotateCcw className="h-4 w-4" /> إعادة المرحلة
                 </button>
-                <button type="button" onClick={onExitToMap} className="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-slate-400 transition hover:bg-white/5 hover:text-white">
+                <button type="button" onClick={requestExitToMap} className="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-slate-400 transition hover:bg-white/5 hover:text-white">
                   <DoorOpen className="h-4 w-4" /> الخروج إلى الخريطة
                 </button>
               </div>
@@ -2171,9 +2213,24 @@ export default function GameArena({
                 <button type="button" onClick={resetRun} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200/30 bg-gradient-to-l from-rose-500 to-fuchsia-600 px-4 py-3.5 font-black text-white shadow-[0_10px_28px_rgba(225,29,72,.25)] transition hover:brightness-110">
                   <RotateCcw className="h-4 w-4" /> إعادة المحاولة
                 </button>
-                <button type="button" onClick={onExitToMap} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/10">
+                <button type="button" onClick={requestExitToMap} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/10">
                   <DoorOpen className="h-4 w-4" /> العودة إلى خريطة المراحل
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {exitConfirmOpen && (
+          <div className="absolute inset-0 z-[90] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-lg" role="dialog" aria-modal="true" aria-labelledby="exit-confirm-title">
+            <motion.div initial={{ opacity: 0, y: 14, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="relative w-full max-w-sm overflow-hidden rounded-[1.8rem] border border-rose-200/20 bg-gradient-to-b from-[#22243c] via-[#121c31] to-[#080f1c] p-5 text-center text-white shadow-[0_28px_90px_rgba(0,0,0,.72)] sm:p-6">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-rose-400/15 to-transparent" />
+              <div className="relative mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl border border-rose-200/25 bg-rose-400/10 text-rose-200"><DoorOpen className="h-7 w-7" /></div>
+              <h3 id="exit-confirm-title" className="relative text-xl font-black">تأكيد مغادرة المرحلة</h3>
+              <p className="relative mt-2 text-sm leading-7 text-slate-300">هل أنتِ متأكدة من رغبتك في الخروج والعودة إلى خريطة المراحل؟ ستنتهي المحاولة الحالية ولن يتم احتسابها كمرحلة مكتملة.</p>
+              <div className="relative mt-5 grid grid-cols-2 gap-2.5">
+                <button type="button" onClick={confirmExitToMap} className="rounded-xl border border-rose-200/25 bg-gradient-to-l from-rose-500 to-fuchsia-600 px-3 py-3 text-sm font-black text-white shadow-lg transition hover:brightness-110">نعم، اخرج</button>
+                <button type="button" onClick={cancelExitToMap} className="rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/10">لا، متابعة اللعب</button>
               </div>
             </motion.div>
           </div>

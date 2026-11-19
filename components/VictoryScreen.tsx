@@ -324,7 +324,7 @@ export default function VictoryScreen({
                     ? `تم إنهاء جميع المستويات الثلاثين وهزيمة الزعيم الأخير. حصلتِ على مكافأة ${rewardCoins.toLocaleString('ar-EG')} عملة ذهبية!`
                     : 'تم إنهاء جميع المستويات الثلاثين وهزيمة الزعيم الأخير. سبق استلام مكافأة الزعيم.'
                   : isFirstCityBoss
-                    ? `تمت هزيمة زعيم المدينة الأولى بعد جمع ${stats.score.toLocaleString('ar-EG')} نقطة. المدينة الثانية تنتظركِ، لكن فتحها يحتاج 10,000 عملة ذهبية.`
+                    ? `تمت هزيمة زعيم المدينة الأولى بعد جمع ${stats.score.toLocaleString('ar-EG')} نقطة. مدينة الظلال تنتظركِ، وفتح الفصل الثاني يحتاج 40,000 نقطة من رصيدكِ الإجمالي.`
                     : `تم إنهاء المستوى ${levelConfig.level} — ${levelConfig.worldName}. النتيجة: ${stats.score.toLocaleString('ar-EG')} نقطة.`}
               </p>
 
