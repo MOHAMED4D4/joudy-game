@@ -161,13 +161,13 @@ const LEVEL_INTROS: Record<number, { title: string; text: string }> = {
 };
 
 const ENEMY_TIPS: Record<string, { title: string; text: string; emoji: string }> = {
-  obstacle: { title: 'عائق جديد ☁️', text: 'العائق ده بيخصم نقاط وبيأثر على قلوب جودي عند الاصطدام. غيري مسارك وابعدي عنه.', emoji: '☁️' },
-  monster: { title: 'وحش الرماية 🏹', text: 'الوحش ده ممكن يطلق مقذوفات ناحية جودي. راقبي اتجاه السهم وتحركي بعيدًا عن مساره.', emoji: '🏹' },
-  runner: { title: 'الوحش المطارد 🏃', text: 'العدّاء سريع وبيحاول يوصلك. غيري اتجاهك ومتفضليش في نفس المكان.', emoji: '🏃' },
-  fierceMonster: { title: 'الوحش الشرس 🔥', text: 'ده أقوى من الوحوش العادية وبيخصم نقاط أكتر عند الاصطدام. حافظي على مسافة آمنة.', emoji: '🔥' },
-  exploder: { title: 'الوحش المتفجر 💥', text: 'الوحش ده بيجهز انفجارًا بعد ظهوره. أول ما تلاحظي الوميض، ابعدي عن مكانه بسرعة.', emoji: '💥' },
-  boss: { title: 'الزعيم 👑', text: 'الزعيم كبير وخطورته أعلى، وممكن يطلق هجمات ومقذوفات. تابعي مكانه وتحركي بعيدًا عن الهجوم.', emoji: '👑' },
-  projectile: { title: 'مقذوف جديد 🎯', text: 'المقذوف بيتجه ناحية جودي بسرعة. تابعي مساره وتحركي يمين أو شمال لتفاديه.', emoji: '🎯' },
+  obstacle: { title: 'عائق جديد', text: 'العائق ده بيخصم نقاط وبيأثر على قلوب جودي عند الاصطدام. غيري مسارك وابعدي عنه.', emoji: '☁️' },
+  monster: { title: 'وحش الرماية', text: 'الوحش ده ممكن يطلق مقذوفات ناحية جودي. راقبي اتجاه السهم وتحركي بعيدًا عن مساره.', emoji: '🏹' },
+  runner: { title: 'الوحش المطارد', text: 'العدّاء سريع وبيحاول يوصلك. غيري اتجاهك ومتفضليش في نفس المكان.', emoji: '🏃' },
+  fierceMonster: { title: 'الوحش الشرس', text: 'ده أقوى من الوحوش العادية وبيخصم نقاط أكتر عند الاصطدام. حافظي على مسافة آمنة.', emoji: '🔥' },
+  exploder: { title: 'الوحش المتفجر', text: 'الوحش ده بيجهز انفجارًا بعد ظهوره. أول ما تلاحظي الوميض، ابعدي عن مكانه بسرعة.', emoji: '💥' },
+  boss: { title: 'الزعيم', text: 'الزعيم كبير وخطورته أعلى، وممكن يطلق هجمات ومقذوفات. تابعي مكانه وتحركي بعيدًا عن الهجوم.', emoji: '👑' },
+  projectile: { title: 'مقذوف جديد', text: 'المقذوف بيتجه ناحية جودي بسرعة. تابعي مساره وتحركي يمين أو شمال لتفاديه.', emoji: '🎯' },
 };
 
 const ITEM_CONFIG: Record<
@@ -281,7 +281,8 @@ export default function GameArena({
   const [tutorialOpen, setTutorialOpen] = useState(true);
   const tutorialActionRef = useRef<'move' | 'collect' | null>(null);
   const [enemyTip, setEnemyTip] = useState<{ title: string; text: string; emoji: string } | null>(null);
-  const [enemyTipMarker, setEnemyTipMarker] = useState<number | null>(null);\n  const [enemyTipTop, setEnemyTipTop] = useState<number>(48);
+  const [enemyTipMarker, setEnemyTipMarker] = useState<number | null>(null);
+  const [enemyTipTop, setEnemyTipTop] = useState<number>(48);
   const seenEnemyTipsRef = useRef<Set<string>>(new Set());
   const [isGameOver, setIsGameOver] = useState(false);
 
@@ -705,7 +706,8 @@ export default function GameArena({
             isPausedRef.current = true;
             setIsPaused(true);
             setEnemyTip(tip);
-            setEnemyTipMarker(Math.max(8, Math.min(92, (x / worldWidth) * 100)));\n            setEnemyTipTop(Math.max(16, Math.min(76, (y / worldHeight) * 100)));
+            setEnemyTipMarker(Math.max(8, Math.min(92, (x / worldWidth) * 100)));
+            setEnemyTipTop(Math.max(16, Math.min(76, (y / worldHeight) * 100)));
           }
         } else {
           seenEnemyTipsRef.current.add(kind);
@@ -2046,13 +2048,13 @@ export default function GameArena({
         {/* Joudy's recurring level guide and first-time enemy introductions */}
         {tutorialOpen && !enemyTip && (
           <div className="absolute inset-0 z-[60] pointer-events-none">
-            <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} className="pointer-events-auto absolute bottom-[4%] left-1/2 w-[min(94%,680px)] -translate-x-1/2 overflow-hidden rounded-2xl border border-white/80 bg-white/95 p-3 text-slate-900 shadow-[0_12px_40px_rgba(0,0,0,.38)] backdrop-blur-sm sm:bottom-[5%] sm:p-4">
+            <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} className="pointer-events-auto absolute bottom-[11%] left-1/2 w-[min(93%,720px)] -translate-x-1/2 overflow-hidden rounded-2xl border border-white/80 bg-white/95 p-3 text-slate-900 shadow-[0_12px_40px_rgba(0,0,0,.38)] backdrop-blur-sm sm:bottom-[12%] sm:p-4">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">دليل جودي · المستوى {levelConfig.level}</span>
                 <span className="text-xs font-semibold text-slate-500">{levelConfig.level === 1 ? `${tutorialPage + 1} / ${FIRST_LEVEL_TUTORIAL.length}` : 'إرشادات المرحلة'}</span>
               </div>
-              <div className="grid grid-cols-[clamp(76px,22vw,116px)_minmax(0,1fr)] items-center gap-3 sm:gap-4">
-                <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-rose-100 bg-rose-50 shadow-inner">
+              <div className="grid grid-cols-[clamp(84px,22vw,120px)_minmax(0,1fr)] items-center gap-3 sm:gap-4">
+                <div className="relative aspect-square w-full max-w-[120px] overflow-hidden rounded-xl border border-rose-100 bg-rose-50 shadow-inner">
                   <Image src={realImageSrc || '/images/joudy-real.png'} alt="جودي" fill sizes="116px" className="object-cover" priority />
                 </div>
                 <div className="flex min-h-[112px] min-w-0 flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 sm:min-h-[132px] sm:p-4">
@@ -2086,10 +2088,10 @@ export default function GameArena({
                 <span className="absolute -top-2 left-1/2 h-3 w-3 -translate-x-1/2 rounded-full border-2 border-amber-200 bg-amber-400" />
               </div>
             </div>
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className={`absolute bottom-[4%] z-[75] w-[min(88%,470px)] sm:bottom-[5%] ${enemyTipMarker > 50 ? 'left-[3%]' : 'right-[3%]'}`}>
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ top: `clamp(12%, calc(${enemyTipTop}% - 76px), 66%)`, left: enemyTipMarker > 50 ? '3%' : 'auto', right: enemyTipMarker > 50 ? 'auto' : '3%' }} className="absolute z-[75] w-[min(84%,460px)]">
               <div className="rounded-2xl border border-amber-200/80 bg-white/95 p-3 text-slate-900 shadow-[0_12px_40px_rgba(0,0,0,.42)] backdrop-blur-sm sm:p-4">
                 <div className="mb-2 flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,.18)]" /><span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">مخلوق جديد ظهر لأول مرة</span></div>
-                <div className="grid grid-cols-[clamp(76px,20vw,108px)_minmax(0,1fr)] items-center gap-3">
+                <div className="grid grid-cols-[clamp(76px,19vw,104px)_minmax(0,1fr)] items-center gap-3">
                   <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-rose-100 bg-rose-50"><Image src={realImageSrc || '/images/joudy-real.png'} alt="جودي" fill sizes="108px" className="object-cover" /></div>
                   <div className="min-w-0">
                     <h3 className="text-base font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-iphone), sans-serif' }}>{enemyTip.title}</h3>
