@@ -17,11 +17,11 @@ const elMessiri = El_Messiri({
 });
 
 export const metadata: Metadata = {
-  title: 'جودي - مغامرة التجميع السريعة',
+  title: 'joudy game',
   description: 'لعبة أركيد عربية تضم 30 مستوى ومتجرًا ومغامرة متكاملة.',
   manifest: '/manifest.webmanifest',
-  applicationName: 'جودي',
-  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'جودي' },
+  applicationName: 'joudy game',
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'joudy game' },
   icons: {
     icon: [
       { url: '/icons/joudy-192.png', sizes: '192x192', type: 'image/png' },
@@ -30,13 +30,13 @@ export const metadata: Metadata = {
     apple: '/icons/joudy-192.png',
   },
   openGraph: {
-    title: 'جودي - مغامرة التجميع السريعة',
+    title: 'joudy game',
     description: 'لعبة أركيد عربية تضم 30 مستوى ومتجرًا ومغامرة متكاملة.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'جودي - مغامرة التجميع السريعة',
+    title: 'joudy game',
     description: 'لعبة أركيد عربية تضم 30 مستوى ومتجرًا ومغامرة متكاملة.',
   },
 };

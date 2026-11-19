@@ -125,9 +125,10 @@ export default function JoudyAdventureGame() {
       const next = !prev;
       soundEngine.setSfxEnabled(next);
       soundEngine.setMusicEnabled(next);
+      if (!next) stopTransitionAudio();
       return next;
     });
-  }, []);
+  }, [stopTransitionAudio]);
 
   const handleStartLevel = useCallback(
     (levelNumber: number) => {
@@ -157,14 +158,18 @@ export default function JoudyAdventureGame() {
 
   const handleGameOver = useCallback(() => {
     stopTransitionAudio();
+    if (!soundEnabled) return;
+    // The loss ambience and Joudy's voice are separate supplied assets.
     const lossMusic = new Audio('/audio/joudy-loss-music.mp3');
+    lossMusic.preload = 'auto';
     lossMusic.volume = 0.24;
     const lossVoice = new Audio('/audio/joudy-loss.mp3');
+    lossVoice.preload = 'auto';
     lossVoice.volume = 1;
     lossAudioRefs.current = [lossMusic, lossVoice];
-    void lossMusic.play().catch(() => undefined);
-    void lossVoice.play().catch(() => undefined);
-  }, [stopTransitionAudio]);
+    void lossMusic.play().catch((error) => console.warn('Loss music could not play', error));
+    void lossVoice.play().catch((error) => console.warn('Loss voice could not play', error));
+  }, [soundEnabled, stopTransitionAudio]);
 
   const handleHighScoreUpdate = useCallback((candidateScore: number) => {
     updateHighScoreOnly(candidateScore);
@@ -172,10 +177,13 @@ export default function JoudyAdventureGame() {
 
   const handleVictory = useCallback((stats: GameRunStats) => {
     stopTransitionAudio();
-    const winAudio = new Audio('/audio/joudy-win.mp3');
-    winAudio.volume = 1;
-    lossAudioRefs.current = [winAudio];
-    void winAudio.play().catch(() => undefined);
+    if (soundEnabled) {
+      const winAudio = new Audio('/audio/joudy-win.mp3');
+      winAudio.preload = 'auto';
+      winAudio.volume = 1;
+      lossAudioRefs.current = [winAudio];
+      void winAudio.play().catch((error) => console.warn('Victory sound could not play', error));
+    }
     setLastStats(stats);
     const beforeReward = loadWorldSave();
     const reward = stats.level === 30
@@ -229,7 +237,7 @@ export default function JoudyAdventureGame() {
     }
     setIsNewHighScore(beatRecord);
     setGameState('VICTORY');
-  }, [characterCoinBonus, stopTransitionAudio]);
+  }, [characterCoinBonus, soundEnabled, stopTransitionAudio]);
 
   const handleNextLevel = useCallback(() => {
     // Chapter transitions return to the map until the next gate is purchased.
