@@ -181,6 +181,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     const prize = wheelPrizes[Math.floor(Math.random() * wheelPrizes.length)];
     saveWorld((current) => current.coins < 500 ? current : { ...current, coins: current.coins - 500 });
     setNotice(''); setWheelPrize(prize); setWheelSpinning(true);
+    soundEngine.startWheelSpin();
     const index = wheelPrizes.findIndex((item) => item.label === prize.label);
     const segment = 360 / wheelPrizes.length;
     const target = 360 * 6 + (360 - (index * segment + segment / 2));
@@ -189,6 +190,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
   const finishWheelSpin = () => {
     if (!wheelSpinning || !wheelPrize) return;
     setWheelSpinning(false);
+    soundEngine.stopWheelSpin();
     setWheelRewardPending(true);
     soundEngine.playWheelWin();
   };

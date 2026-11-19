@@ -24,6 +24,8 @@ class MagicalSoundEngine {
   private musicEnabled = true;
   private musicTimer: number | null = null;
   private musicStep = 0;
+  private wheelOscillator: OscillatorNode | null = null;
+  private wheelGain: GainNode | null = null;
 
   // Gentle C-major pentatonic music-box melody (Hz)
   private readonly melodyNotes = [
@@ -288,6 +290,41 @@ class MagicalSoundEngine {
         delay: n.t,
       });
     });
+  }
+
+  public startWheelSpin() {
+    if (!this.sfxEnabled || this.wheelOscillator) return;
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const now = ctx.currentTime;
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.setValueAtTime(95, now);
+    oscillator.frequency.exponentialRampToValueAtTime(520, now + 4.8);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.035, now + 0.12);
+    gain.gain.setValueAtTime(0.025, now + 3.8);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 5.35);
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 5.4);
+    this.wheelOscillator = oscillator;
+    this.wheelGain = gain;
+    oscillator.onended = () => { this.wheelOscillator = null; this.wheelGain = null; };
+  }
+
+  public stopWheelSpin() {
+    const oscillator = this.wheelOscillator;
+    const gain = this.wheelGain;
+    if (!oscillator || !gain || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setTargetAtTime(0.0001, now, 0.035);
+    try { oscillator.stop(now + 0.16); } catch { /* already stopped */ }
+    this.wheelOscillator = null;
+    this.wheelGain = null;
   }
 
   public playWheelWin() {
