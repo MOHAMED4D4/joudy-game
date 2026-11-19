@@ -1,6 +1,6 @@
 /* Joudy PWA service worker — versioned shell and safe app updates. */
-const CACHE_NAME = 'joudy-shell-v4.2.2';
-const APP_SHELL = ['/manifest.webmanifest', '/icons/joudy-192.png', '/icons/joudy-512.png'];
+const CACHE_NAME = 'joudy-shell-v4.2.6';
+const APP_SHELL = ['/manifest.webmanifest', '/icons/joudy-192.png', '/icons/joudy-512.png', '/favicon.ico', '/icon.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => undefined));

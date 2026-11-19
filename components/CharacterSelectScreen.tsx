@@ -32,7 +32,6 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
   const [installHelp, setInstallHelp] = useState(false);
   const [isInstalledApp, setIsInstalledApp] = useState(false);
   const [hasInstalledApp, setHasInstalledApp] = useState(false);
-  const [appLaunchHelp, setAppLaunchHelp] = useState(false);
   useEffect(() => {
     const standaloneQuery = window.matchMedia('(display-mode: standalone)');
     const updateDisplayMode = () => setIsInstalledApp(standaloneQuery.matches || (navigator as Navigator & { standalone?: boolean }).standalone === true);
@@ -58,7 +57,16 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
   }, []);
   const requestInstall = async () => {
     if (installPrompt && 'prompt' in installPrompt) {
-      await (installPrompt as Event & { prompt: () => Promise<void> }).prompt();
+      const installEvent = installPrompt as Event & {
+        prompt: () => Promise<void>;
+        userChoice?: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+      };
+      await installEvent.prompt();
+      const choice = await installEvent.userChoice;
+      if (choice?.outcome === 'accepted') {
+        try { window.localStorage.setItem('joudy-pwa-installed', '1'); } catch {}
+        setHasInstalledApp(true);
+      }
       setInstallPrompt(null);
     } else setInstallHelp(true);
   };
@@ -116,10 +124,10 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
           18% { opacity: .45; }
           55% { transform: translateX(-190%) skewX(-18deg); opacity: 0; }
         }
-        .joudy-portrait-glow { animation: joudy-portrait-glow 4.8s ease-in-out infinite; }
-        .joudy-portrait-sweep { animation: joudy-portrait-sweep 7.5s ease-in-out infinite; }
-        .joudy-portrait-twinkle { animation: joudy-portrait-twinkle 2.6s ease-in-out infinite; }
-        .joudy-portrait-ring { animation: joudy-portrait-ring 3.8s ease-out infinite; }
+        .joudy-portrait-glow { animation: joudy-portrait-glow 3.2s ease-in-out infinite; }
+        .joudy-portrait-sweep { animation: joudy-portrait-sweep 4.8s ease-in-out infinite; }
+        .joudy-portrait-twinkle { animation: joudy-portrait-twinkle 1.8s ease-in-out infinite; }
+        .joudy-portrait-ring { animation: joudy-portrait-ring 2.5s ease-out infinite; }
         .home-orbit { animation: home-orbit 16s linear infinite; }
         .info-glint { animation: info-glint 5.5s ease-in-out infinite; }
         @keyframes guide-sprite-float { 0%,100% { transform: translateY(0) rotate(-4deg) scale(1); } 50% { transform: translateY(-9px) rotate(4deg) scale(1.06); } }
@@ -127,7 +135,7 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
         .guide-sprite-float { animation: guide-sprite-float 3.1s ease-in-out infinite; }
         .guide-sprite-glow { animation: guide-sprite-glow 2.6s ease-in-out infinite; }
         @keyframes joudy-title-shine { 0%,100% { text-shadow: 0 0 12px rgba(103,232,249,.25), 0 0 28px rgba(103,232,249,.12); transform: translateY(0); } 50% { text-shadow: 0 0 22px rgba(103,232,249,.75), 0 0 48px rgba(167,139,250,.35); transform: translateY(-2px); } }
-        .joudy-title { animation: joudy-title-shine 3.2s ease-in-out infinite; }
+        .joudy-title { animation: joudy-title-shine 2.2s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
           .joudy-portrait-glow, .joudy-portrait-sweep, .joudy-portrait-twinkle, .joudy-portrait-ring, .home-orbit, .info-glint, .guide-sprite-float, .guide-sprite-glow, .joudy-title { animation: none !important; }
         }
@@ -146,7 +154,7 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.72, ease: [0.2, 0.75, 0.25, 1] }}
+          transition={{ duration: 0.38, ease: [0.2, 0.75, 0.25, 1] }}
           className="relative z-10 mx-auto mb-4 max-w-3xl text-center sm:mb-6"
         >
           <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-200/20 bg-cyan-200/[.07] px-4 py-1.5 text-[10px] font-black tracking-[.22em] text-cyan-200 sm:text-xs">
@@ -162,9 +170,9 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
         <div className="relative mx-auto flex w-full max-w-5xl flex-1 items-center justify-center">
           <div className="absolute left-1/2 top-1/2 h-[min(77vw,620px)] w-[min(77vw,620px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/[.07] blur-3xl" />
           <motion.div
-            initial={reduceMotion ? false : { opacity: 0, y: 58, scale: 0.78, rotate: 2, filter: 'blur(16px)' }}
+            initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.94 }}
             animate={{ opacity: 1, y: reduceMotion ? 0 : [0, -7, 0], scale: 1, rotate: 0, filter: 'blur(0px)' }}
-            transition={{ opacity: { duration: 1, delay: 0.15 }, scale: { duration: 1.05, delay: 0.12, type: 'spring', stiffness: 90, damping: 17 }, rotate: { duration: .9, delay: .12 }, y: { duration: 5.2, repeat: Infinity, ease: 'easeInOut', delay: 1.1 }, filter: { duration: .85, delay: .15 } }}
+            transition={{ opacity: { duration: 0.42, delay: 0.04 }, scale: { duration: 0.48, delay: 0.03, type: 'spring', stiffness: 150, damping: 22 }, rotate: { duration: 0.38 }, y: { duration: 5.2, repeat: Infinity, ease: 'easeInOut', delay: 0.65 } }}
             className="relative isolate h-[min(57svh,590px)] min-h-[320px] w-full max-w-[760px] overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_50%_40%,rgba(61,111,142,.48),rgba(18,35,55,.84)_57%,rgba(7,17,30,.96))] shadow-[0_30px_100px_rgba(0,0,0,.55),0_0_65px_rgba(34,211,238,.12)] sm:h-[min(63svh,650px)] sm:rounded-[2.6rem]"
           >
             <div className="absolute inset-0 opacity-45" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px)', backgroundSize: '32px 32px' }} />
@@ -173,9 +181,9 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
             <div className="joudy-portrait-ring absolute left-1/2 top-[46%] z-[2] aspect-square w-[min(75%,490px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-100/55" />
             <div className="joudy-portrait-ring absolute left-1/2 top-[46%] z-[2] aspect-square w-[min(75%,490px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-200/35 [animation-delay:1.9s]" />
             <motion.div
-              initial={reduceMotion ? false : { opacity: 0, scale: .84, y: 38 }}
+              initial={reduceMotion ? false : { opacity: 0, scale: .97, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 1.15, delay: .25, type: 'spring', stiffness: 72, damping: 18 }}
+              transition={{ duration: 0.48, delay: 0.08, type: 'spring', stiffness: 160, damping: 23 }}
               className="absolute inset-0 z-10"
             >
               <Image src={realImageSrc} alt="صورة جودي" fill priority sizes="(max-width: 1024px) 100vw, 760px" className="object-contain object-center drop-shadow-[0_22px_36px_rgba(0,0,0,.55)]" />
@@ -219,8 +227,8 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
             <span className="absolute -left-8 -top-10 h-40 w-40 rounded-full bg-fuchsia-400/15 blur-3xl"/><span className="relative flex items-center justify-between"><span className="grid h-14 w-14 place-items-center rounded-2xl border border-fuchsia-200/25 bg-fuchsia-200/10 text-fuchsia-100"><Swords className="h-7 w-7"/></span><ArrowRight className="h-5 w-5 rotate-180 text-fuchsia-100/60"/></span>
             <span className="relative mt-5 block text-[10px] font-black tracking-[.2em] text-fuchsia-200/70">ENEMIES & BOSSES DATABASE</span><span className="relative mt-1 block text-xl font-black text-white sm:text-2xl">دليل الوحوش</span><span className="relative mt-2 block text-xs leading-6 text-fuchsia-50/65">اكتشف الخصوم والزعماء، ومستويات ظهورهم، ومتطلبات فتحهم عبر فصول المغامرة.</span>
           </button>
-          <div className="sm:col-span-2"><button type="button" onClick={requestInstall} className="flex w-full items-center justify-between gap-3 rounded-2xl border border-cyan-200/20 bg-gradient-to-l from-cyan-300/15 to-blue-500/10 p-4 text-right shadow-lg transition hover:border-cyan-200/45"><span className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-xl border border-cyan-100/20 bg-cyan-200/10 text-cyan-100"><Download className="h-6 w-6"/></span><span><span className="block text-sm font-black text-white">ثبّت جودي على جهازك</span><span className="mt-1 block text-[10px] text-slate-300">أضف اللعبة إلى الشاشة الرئيسية كتطبيق ويب</span></span></span><Smartphone className="h-5 w-5 text-cyan-100"/></button>
-          {installHelp && <div className="mt-2 rounded-xl border border-cyan-100/15 bg-slate-950/70 p-3 text-xs leading-6 text-cyan-50"><button onClick={()=>setInstallHelp(false)} className="float-left p-1 text-white/60" aria-label="إغلاق"><X className="h-4 w-4"/></button><b>للتثبيت:</b> على Android افتح قائمة المتصفح واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». على iPhone افتح المشاركة ثم «إضافة إلى الشاشة الرئيسية».</div>}</div>
+          {!isInstalledApp && !hasInstalledApp && <div className="sm:col-span-2"><button type="button" onClick={requestInstall} className="flex w-full items-center justify-between gap-3 rounded-2xl border border-cyan-200/20 bg-gradient-to-l from-cyan-300/15 to-blue-500/10 p-4 text-right shadow-lg transition hover:border-cyan-200/45"><span className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-xl border border-cyan-100/20 bg-cyan-200/10 text-cyan-100"><Download className="h-6 w-6"/></span><span><span className="block text-sm font-black text-white">تثبيت التطبيق</span><span className="mt-1 block text-[10px] text-slate-300">أضف اللعبة إلى الشاشة الرئيسية كتطبيق ويب</span></span></span><Smartphone className="h-5 w-5 text-cyan-100"/></button>
+          {installHelp && <div className="mt-2 rounded-xl border border-cyan-100/15 bg-slate-950/70 p-3 text-xs leading-6 text-cyan-50"><button onClick={()=>setInstallHelp(false)} className="float-left p-1 text-white/60" aria-label="إغلاق"><X className="h-4 w-4"/></button><b>للتثبيت:</b> على Android افتح قائمة المتصفح واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». على iPhone افتح المشاركة ثم «إضافة إلى الشاشة الرئيسية».</div>}</div>}
         </motion.section>
       ) : (
         <motion.section key={guidePage} initial={{opacity:0,y:24,scale:.985}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-14}} transition={{duration:.48}} className="relative mx-auto min-h-[75svh] w-full max-w-6xl px-4 pb-32 pt-7 sm:px-7 sm:pt-10">
@@ -240,19 +248,6 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
           </div>}
         </motion.section>
       )}
-
-      {guidePage === 'home' && !isInstalledApp && hasInstalledApp && <div className="fixed inset-x-0 bottom-[5.6rem] z-40 flex justify-center px-3 pb-[env(safe-area-inset-bottom)]">
-        <button type="button" onClick={() => setAppLaunchHelp(true)} className="flex w-full max-w-2xl items-center justify-center gap-2 rounded-xl border border-violet-200/30 bg-gradient-to-l from-violet-500/90 to-indigo-500/90 px-4 py-3 text-sm font-black text-white shadow-lg transition hover:brightness-110 active:scale-[.99]">
-          <Smartphone className="h-5 w-5" /> الدخول للتطبيق
-        </button>
-      </div>}
-      {appLaunchHelp && <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 px-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="app-launch-title">
-        <div className="w-full max-w-sm rounded-2xl border border-violet-200/20 bg-slate-900 p-5 text-right text-white shadow-2xl" dir="rtl">
-          <div className="mb-3 flex items-center gap-2 text-violet-200"><Smartphone className="h-6 w-6"/><h2 id="app-launch-title" className="text-lg font-black">فتح تطبيق جودي</h2></div>
-          <p className="text-sm leading-7 text-slate-200">للحفاظ على فتح روابط اللعبة في الموقع، لا يستطيع المتصفح تشغيل نسخة PWA المثبّتة مباشرةً من هذا الزر. ارجع للشاشة الرئيسية واضغط أيقونة <b className="text-white">joudy game</b> لفتح التطبيق.</p>
-          <button type="button" onClick={() => setAppLaunchHelp(false)} className="mt-4 w-full rounded-xl bg-violet-500 px-4 py-3 text-sm font-black text-white">حسنًا</button>
-        </div>
-      </div>}
 
       {guidePage === 'home' && <div className="pointer-events-none fixed inset-x-0 bottom-3 z-50 flex justify-center px-3 pb-[env(safe-area-inset-bottom)]">
         <motion.button type="button" whileHover={{ scale: 1.015, y: -2 }} whileTap={{ scale: .98 }} onClick={onStartAdventure} className="pointer-events-auto flex w-full max-w-2xl items-center justify-between rounded-2xl border border-cyan-100/35 bg-gradient-to-l from-cyan-300 via-cyan-400 to-blue-500 px-5 py-4 text-right text-base font-black text-[#071321] shadow-[0_12px_40px_rgba(0,0,0,.5),0_0_28px_rgba(34,211,238,.16)] backdrop-blur transition">
