@@ -73,6 +73,14 @@ export default function JoudyAdventureGame() {
         setGameState('WORLD_MAP');
         return;
       }
+      // Enter immersive browser fullscreen directly from the level-selection tap.
+      // Browsers may decline fullscreen when the page is not installed or the API is unavailable.
+      try {
+        const root = document.documentElement as HTMLElement & { requestFullscreen?: () => Promise<void> };
+        if (!document.fullscreenElement && root.requestFullscreen) {
+          void root.requestFullscreen().catch(() => undefined);
+        }
+      } catch { /* Keep the game playable when fullscreen is unsupported. */ }
       soundEngine.setSfxEnabled(soundEnabled);
       soundEngine.setMusicEnabled(soundEnabled);
       soundEngine.playStartAdventure();
@@ -156,6 +164,12 @@ export default function JoudyAdventureGame() {
   }, [activeLevel, handleStartLevel]);
 
   const activeLevelConfig = getLevelConfig(activeLevel);
+
+  useEffect(() => {
+    if (gameState !== 'PLAYING' && document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => undefined);
+    }
+  }, [gameState]);
 
   return (
     <main onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} onSelect={(event) => event.preventDefault()} onClickCapture={(event) => { if ((event.target as HTMLElement).closest('button')) soundEngine.playButtonClick(); }} className="relative min-h-dvh w-full overflow-x-clip bg-[#080f1b] flex flex-col">

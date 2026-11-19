@@ -169,6 +169,18 @@ const ENEMY_TIPS: Record<string, { title: string; text: string; emoji: string }>
   exploder: { title: 'الوحش المتفجر', text: 'الوحش ده بيجهز انفجارًا بعد ظهوره. أول ما تلاحظي الوميض، ابعدي عن مكانه بسرعة.', emoji: '💥' },
   boss: { title: 'الزعيم', text: 'الزعيم كبير وخطورته أعلى، وممكن يطلق هجمات ومقذوفات. تابعي مكانه وتحركي بعيدًا عن الهجوم.', emoji: '👑' },
   projectile: { title: 'مقذوف جديد', text: 'المقذوف بيتجه ناحية جودي بسرعة. تابعي مساره وتحركي يمين أو شمال لتفاديه.', emoji: '🎯' },
+  shadowHunter: { title: 'صيّاد الظلال 🌙', text: 'ده صيّاد متخفّي في مدينة الظلال، وبيقدر يطلق مقذوفات ناحية جودي. تابعي اتجاهه واتحركي باستمرار علشان تتفادي هجماته.', emoji: '🌙' },
+  shadowRunner: { title: 'عدّاء الظلال 🏃', text: 'عدّاء الظلال سريع وبيحاول يلحق جودي. ما تثبتيش في مكانك، وغيّري اتجاهك أول ما يقرب.', emoji: '🏃' },
+  shadowBrute: { title: 'وحش الظلال الشرس 🔥', text: 'وحش ضخم وقوي من مدينة الظلال. اصطدامه مؤذٍ، فحافظي على مسافة آمنة واستخدمي الدرع لو قرب منك.', emoji: '🔥' },
+  shadowBoss: { title: 'حارس الظلال 👑', text: 'ده حارس الفصل الثاني. هجماته قوية وممكن يطلق مقذوفات؛ راقبي حركته وابتعدي عن مسار هجومه.', emoji: '👑' },
+  crystalHunter: { title: 'صيّاد البلورات 💎', text: 'ده صيّاد الغابة البلورية. بيطلق مقذوفات باتجاه جودي؛ تابعي اتجاه الهجوم وغيّري مسارك بسرعة.', emoji: '💎' },
+  crystalRunner: { title: 'عدّاء البلورات ⚡', text: 'مخلوق بلوري سريع بيطارد جودي. استني اقترابه وغيّري اتجاهك، ومتخليهوش يحاصرك.', emoji: '⚡' },
+  crystalBrute: { title: 'الوحش البلوري الضخم 🪨', text: 'مخلوق بلوري قوي، واصطدامه بيكون مؤذي. سيبي بينك وبينه مسافة واستخدمي الدرع وقت الخطر.', emoji: '🪨' },
+  crystalBoss: { title: 'حارس الغابة البلوري 💎', text: 'ده حارس الفصل الثالث. بيتحرك وسط الموجات البلورية وبيهاجم بقوة؛ راقبي مكانه واحتفظي بمساحة للمراوغة.', emoji: '💎' },
+  emberHunter: { title: 'صيّاد اللهب 🔥', text: 'صيّاد من قلعة الزعيم الأخير، بيطلق مقذوفات خطيرة ناحية جودي. تحركي باستمرار وابتعدي عن خط النار.', emoji: '🔥' },
+  emberRunner: { title: 'عدّاء اللهب ⚡', text: 'عدّاء سريع من القلعة النارية، بيلاحق جودي. غيّري اتجاهك باستمرار قبل ما يقرب منك.', emoji: '⚡' },
+  emberBrute: { title: 'وحش اللهب الضخم 🌋', text: 'وحش ناري قوي وخطير عند الاصطدام. حافظي على مسافة كبيرة، وفعّلي الدرع لو اضطرّيتي للمرور بجانبه.', emoji: '🌋' },
+  emberBoss: { title: 'حارس القلعة النارية 👑', text: 'ده حارس الفصل الأخير. هجماته شديدة ومقذوفاته سريعة؛ راقبي حركته واستخدمي أدوات الحماية في التوقيت المناسب.', emoji: '👑' },
 };
 
 const ITEM_CONFIG: Record<
@@ -733,32 +745,6 @@ export default function GameArena({
 
       const x = radius + 16 + Math.random() * Math.max(40, worldWidth - (radius + 16) * 2);
       const y = -radius - 12;
-      if (isHazardKind(kind) && !seenEnemyTipsRef.current.has(kind)) {
-        let alreadySeen = false;
-        try {
-          const stored = JSON.parse(window.localStorage.getItem('joudy_enemy_tips_v1') || '[]') as string[];
-          alreadySeen = stored.includes(kind);
-        } catch { /* ignore invalid optional tutorial history */ }
-        if (!alreadySeen) {
-          const tip = ENEMY_TIPS[kind];
-          if (tip) {
-            seenEnemyTipsRef.current.add(kind);
-            try {
-              const stored = JSON.parse(window.localStorage.getItem('joudy_enemy_tips_v1') || '[]') as string[];
-              window.localStorage.setItem('joudy_enemy_tips_v1', JSON.stringify([...new Set([...stored, kind]) ]));
-            } catch { /* tutorial still works for this session */ }
-            isPausedRef.current = true;
-            setIsPaused(true);
-            setEnemyTip(tip);
-            setEnemyTipMarker(Math.max(8, Math.min(92, (x / worldWidth) * 100)));
-            setEnemyTipTop(Math.max(16, Math.min(76, (y / worldHeight) * 100)));
-          }
-        } else {
-          seenEnemyTipsRef.current.add(kind);
-        }
-      }
-      const hasZigzag = kind !== 'runner' && Math.random() < (kind === 'boss' || kind === 'projectile' ? 0.68 : 0.42);
-
       const biomePrefix = stageNumber <= 15 ? '' : stageNumber <= 20 ? 'shadow' : stageNumber <= 25 ? 'crystal' : 'ember';
       const biomeSuffix = kind === 'boss' ? 'Boss'
         : kind === 'runner' ? 'Runner'
@@ -767,6 +753,32 @@ export default function GameArena({
       const themedSprite = biomePrefix && biomeSuffix
         ? `${biomePrefix}${biomeSuffix}` as CartoonSpriteKind
         : undefined;
+      const enemyTipKey = themedSprite ?? kind;
+      if (isHazardKind(kind) && !seenEnemyTipsRef.current.has(enemyTipKey)) {
+        let alreadySeen = false;
+        try {
+          const stored = JSON.parse(window.localStorage.getItem('joudy_enemy_tips_v1') || '[]') as string[];
+          alreadySeen = stored.includes(enemyTipKey);
+        } catch { /* ignore invalid optional tutorial history */ }
+        if (!alreadySeen) {
+          const tip = ENEMY_TIPS[enemyTipKey] ?? ENEMY_TIPS[kind];
+          if (tip) {
+            seenEnemyTipsRef.current.add(enemyTipKey);
+            try {
+              const stored = JSON.parse(window.localStorage.getItem('joudy_enemy_tips_v1') || '[]') as string[];
+              window.localStorage.setItem('joudy_enemy_tips_v1', JSON.stringify([...new Set([...stored, enemyTipKey]) ]));
+            } catch { /* tutorial still works for this session */ }
+            isPausedRef.current = true;
+            setIsPaused(true);
+            setEnemyTip(tip);
+            setEnemyTipMarker(Math.max(8, Math.min(92, (x / worldWidth) * 100)));
+            setEnemyTipTop(Math.max(16, Math.min(76, (y / worldHeight) * 100)));
+          }
+        } else {
+          seenEnemyTipsRef.current.add(enemyTipKey);
+        }
+      }
+      const hasZigzag = kind !== 'runner' && Math.random() < (kind === 'boss' || kind === 'projectile' ? 0.68 : 0.42);
 
       entities.push({
         id: nextEntityId++,
@@ -2178,7 +2190,7 @@ export default function GameArena({
                 <div><p className="text-[10px] font-semibold text-slate-400">النقاط الحالية</p><p className="mt-1 text-lg font-black tabular-nums text-white">{score.toLocaleString('ar-EG')}</p></div>
                 <div><p className="text-[10px] font-semibold text-slate-400">الهدف</p><p className="mt-1 text-lg font-black tabular-nums text-amber-200">{levelConfig.targetScore.toLocaleString('ar-EG')}</p></div>
               </div>
-              <div className="relative mt-4 flex flex-col gap-2.5">
+              <div className="relative mt-2 flex flex-col gap-1.5">
                 <button type="button" onClick={() => setIsPaused(false)} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-200/30 bg-gradient-to-l from-cyan-400 to-blue-600 px-4 py-3.5 font-black text-white shadow-lg transition hover:brightness-110">
                   <Play className="h-4 w-4 fill-current" /> استئناف المغامرة
                 </button>
@@ -2195,39 +2207,39 @@ export default function GameArena({
 
         {/* Premium Game Over screen. The map action here is immediate; only the pause door asks for confirmation. */}
         {isGameOver && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#050815]/88 p-3 backdrop-blur-xl sm:p-5">
+          <div className="absolute inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#050815]/90 p-2 backdrop-blur-lg sm:p-3">
             <motion.div
               initial={{ y: 28, scale: 0.94, opacity: 0 }}
               animate={{ y: 0, scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 210, damping: 21 }}
-              className="relative my-auto w-full max-w-md overflow-hidden rounded-[2rem] border border-rose-100/20 bg-gradient-to-br from-[#25152c] via-[#151d35] to-[#08111f] p-4 text-center text-white shadow-[0_30px_100px_rgba(0,0,0,.75)] sm:p-6"
+              className="relative my-auto w-full max-w-sm max-h-[94dvh] overflow-y-auto overflow-x-hidden rounded-[1.55rem] border border-rose-100/20 bg-gradient-to-br from-[#25152c] via-[#151d35] to-[#08111f] p-3 text-center text-white shadow-[0_24px_70px_rgba(0,0,0,.72)] sm:p-4"
             >
               <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-rose-500/20 blur-3xl" />
               <div className="pointer-events-none absolute -bottom-24 -left-16 h-60 w-60 rounded-full bg-violet-500/15 blur-3xl" />
               <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-rose-200/70 to-transparent" />
 
-              <div className="relative mb-4 flex items-center justify-between gap-3">
+              <div className="relative mb-2 flex items-center justify-between gap-2">
                 <span className="rounded-full border border-rose-200/20 bg-rose-300/10 px-3 py-1.5 text-[9px] font-black tracking-[.2em] text-rose-100">JOUDY · ARCADE RUN</span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold text-slate-300">المستوى {levelConfig.level} / 30</span>
               </div>
 
-              <div className="relative mx-auto grid h-24 w-24 place-items-center rounded-[2rem] border border-rose-100/35 bg-gradient-to-br from-rose-300/20 via-fuchsia-500/15 to-violet-700/20 shadow-[0_0_55px_rgba(244,63,94,.2)]">
+              <div className="relative mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-rose-100/35 bg-gradient-to-br from-rose-300/20 via-fuchsia-500/15 to-violet-700/20 shadow-[0_0_55px_rgba(244,63,94,.2)]">
                 <div className="absolute inset-2 rounded-[1.4rem] border border-white/10" />
-                <Heart className="h-12 w-12 fill-rose-400/25 text-rose-100 drop-shadow-[0_0_14px_rgba(251,113,133,.65)]" />
-                <Sparkles className="absolute -right-2 -top-2 h-7 w-7 text-amber-200 drop-shadow-[0_0_10px_rgba(251,191,36,.8)]" />
+                <Heart className="h-8 w-8 fill-rose-400/25 text-rose-100 drop-shadow-[0_0_14px_rgba(251,113,133,.65)]" />
+                <Sparkles className="absolute -right-1 -top-1 h-5 w-5 text-amber-200 drop-shadow-[0_0_10px_rgba(251,191,36,.8)]" />
               </div>
 
-              <p className="relative mt-4 text-[10px] font-black tracking-[.28em] text-rose-200/75">END OF ATTEMPT</p>
-              <h3 className="relative mt-1 text-3xl font-black tracking-tight text-white sm:text-4xl" style={{ fontFamily: 'var(--font-display)' }}>انتهت المحاولة</h3>
-              <p className="relative mx-auto mt-2 max-w-sm text-xs leading-6 text-slate-300 sm:text-sm">
+              <p className="relative mt-2 text-[9px] font-black tracking-[.28em] text-rose-200/75">END OF ATTEMPT</p>
+              <h3 className="relative mt-0.5 text-2xl font-black tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>انتهت المحاولة</h3>
+              <p className="relative mx-auto mt-1 max-w-sm text-[11px] leading-5 text-slate-300">
                 نفدت القلوب في هذه الجولة. كل محاولة بتقرّبك من إتقان المرحلة — جهّزي أدواتك وارجعي أقوى.
               </p>
 
-              <div className="relative mt-5 rounded-2xl border border-white/10 bg-[#060d1b]/65 p-4 text-right shadow-inner">
+              <div className="relative mt-2 rounded-xl border border-white/10 bg-[#060d1b]/65 p-3 text-right shadow-inner">
                 <div className="flex items-end justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-bold text-slate-400">نتيجتك في هذه المحاولة</p>
-                    <p className="mt-1 text-3xl font-black tabular-nums text-white">{score.toLocaleString('ar-EG')} <span className="text-xs font-bold text-slate-400">نقطة</span></p>
+                    <p className="mt-0.5 text-2xl font-black tabular-nums text-white">{score.toLocaleString('ar-EG')} <span className="text-xs font-bold text-slate-400">نقطة</span></p>
                   </div>
                   <div className="text-left">
                     <p className="text-[10px] font-bold text-slate-400">الهدف المطلوب</p>
@@ -2240,7 +2252,7 @@ export default function GameArena({
                 <div className="mt-2 flex justify-between text-[10px] font-bold text-slate-400"><span>{progressPct}% من الهدف</span><span>باقي {(Math.max(0, levelConfig.targetScore - score)).toLocaleString('ar-EG')} نقطة</span></div>
               </div>
 
-              <div className="relative mt-3 grid grid-cols-3 gap-2">
+              <div className="relative mt-2 grid grid-cols-3 gap-1.5">
                 <div className="rounded-xl border border-white/10 bg-white/[.045] px-2 py-3"><p className="text-[9px] font-bold text-slate-400">الاصطدامات</p><p className="mt-1 text-lg font-black tabular-nums text-rose-200">{counts.obstaclesHit}</p></div>
                 <div className="rounded-xl border border-white/10 bg-white/[.045] px-2 py-3"><p className="text-[9px] font-bold text-slate-400">القلوب المتبقية</p><p className="mt-1 text-lg font-black tabular-nums text-sky-200">0</p></div>
                 <div className="rounded-xl border border-white/10 bg-white/[.045] px-2 py-3"><p className="text-[9px] font-bold text-slate-400">المستوى</p><p className="mt-1 text-lg font-black tabular-nums text-amber-200">{levelConfig.level}</p></div>
@@ -2248,16 +2260,16 @@ export default function GameArena({
 
               <div className="relative mt-4 flex flex-col gap-2.5">
                 {worldSave.blueKeys >= 2 ** reviveCountRef.current && (
-                  <button type="button" onClick={handleRevive} className="group flex w-full items-center gap-3 rounded-2xl border border-sky-200/30 bg-gradient-to-l from-sky-500/25 via-blue-600/25 to-indigo-600/25 px-4 py-3.5 text-right shadow-[0_12px_30px_rgba(37,99,235,.2)] transition hover:border-sky-200/60 hover:from-sky-400/35 hover:to-indigo-500/35">
-                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-sky-100/25 bg-sky-300/15 text-sky-100 shadow-inner"><KeyRound className="h-7 w-7 -rotate-45 drop-shadow-[0_0_8px_rgba(125,211,252,.8)]" /></span>
+                  <button type="button" onClick={handleRevive} className="group flex w-full items-center gap-3 rounded-2xl border border-sky-200/30 bg-gradient-to-l from-sky-500/25 via-blue-600/25 to-indigo-600/25 px-3 py-2.5 text-right shadow-[0_12px_30px_rgba(37,99,235,.2)] transition hover:border-sky-200/60 hover:from-sky-400/35 hover:to-indigo-500/35">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-sky-100/25 bg-sky-300/15 text-sky-100 shadow-inner"><KeyRound className="h-5 w-5 -rotate-45 drop-shadow-[0_0_8px_rgba(125,211,252,.8)]" /></span>
                     <span className="min-w-0 flex-1"><span className="block text-sm font-black text-white">إنقاذ جودي بمفتاح أزرق</span><span className="mt-0.5 block text-[10px] font-semibold text-sky-100/75">استكملي اللعب بحياة واحدة</span></span>
                     <span className="rounded-lg border border-sky-100/20 bg-sky-100/10 px-2.5 py-1.5 text-xs font-black text-sky-100">× {2 ** reviveCountRef.current}</span>
                   </button>
                 )}
-                <button type="button" onClick={resetRun} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200/30 bg-gradient-to-l from-rose-400 via-fuchsia-500 to-violet-600 px-4 py-3.5 font-black text-white shadow-[0_12px_30px_rgba(225,29,72,.28)] transition hover:-translate-y-0.5 hover:brightness-110">
+                <button type="button" onClick={resetRun} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200/30 bg-gradient-to-l from-rose-400 via-fuchsia-500 to-violet-600 px-3 py-2.5 font-black text-white shadow-[0_12px_30px_rgba(225,29,72,.28)] transition hover:-translate-y-0.5 hover:brightness-110">
                   <RotateCcw className="h-4 w-4" /> إعادة المحاولة
                 </button>
-                <button type="button" onClick={onExitToMap} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-slate-200 transition hover:border-cyan-200/30 hover:bg-cyan-300/10 hover:text-cyan-100">
+                <button type="button" onClick={onExitToMap} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-bold text-slate-200 transition hover:border-cyan-200/30 hover:bg-cyan-300/10 hover:text-cyan-100">
                   <DoorOpen className="h-4 w-4" /> العودة إلى خريطة المراحل
                 </button>
               </div>

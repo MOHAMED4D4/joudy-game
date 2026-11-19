@@ -40,16 +40,22 @@ function ChapterGateCard({
   const remaining = Math.max(0, price - totalScore);
   return (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32 }}
-      className={`relative my-10 overflow-hidden rounded-[2rem] border ${palette.edge} bg-gradient-to-br from-[#171b31] via-[#10182a] to-[#080e19] p-4 shadow-[0_20px_60px_rgba(0,0,0,.42)] sm:my-14 sm:p-6`}
+      className={`relative my-10 overflow-hidden rounded-[2rem] border ${palette.edge} bg-gradient-to-br from-[#171b31] via-[#10182a] to-[#080e19] p-4 shadow-[0_20px_60px_rgba(0,0,0,.42)] sm:my-14 sm:p-6 ${unlocked ? 'chapter-gate-open' : 'chapter-gate-locked'}`}
       aria-label={`بوابة الفصل ${chapter}`}>
       <div className={`pointer-events-none absolute -left-12 -top-14 h-44 w-44 rounded-full ${palette.glow} blur-3xl`} />
       <div className={`pointer-events-none absolute -right-12 -bottom-16 h-48 w-48 rounded-full ${palette.glow} blur-3xl`} />
       <div className="relative mb-5 flex h-16 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#090f1a]" aria-hidden="true">
         <div className="absolute inset-x-0 top-1/2 h-8 -translate-y-1/2 bg-[#252d3a] shadow-inner" />
         <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 border-t-2 border-dashed border-amber-100/55" />
-        <div className={`relative z-10 grid h-14 w-14 place-items-center rounded-full border-[3px] ${palette.icon} bg-[#111a2b] shadow-[0_0_28px_rgba(0,0,0,.7)]`}>
+        <motion.div
+          className={`relative z-10 grid h-14 w-14 place-items-center rounded-full border-[3px] ${palette.icon} bg-[#111a2b] shadow-[0_0_28px_rgba(0,0,0,.7)]`}
+          animate={unlocked
+            ? { scale: [1, 1.12, 1], rotate: [0, 8, -8, 0], boxShadow: ['0 0 18px rgba(52,211,153,.25)', '0 0 38px rgba(52,211,153,.8)', '0 0 18px rgba(52,211,153,.25)'] }
+            : { y: [0, -7, 0], rotate: [0, -12, 12, 0], scale: [1, 1.08, 1], boxShadow: ['0 0 18px rgba(251,191,36,.25)', '0 0 42px rgba(251,191,36,.8)', '0 0 18px rgba(251,191,36,.25)'] }}
+          transition={{ duration: unlocked ? 2.4 : 1.55, repeat: Infinity, ease: 'easeInOut' }}
+        >
           {unlocked ? <Sparkles className="h-7 w-7" /> : <Lock className="h-7 w-7" />}
-        </div>
+        </motion.div>
       </div>
       <div className="relative flex flex-col items-center gap-4 text-center">
         <div className="min-w-0 max-w-3xl">
@@ -108,7 +114,7 @@ export default function WorldMapScreen({
   const chapterSettings: Record<ChapterNumber, { price: number; requiredLevel: number; flag: ChapterFlag; region: string }> = {
     2: { price: 40_000, requiredLevel: 15, flag: 'coastalRegionUnlocked', region: 'مدينة الظلال' },
     3: { price: 65_000, requiredLevel: 20, flag: 'thirdChapterUnlocked', region: 'غابة الكائنات الغريبة' },
-    4: { price: 55_000, requiredLevel: 25, flag: 'fourthChapterUnlocked', region: 'قلعة الزعيم الأخير' },
+    4: { price: 70_000, requiredLevel: 25, flag: 'fourthChapterUnlocked', region: 'قلعة الزعيم الأخير' },
   };
 
   const unlockChapter = (chapter: ChapterNumber) => {
