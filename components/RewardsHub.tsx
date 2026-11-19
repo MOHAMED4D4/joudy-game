@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
-import { ShoppingBag, Trophy, Lock, Check, Coins, KeyRound, Heart, ArrowRight, Shield, Magnet, Sparkles, type LucideIcon } from 'lucide-react';
+import { ShoppingBag, Trophy, Lock, Check, Coins, KeyRound, Heart, ArrowRight, Shield, Magnet, Sparkles, Wind, type LucideIcon } from 'lucide-react';
 import { loadWorldSave, saveWorld, useWorldSave } from '@/lib/joudyWorld';
 import { soundEngine } from '@/lib/soundEffects';
 import type { JoudyGameProgress } from '@/lib/storage';
@@ -50,55 +50,55 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     const defeated = save.totalBosses ?? 0;
     const stars = Object.values(progress.completedLevels).reduce((sum, record) => sum + record.stars, 0);
     const threeStarLevels = Object.values(progress.completedLevels).filter((record) => record.stars === 3).length;
-    const highScores = Object.values(progress.completedLevels).filter((record) => record.bestScore >= 1000).length;
+    const highScores = Object.values(progress.completedLevels).filter((record) => record.bestScore >= 1800).length;
     const defs: Omit<Achievement, 'unlocked' | 'progress'>[] = [
       {id:'levels-1',title:'أول خطوة',detail:'أكمل أول مرحلة',icon:'👟',tier:'البدايات'},
-      {id:'choco-25',title:'حلوى البداية',detail:'اجمع 25 قطعة شوكولاتة',icon:'🍫',tier:'البدايات'},
-      {id:'score-5k',title:'جامع النقاط',detail:'حقق 5,000 نقطة إجمالية',icon:'⭐',tier:'البدايات'},
+      {id:'choco-25',title:'حلوى البداية',detail:'اجمع 50 قطعة شوكولاتة',icon:'🍫',tier:'البدايات'},
+      {id:'score-5k',title:'جامع النقاط',detail:'حقق 10,000 نقطة إجمالية',icon:'⭐',tier:'البدايات'},
       {id:'levels-5',title:'مغامر ناشئ',detail:'أكمل 5 مراحل',icon:'🧭',tier:'التقدم'},
-      {id:'choco-100',title:'عاشق الشوكولاتة',detail:'اجمع 100 قطعة شوكولاتة',icon:'🍬',tier:'التقدم'},
-      {id:'stars-10',title:'عين على النجوم',detail:'اجمع 10 نجوم مراحل',icon:'🌟',tier:'التقدم'},
-      {id:'score-25k',title:'صياد النقاط',detail:'حقق 25,000 نقطة إجمالية',icon:'💫',tier:'التقدم'},
+      {id:'choco-100',title:'عاشق الشوكولاتة',detail:'اجمع 200 قطعة شوكولاتة',icon:'🍬',tier:'التقدم'},
+      {id:'stars-10',title:'عين على النجوم',detail:'اجمع 20 نجمة مراحل',icon:'🌟',tier:'التقدم'},
+      {id:'score-25k',title:'صياد النقاط',detail:'حقق 50,000 نقطة إجمالية',icon:'💫',tier:'التقدم'},
       {id:'levels-10',title:'رحّالة',detail:'أكمل 10 مراحل',icon:'🗺️',tier:'التقدم'},
-      {id:'perfect-1',title:'قلب من حديد',detail:'أكمل مرحلة دون أي اصطدام',icon:'❤️',tier:'المهارة'},
-      {id:'three-star-3',title:'ثلاث نجوم',detail:'احصل على 3 نجوم في 3 مراحل',icon:'🌠',tier:'المهارة'},
-      {id:'choco-300',title:'كنز الحلوى',detail:'اجمع 300 قطعة شوكولاتة',icon:'🍭',tier:'المهارة'},
-      {id:'boss-1',title:'مواجهة الزعيم',detail:'اهزم أول زعيم',icon:'⚔️',tier:'المهارة'},
+      {id:'perfect-1',title:'قلب من حديد',detail:'أكمل مرحلتين دون أي اصطدام',icon:'❤️',tier:'المهارة'},
+      {id:'three-star-3',title:'ثلاث نجوم',detail:'احصل على 3 نجوم في 5 مراحل',icon:'🌠',tier:'المهارة'},
+      {id:'choco-300',title:'كنز الحلوى',detail:'اجمع 600 قطعة شوكولاتة',icon:'🍭',tier:'المهارة'},
+      {id:'boss-1',title:'مواجهة الزعيم',detail:'اهزم زعيمين',icon:'⚔️',tier:'المهارة'},
       {id:'levels-15',title:'حامي المدينة',detail:'أكمل الفصل الأول حتى المرحلة 15',icon:'🛡️',tier:'المهارة'},
-      {id:'bosses-3',title:'صياد الزعماء',detail:'اهزم 3 زعماء',icon:'👑',tier:'المهارة'},
-      {id:'score-100k',title:'أسطورة النقاط',detail:'حقق 100,000 نقطة إجمالية',icon:'🏅',tier:'الخبراء'},
-      {id:'perfect-5',title:'مراوغ أسطوري',detail:'أكمل 5 مراحل دون اصطدام',icon:'💎',tier:'الخبراء'},
-      {id:'stars-30',title:'جامع النجوم',detail:'اجمع 30 نجمة مراحل',icon:'🌌',tier:'الخبراء'},
-      {id:'three-star-10',title:'لا يخطئ',detail:'احصل على 3 نجوم في 10 مراحل',icon:'🎯',tier:'الخبراء'},
-      {id:'choco-750',title:'مصنع الشوكولاتة',detail:'اجمع 750 قطعة شوكولاتة',icon:'🍩',tier:'الخبراء'},
+      {id:'bosses-3',title:'صياد الزعماء',detail:'اهزم 4 زعماء',icon:'👑',tier:'المهارة'},
+      {id:'score-100k',title:'أسطورة النقاط',detail:'حقق 200,000 نقطة إجمالية',icon:'🏅',tier:'الخبراء'},
+      {id:'perfect-5',title:'مراوغ أسطوري',detail:'أكمل 8 مراحل دون اصطدام',icon:'💎',tier:'الخبراء'},
+      {id:'stars-30',title:'جامع النجوم',detail:'اجمع 45 نجمة مراحل',icon:'🌌',tier:'الخبراء'},
+      {id:'three-star-10',title:'لا يخطئ',detail:'احصل على 3 نجوم في 15 مرحلة',icon:'🎯',tier:'الخبراء'},
+      {id:'choco-750',title:'مصنع الشوكولاتة',detail:'اجمع 1,500 قطعة شوكولاتة',icon:'🍩',tier:'الخبراء'},
       {id:'levels-20',title:'سيد المغامرة',detail:'أكمل 20 مرحلة',icon:'🧗',tier:'الخبراء'},
-      {id:'highscore-5',title:'صاحب الأرقام',detail:'حقق 1,000 نقطة أو أكثر في 5 مراحل مختلفة',icon:'📈',tier:'الخبراء'},
+      {id:'highscore-5',title:'صاحب الأرقام',detail:'حقق 1,800 نقطة أو أكثر في 5 مراحل مختلفة',icon:'📈',tier:'الخبراء'},
       {id:'bosses-5',title:'كابوس الزعماء',detail:'اهزم 5 زعماء',icon:'🐉',tier:'الخبراء'},
-      {id:'perfect-10',title:'لم تُمس',detail:'أكمل 10 مراحل دون اصطدام',icon:'🪽',tier:'أسطوري'},
-      {id:'score-250k',title:'مليون؟ ليس بعد!',detail:'حقق 250,000 نقطة إجمالية',icon:'🚀',tier:'أسطوري'},
-      {id:'stars-60',title:'سماء مرصعة',detail:'اجمع 60 نجمة مراحل',icon:'🌃',tier:'أسطوري'},
-      {id:'three-star-20',title:'الكمال المطلق',detail:'احصل على 3 نجوم في 20 مرحلة',icon:'🏆',tier:'أسطوري'},
-      {id:'choco-1500',title:'إمبراطورية الحلوى',detail:'اجمع 1,500 قطعة شوكولاتة',icon:'🍬',tier:'أسطوري'},
+      {id:'perfect-10',title:'لم تُمس',detail:'أكمل 15 مرحلة دون اصطدام',icon:'🪽',tier:'أسطوري'},
+      {id:'score-250k',title:'مليون؟ ليس بعد!',detail:'حقق 500,000 نقطة إجمالية',icon:'🚀',tier:'أسطوري'},
+      {id:'stars-60',title:'سماء مرصعة',detail:'اجمع 80 نجمة مراحل',icon:'🌃',tier:'أسطوري'},
+      {id:'three-star-20',title:'الكمال المطلق',detail:'احصل على 3 نجوم في 25 مرحلة',icon:'🏆',tier:'أسطوري'},
+      {id:'choco-1500',title:'إمبراطورية الحلوى',detail:'اجمع 3,000 قطعة شوكولاتة',icon:'🍬',tier:'أسطوري'},
       {id:'levels-25',title:'أسطورة العالم',detail:'أكمل 25 مرحلة',icon:'🌍',tier:'أسطوري'},
       {id:'bosses-6',title:'قاهر العمالقة',detail:'اهزم الزعماء الستة',icon:'👹',tier:'أسطوري'},
       {id:'all-stars',title:'كل نجمة في مكانها',detail:'اجمع 90 نجمة من كل المراحل',icon:'✨',tier:'أسطوري'},
       {id:'final',title:'أسطورة جودي',detail:'أكمل المستوى 30',icon:'👑',tier:'أسطوري'},
-      {id:'score-500k',title:'الرقم المستحيل',detail:'حقق 500,000 نقطة إجمالية',icon:'💠',tier:'أسطوري'},
+      {id:'score-500k',title:'الرقم المستحيل',detail:'حقق 1,000,000 نقطة إجمالية',icon:'💠',tier:'أسطوري'},
     ];
     const unlock: Record<string, boolean> = {
-      'levels-1':completed>=1,'choco-25':chocolates>=25,'score-5k':score>=5000,
-      'levels-5':completed>=5,'choco-100':chocolates>=100,'stars-10':stars>=10,'score-25k':score>=25000,'levels-10':completed>=10,
-      'perfect-1':perfect>=1,'three-star-3':threeStarLevels>=3,'choco-300':chocolates>=300,'boss-1':defeated>=1,'levels-15':Boolean(progress.completedLevels[15]),
-      'bosses-3':defeated>=3,'score-100k':score>=100000,'perfect-5':perfect>=5,'stars-30':stars>=30,'three-star-10':threeStarLevels>=10,
-      'choco-750':chocolates>=750,'levels-20':completed>=20,'highscore-5':highScores>=5,'bosses-5':defeated>=5,'perfect-10':perfect>=10,
-      'score-250k':score>=250000,'stars-60':stars>=60,'three-star-20':threeStarLevels>=20,'choco-1500':chocolates>=1500,
-      'levels-25':completed>=25,'bosses-6':defeated>=6,'all-stars':stars>=90,'final':Boolean(progress.completedLevels[30]),'score-500k':score>=500000,
+      'levels-1':completed>=1,'choco-25':chocolates>=50,'score-5k':score>=10000,
+      'levels-5':completed>=5,'choco-100':chocolates>=200,'stars-10':stars>=20,'score-25k':score>=50000,'levels-10':completed>=10,
+      'perfect-1':perfect>=2,'three-star-3':threeStarLevels>=5,'choco-300':chocolates>=600,'boss-1':defeated>=2,'levels-15':Boolean(progress.completedLevels[15]),
+      'bosses-3':defeated>=4,'score-100k':score>=200000,'perfect-5':perfect>=8,'stars-30':stars>=45,'three-star-10':threeStarLevels>=15,
+      'choco-750':chocolates>=1500,'levels-20':completed>=20,'highscore-5':highScores>=5,'bosses-5':defeated>=5,'perfect-10':perfect>=15,
+      'score-250k':score>=500000,'stars-60':stars>=80,'three-star-20':threeStarLevels>=25,'choco-1500':chocolates>=3000,
+      'levels-25':completed>=25,'bosses-6':defeated>=6,'all-stars':stars>=90,'final':Boolean(progress.completedLevels[30]),'score-500k':score>=1000000,
     };
     const progressValues: Record<string, number> = {
-      'levels-1':completed/1,'choco-25':chocolates/25,'score-5k':score/5000,'levels-5':completed/5,'choco-100':chocolates/100,'stars-10':stars/10,'score-25k':score/25000,'levels-10':completed/10,
-      'perfect-1':perfect/1,'three-star-3':threeStarLevels/3,'choco-300':chocolates/300,'boss-1':defeated/1,'levels-15':Number(Boolean(progress.completedLevels[15])),'bosses-3':defeated/3,
-      'score-100k':score/100000,'perfect-5':perfect/5,'stars-30':stars/30,'three-star-10':threeStarLevels/10,'choco-750':chocolates/750,'levels-20':completed/20,'highscore-5':highScores/5,'bosses-5':defeated/5,
-      'perfect-10':perfect/10,'score-250k':score/250000,'stars-60':stars/60,'three-star-20':threeStarLevels/20,'choco-1500':chocolates/1500,'levels-25':completed/25,'bosses-6':defeated/6,'all-stars':stars/90,'final':Number(Boolean(progress.completedLevels[30])),'score-500k':score/500000,
+      'levels-1':completed/1,'choco-25':chocolates/50,'score-5k':score/10000,'levels-5':completed/5,'choco-100':chocolates/200,'stars-10':stars/20,'score-25k':score/50000,'levels-10':completed/10,
+      'perfect-1':perfect/2,'three-star-3':threeStarLevels/5,'choco-300':chocolates/600,'boss-1':defeated/2,'levels-15':Number(Boolean(progress.completedLevels[15])),'bosses-3':defeated/4,
+      'score-100k':score/200000,'perfect-5':perfect/8,'stars-30':stars/45,'three-star-10':threeStarLevels/15,'choco-750':chocolates/1500,'levels-20':completed/20,'highscore-5':highScores/5,'bosses-5':defeated/5,
+      'perfect-10':perfect/15,'score-250k':score/500000,'stars-60':stars/80,'three-star-20':threeStarLevels/25,'choco-1500':chocolates/3000,'levels-25':completed/25,'bosses-6':defeated/6,'all-stars':stars/90,'final':Number(Boolean(progress.completedLevels[30])),'score-500k':score/1000000,
     };
     return defs.map((item) => ({...item,unlocked:Boolean(unlock[item.id]),progress:Math.max(0,Math.min(100,Math.round((progressValues[item.id] ?? 0)*100)))}));
   }, [progress.completedLevels, save.totalChocolates, save.totalScore, save.perfectRuns, save.totalBosses]);
@@ -118,7 +118,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     setNotice(purchased ? `تم تحويل ${coinAmount.toLocaleString('ar-EG')} عملة إلى ${(coinAmount * 2).toLocaleString('ar-EG')} نقطة Score!` : 'تعذر إتمام التحويل؛ راجع رصيدك.');
   };
 
-  const buy = (kind: 'key' | 'heart' | 'shield' | 'magnet') => {
+  const buy = (kind: 'key' | 'heart' | 'shield' | 'magnet' | 'slow') => {
     if (kind === 'shield' && progress.highestUnlockedLevel < 5) { setNotice('الدرع الدائري يفتح عند الوصول إلى المستوى الخامس.'); return; }
     const price = 500;
     const latest = loadWorldSave();
@@ -130,14 +130,14 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     saveWorld((current) => {
       if (current.coins < price) return current;
       purchased = true;
-      return { ...current, coins: current.coins - price, blueKeys: kind === 'key' ? current.blueKeys + 1 : current.blueKeys, extraHearts: kind === 'heart' ? current.extraHearts + 1 : current.extraHearts, shieldCharges: kind === 'shield' ? current.shieldCharges + 1 : current.shieldCharges, magnetCharges: kind === 'magnet' ? current.magnetCharges + 1 : current.magnetCharges };
+      return { ...current, coins: current.coins - price, blueKeys: kind === 'key' ? current.blueKeys + 1 : current.blueKeys, extraHearts: kind === 'heart' ? current.extraHearts + 1 : current.extraHearts, shieldCharges: kind === 'shield' ? current.shieldCharges + 1 : current.shieldCharges, magnetCharges: kind === 'magnet' ? current.magnetCharges + 1 : current.magnetCharges, slowMonsterCharges: kind === 'slow' ? current.slowMonsterCharges + 1 : current.slowMonsterCharges };
     });
-    setNotice(purchased ? (kind === 'key' ? 'تم شراء المفتاح الأزرق وإضافته للمخزون!' : kind === 'heart' ? 'تم شراء قلب إضافي! سيظهر أسفل القلوب الأساسية باللون الأزرق.' : kind === 'shield' ? 'تم شراء شحنة درع دائري لمدة دقيقتين!' : 'تم شراء شحنة مغناطيس وإضافتها إلى أدوات اللعب!') : 'تعذر إتمام الشراء؛ راجع رصيدك.');
+    setNotice(purchased ? (kind === 'key' ? 'تم شراء المفتاح الأزرق وإضافته للمخزون!' : kind === 'heart' ? 'تم شراء قلب إضافي! سيظهر أسفل القلوب الأساسية باللون الأزرق.' : kind === 'shield' ? 'تم شراء شحنة درع دائري لمدة دقيقتين!' : kind === 'slow' ? 'تم شراء شحنة إبطاء الوحوش لمدة دقيقة!' : 'تم شراء شحنة مغناطيس وإضافتها إلى أدوات اللعب!') : 'تعذر إتمام الشراء؛ راجع رصيدك.');
   };
 
   const rewardForAchievement = (achievement: Achievement) => {
-    if (achievement.id.startsWith('score-')) return { kind: 'score' as const, amount: achievement.id === 'score-500k' ? 10000 : 5000, label: `${achievement.id === 'score-500k' ? '10,000' : '5,000'} نقطة Score` };
-    const tierRewards: Record<string, number> = { 'البدايات': 1000, 'التقدم': 5000, 'المهارة': 10000, 'الخبراء': 25000, 'أسطوري': 50000 };
+    if (achievement.id.startsWith('score-')) return { kind: 'score' as const, amount: achievement.id === 'score-500k' ? 2500 : 750, label: `${achievement.id === 'score-500k' ? '2,500' : '750'} نقطة Score` };
+    const tierRewards: Record<string, number> = { 'البدايات': 250, 'التقدم': 500, 'المهارة': 900, 'الخبراء': 1600, 'أسطوري': 2500 };
     const amount = tierRewards[achievement.tier] ?? 1000;
     return { kind: 'coins' as const, amount, label: `${amount.toLocaleString('ar-EG')} عملة` };
   };
@@ -166,13 +166,13 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
   };
 
   const wheelPrizes: WheelPrize[] = [
-    { label: '10,000 عملة', kind: 'coins' as const, amount: 10000, icon: '🪙' },
-    { label: '5,000 Score', kind: 'score' as const, amount: 5000, icon: '⭐' },
-    { label: '10 مفاتيح', kind: 'key' as const, amount: 10, icon: '🔑' },
-    { label: '30 مفتاح', kind: 'key' as const, amount: 30, icon: '🗝️' },
-    { label: '10 مغناطيس', kind: 'magnet' as const, amount: 10, icon: '🧲' },
-    { label: '10 قلوب', kind: 'heart' as const, amount: 10, icon: '💙' },
-    { label: '10 دروع', kind: 'shield' as const, amount: 10, icon: '🛡️' },
+    { label: '5,000 عملة', kind: 'coins' as const, amount: 5000, icon: '🪙' },
+    { label: '2,500 Score', kind: 'score' as const, amount: 2500, icon: '⭐' },
+    { label: '5 مفاتيح', kind: 'key' as const, amount: 5, icon: '🔑' },
+    { label: '15 مفتاح', kind: 'key' as const, amount: 15, icon: '🗝️' },
+    { label: '5 مغناطيس', kind: 'magnet' as const, amount: 5, icon: '🧲' },
+    { label: '5 قلوب', kind: 'heart' as const, amount: 5, icon: '💙' },
+    { label: '5 دروع', kind: 'shield' as const, amount: 5, icon: '🛡️' },
   ];
   const spinWheel = () => {
     if (wheelSpinning) return;
@@ -211,14 +211,15 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
   const grouped = ['البدايات','التقدم','المهارة','الخبراء','أسطوري'];
   const isShop = page === 'shop';
   const isWheel = page === 'wheel';
-  const shopProducts: { id: 'key' | 'heart' | 'shield' | 'magnet'; name: string; eyebrow: string; description: string; icon: LucideIcon; artwork: string; image: string; tint: string; stock: number; stockLabel: string; action: string; locked?: boolean }[] = [
+  const shopProducts: { id: 'key' | 'heart' | 'shield' | 'magnet' | 'slow'; name: string; eyebrow: string; description: string; icon: LucideIcon; artwork: string; image: string; tint: string; stock: number; stockLabel: string; action: string; locked?: boolean }[] = [
     { id: 'key', name: 'المفتاح الأزرق', eyebrow: 'إنقاذ ومواصلة', description: 'احتفظي به في مخزونك لإنقاذ جودي ومتابعة المرحلة بعد نفاد القلوب.', icon: KeyRound, artwork: '🔑', image: '/images/powerups/key.svg', tint: 'from-sky-400/25 via-blue-500/10 to-indigo-500/10', stock: save.blueKeys, stockLabel: 'مفتاح في المخزون', action: 'شراء مفتاح' },
     { id: 'heart', name: 'قلب إضافي', eyebrow: 'فرصة حياة إضافية', description: 'يمنحك فرصة إضافية في المحاولة. يظهر باللون الأزرق أسفل القلوب الحمراء الأساسية.', icon: Heart, artwork: '💠', image: '/images/powerups/heart.svg', tint: 'from-cyan-300/25 via-sky-500/10 to-blue-500/10', stock: save.extraHearts, stockLabel: 'قلب في المخزون', action: 'شراء قلب' },
     { id: 'shield', name: 'الدرع الدائري', eyebrow: 'حماية لمدة دقيقتين', description: 'يحمي جودي من الوحوش لمدة 120 ثانية. فعّليه بلمسة واحدة في اللحظة المناسبة.', icon: Shield, artwork: '🛡️', image: '/images/powerups/shield.svg', tint: 'from-emerald-300/25 via-teal-500/10 to-cyan-500/10', stock: save.shieldCharges, stockLabel: 'شحنة درع', action: progress.highestUnlockedLevel < 5 ? 'يفتح عند المستوى 5' : 'شراء شحنة', locked: progress.highestUnlockedLevel < 5 },
     { id: 'magnet', name: 'المغناطيس', eyebrow: 'جذب العناصر · 6.5 ثوانٍ', description: 'يجذب العناصر القابلة للجمع نحو جودي تلقائيًا. استخدميه من زر المغناطيس بجوار الدرع أثناء اللعب.', icon: Magnet, artwork: '🧲', image: '/images/powerups/magnet.svg', tint: 'from-violet-300/25 via-fuchsia-500/10 to-sky-500/10', stock: save.magnetCharges, stockLabel: 'شحنة مغناطيس', action: 'شراء مغناطيس' },
+    { id: 'slow', name: 'مُبطّئ الوحوش', eyebrow: 'إبطاء الوحوش · 60 ثانية', description: 'يقلل سرعة حركة الوحوش ومقذوفاتهم فقط لمدة دقيقة. جودي تظل تجري طبيعيًا، والنقاط والقطط والشوكولاتة لا تتأثر.', icon: Wind, artwork: '🐌', image: '/images/powerups/slow.svg', tint: 'from-lime-300/25 via-emerald-500/10 to-teal-500/10', stock: save.slowMonsterCharges, stockLabel: 'شحنة إبطاء', action: 'شراء مُبطّئ' },
   ];
-  return <section className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-[2rem] border border-cyan-100/10 bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,.12),transparent_38%),linear-gradient(145deg,#101c32_0%,#0b1425_54%,#11152c_100%)] p-4 text-slate-100 shadow-[0_28px_80px_rgba(0,0,0,.42)] sm:p-6">
-    <div className="relative mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3 sm:p-4">
+  return <section className={`relative mx-auto w-full ${isWheel ? 'flex h-full max-w-5xl flex-col overflow-hidden rounded-2xl p-2 sm:p-3' : 'max-w-6xl overflow-hidden rounded-[2rem] p-4 sm:p-6'} border border-cyan-100/10 bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,.12),transparent_38%),linear-gradient(145deg,#101c32_0%,#0b1425_54%,#11152c_100%)] text-slate-100 shadow-[0_28px_80px_rgba(0,0,0,.42)]`}>
+    <div className={`relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-2.5 sm:p-3 ${isWheel ? 'mb-2 shrink-0' : 'mb-5'}`}>
       <div className="flex items-center gap-3">
         <div className={`grid h-14 w-14 place-items-center rounded-2xl border shadow-inner ${isShop?'border-cyan-200/25 bg-gradient-to-br from-cyan-300/20 to-blue-700/20 text-cyan-100':'border-amber-200/20 bg-amber-300/10 text-amber-200'}`}>{isShop?<ShoppingBag className="h-7 w-7"/>:isWheel?<span className="text-3xl">🎡</span>:<Trophy className="h-6 w-6"/>}</div>
         <div><p className="text-[10px] font-black tracking-[.22em] text-cyan-200">JOUDY · {isShop?'PREMIUM STORE':isWheel?'LUCKY WHEEL':'ACHIEVEMENTS'}</p><h2 className="text-2xl font-black text-white sm:text-3xl">{isShop?'متجر الأدوات':isWheel?'عجلة الحظ':'الإنجازات'}</h2><p className="text-xs text-slate-400">{isShop?'عزّزي فرصك بأدوات مصممة للمغامرات الصعبة':isWheel?'لفة واحدة قد تغيّر مغامرتك':'مرتبة من الأسهل للأصعب'}</p></div>
@@ -228,13 +229,13 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
         <div className="flex items-center gap-2 rounded-xl border border-amber-200/20 bg-amber-300/10 px-3 py-2 text-sm font-black text-amber-100"><Coins className="h-4 w-4"/>{save.coins.toLocaleString('ar-EG')}</div>
       </div>
     </div>
-    <button type="button" onClick={onBack} className="mb-5 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-200 transition hover:bg-white/10"><ArrowRight className="h-4 w-4"/> رجوع للخريطة</button>
-    {notice && <p role="status" className="mb-4 rounded-xl border border-emerald-200/20 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-100">{notice}</p>}
-    {isWheel ? <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 py-5">
-      <div className="rounded-2xl border border-amber-200/25 bg-gradient-to-br from-amber-300/15 to-orange-500/5 px-6 py-3 text-center shadow-lg"><p className="text-xs font-bold text-amber-100">تكلفة اللفة الواحدة</p><p className="mt-1 text-2xl font-black text-white">500 🪙</p></div>
-      <div className="relative w-full max-w-[430px] px-2">
+    <button type="button" onClick={onBack} className={`inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-slate-200 transition hover:bg-white/10 ${isWheel ? 'mb-2 self-start text-xs' : 'mb-5 px-4 py-2.5'}`}><ArrowRight className="h-4 w-4"/> رجوع للخريطة</button>
+    {notice && <p role="status" className={`rounded-xl border border-emerald-200/20 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-100 ${isWheel ? 'mb-1 shrink-0 text-center text-[10px]' : 'mb-4'}`}>{notice}</p>}
+    {isWheel ? <div className="mx-auto flex min-h-0 w-full flex-1 flex-col items-center justify-evenly gap-2 overflow-hidden py-1">
+      <div className="shrink-0 rounded-xl border border-amber-200/25 bg-gradient-to-br from-amber-300/15 to-orange-500/5 px-5 py-1.5 text-center shadow-lg"><p className="text-xs font-bold text-amber-100">تكلفة اللفة الواحدة</p><p className="mt-1 text-2xl font-black text-white">500 🪙</p></div>
+      <div className="relative aspect-square w-[min(58vh,78vw)] max-w-[370px] shrink-0">
         <div className="pointer-events-none absolute left-1/2 top-[-5px] z-30 -translate-x-1/2 drop-shadow-[0_4px_5px_rgba(0,0,0,.7)]"><svg width="42" height="52" viewBox="0 0 42 52"><path d="M21 50 3 5Q21 14 39 5Z" fill="#fff1a8" stroke="#92400e" strokeWidth="3"/><circle cx="21" cy="8" r="5" fill="#f59e0b" stroke="#fff1a8" strokeWidth="2"/></svg></div>
-        <motion.div className="relative aspect-square w-full overflow-hidden rounded-full border-[12px] border-[#f8d778] bg-[#18243b] shadow-[0_0_0_5px_#75451f,0_0_45px_rgba(251,191,36,.3)]" animate={{ rotate: wheelRotation }} transition={{ duration: 5.4, ease: [0.12,0.75,0.12,1] }} onAnimationComplete={finishWheelSpin}>
+        <motion.div className="relative aspect-square h-full w-full overflow-hidden rounded-full border-[9px] border-[#f8d778] bg-[#18243b] shadow-[0_0_0_5px_#75451f,0_0_45px_rgba(251,191,36,.3)]" animate={{ rotate: wheelRotation }} transition={{ duration: 5.4, ease: [0.12,0.75,0.12,1] }} onAnimationComplete={finishWheelSpin}>
           <svg viewBox="0 0 420 420" className="h-full w-full" role="img" aria-label="عجلة الحظ مقسمة إلى سبع جوائز">
             {wheelPrizes.map((prize,index)=>{ const n=wheelPrizes.length; const a1=(-90+index*360/n)*Math.PI/180; const a2=(-90+(index+1)*360/n)*Math.PI/180; const mid=(a1+a2)/2; const x1=210+190*Math.cos(a1), y1=210+190*Math.sin(a1), x2=210+190*Math.cos(a2), y2=210+190*Math.sin(a2); const tx=210+123*Math.cos(mid), ty=210+123*Math.sin(mid); const colors=['#e7a52d','#2563a8','#0f8790','#7852ad','#bd3976','#27875d','#a85a25']; return <g key={prize.label}><path d={`M210 210 L${x1} ${y1} A190 190 0 0 1 ${x2} ${y2} Z`} fill={colors[index]} stroke="#fff0b8" strokeWidth="3"/><path d={`M210 210 L${x1} ${y1}`} stroke="#fff7d6" strokeOpacity=".65" strokeWidth="2"/><text x={tx} y={ty-8} textAnchor="middle" dominantBaseline="middle" fontSize="30">{prize.icon}</text><text x={tx} y={ty+19} textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="12" fontWeight="900" stroke="#18243b" strokeWidth=".8" paintOrder="stroke">{prize.label}</text></g>; })}
             <circle cx="210" cy="210" r="43" fill="#17243a" stroke="#ffe8a0" strokeWidth="7"/><circle cx="210" cy="210" r="31" fill="#e8b84d" stroke="#fff4cf" strokeWidth="3"/><text x="210" y="219" textAnchor="middle" fontSize="29">🎡</text>
@@ -242,8 +243,8 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
         </motion.div>
         <div className="pointer-events-none absolute inset-0 z-20 rounded-full border-[3px] border-white/35" />
       </div>
-      <button type="button" disabled={wheelSpinning || wheelRewardPending} onClick={spinWheel} className="rounded-2xl border border-amber-100/50 bg-gradient-to-l from-amber-300 via-yellow-400 to-orange-500 px-12 py-4 text-lg font-black text-slate-950 shadow-[0_12px_35px_rgba(245,158,11,.32)] transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60">{wheelSpinning?'العجلة بتلف...':'🎯 لف العجلة · 500 عملة'}</button>
-      <p className="max-w-md text-center text-xs leading-6 text-slate-400">كل جائزة لها خانة مستقلة وواضحة. بعد توقف العجلة ستظهر لك نافذة لاستلام الجائزة بنفسك.</p>
+      <button type="button" disabled={wheelSpinning || wheelRewardPending} onClick={spinWheel} className="shrink-0 rounded-xl border border-amber-100/50 bg-gradient-to-l from-amber-300 via-yellow-400 to-orange-500 px-9 py-2.5 text-base font-black text-slate-950 shadow-[0_12px_35px_rgba(245,158,11,.32)] transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60">{wheelSpinning?'العجلة بتلف...':'🎯 لف العجلة · 500 عملة'}</button>
+      <p className="max-w-md shrink-0 text-center text-[10px] leading-4 text-slate-400">كل جائزة لها خانة مستقلة وواضحة. بعد توقف العجلة ستظهر لك نافذة لاستلام الجائزة بنفسك.</p>
       {wheelRewardPending && wheelPrize && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md" role="dialog" aria-modal="true"><motion.div initial={{opacity:0,scale:.72,y:25}} animate={{opacity:1,scale:1,y:0}} className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-amber-200/45 bg-gradient-to-br from-[#263654] via-[#111c32] to-[#251333] p-6 text-center shadow-[0_30px_100px_rgba(0,0,0,.75)]"><div className="pointer-events-none absolute -left-10 -top-12 h-44 w-44 rounded-full bg-amber-300/20 blur-3xl"/><div className="relative mx-auto mb-3 grid h-24 w-24 place-items-center rounded-full border-2 border-amber-200/50 bg-amber-300/10 text-5xl shadow-[0_0_45px_rgba(251,191,36,.3)]">{wheelPrize.icon}</div><p className="text-[10px] font-black tracking-[.25em] text-amber-200">LUCKY WINNER</p><h3 className="mt-2 text-2xl font-black text-white">مبروك! كسبت 🎉</h3><p className="mt-3 rounded-2xl border border-emerald-200/25 bg-emerald-300/10 px-4 py-4 text-2xl font-black text-emerald-100">{wheelPrize.label}</p><button type="button" onClick={claimWheelPrize} className="mt-5 w-full rounded-xl border border-amber-100/50 bg-gradient-to-l from-amber-300 to-orange-400 px-5 py-3.5 text-sm font-black text-slate-950 shadow-lg">استلام الجائزة ومواصلة اللعب</button></motion.div></div>}
     </div> : isShop ? <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-cyan-200/15 bg-gradient-to-r from-cyan-400/[0.08] via-blue-500/[0.06] to-violet-500/[0.08] px-4 py-3">
@@ -269,7 +270,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
               <div className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full border border-white/10" />
               <div className="pointer-events-none absolute -bottom-14 -left-8 h-40 w-40 rounded-full border border-white/10" />
               <div className="absolute inset-x-8 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <div className="relative h-32 w-44 transition duration-300 group-hover:scale-105">
+              <div className="relative z-10 h-32 w-44 transition duration-300 group-hover:scale-105">
                 {failedShopImages[product.id] ? (
                   <span className="grid h-full w-full place-items-center text-6xl drop-shadow-[0_8px_12px_rgba(0,0,0,.4)]" role="img" aria-label={product.name}>{product.artwork}</span>
                 ) : (
@@ -278,7 +279,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
                     alt={product.name}
                     draggable={false}
                     onError={() => setFailedShopImages((current) => ({ ...current, [product.id]: true }))}
-                    className="h-full w-full object-contain drop-shadow-[0_12px_16px_rgba(0,0,0,.35)]"
+                    className="product-art-float h-full w-full object-contain drop-shadow-[0_12px_16px_rgba(0,0,0,.35)]" style={{ minWidth: "100%", minHeight: "100%" }}
                   />
                 )}
                 <span className="absolute bottom-0 right-1 grid h-8 w-8 place-items-center rounded-xl border border-white/20 bg-[#111d32] text-lg shadow-lg"><Icon className="h-4 w-4 text-white" strokeWidth={1.8}/></span>
@@ -298,7 +299,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
           </article>;
         })}
       </div>
-      <p className="rounded-xl border border-white/10 bg-black/15 px-3 py-2 text-[10px] leading-5 text-slate-500">ملاحظة: الدرع الدائري متاح من المستوى الخامس، وتحصلين على 20 شحنة مجانية عند فتحه لأول مرة. المغناطيس المشترى يُستخدم يدويًا لمدة 6.5 ثانية.</p>
+      <p className="rounded-xl border border-white/10 bg-black/15 px-3 py-2 text-[10px] leading-5 text-slate-500">ملاحظة: الدرع الدائري متاح من المستوى الخامس، وتحصلين على 20 شحنة مجانية عند فتحه لأول مرة. المغناطيس يعمل 6.5 ثانية، ومُبطّئ الوحوش يعمل 60 ثانية.</p>
     </div> : <div className="space-y-6">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4"><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">إجمالي الإنجازات</p><p className="mt-1 text-xl font-black text-white">{achievements.length}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">المكتملة</p><p className="mt-1 text-xl font-black text-emerald-300">{unlockedCount}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">المتبقية</p><p className="mt-1 text-xl font-black text-amber-200">{achievements.length-unlockedCount}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">نسبة الإنجاز</p><p className="mt-1 text-xl font-black text-cyan-200">{Math.round(unlockedCount/achievements.length*100)}%</p></div></div>
       {grouped.map((tier,index)=>{
@@ -315,7 +316,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
             {tierAchievements.map((a,i)=><motion.article key={a.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.22,delay:Math.min(i*.025,.15)}}
               className={`group relative flex min-h-[190px] flex-col overflow-hidden rounded-[1.35rem] border bg-gradient-to-br ${a.unlocked ? `${tierStyle.border} ${tierStyle.glow}` : 'border-white/8 from-slate-900/95 to-slate-950/95'} p-3 text-center shadow-[0_12px_28px_rgba(0,0,0,.22)] transition duration-300 hover:-translate-y-1 hover:border-white/25`}>
               <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/[.035] blur-2xl" />
-              <div className="relative mx-auto mb-2 h-[76px] w-[68px] transition duration-300 group-hover:scale-105">
+              <div className="relative mx-auto mb-2 h-[76px] w-[68px] animate-[rewardBob_3.2s_ease-in-out_infinite] transition duration-300 group-hover:scale-110">
                 <Image src={`/images/achievements/badges/${a.id}.svg`} alt={`وسام ${a.title}`} fill sizes="68px" className="object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,.4)]" />
                 {!a.unlocked && <span className="absolute inset-x-2 bottom-1 rounded-b-full bg-amber-300/35 transition-all duration-700" style={{ height: `${Math.max(4, a.progress * .58)}%`, clipPath: 'polygon(12% 0,88% 0,100% 100%,0 100%)' }} />}
                 <span className={`absolute inset-0 flex items-center justify-center pt-1 text-[23px] drop-shadow-[0_2px_3px_rgba(0,0,0,.7)] ${a.unlocked ? '' : 'grayscale'}`}>{a.unlocked ? '' : '🔒'}</span>

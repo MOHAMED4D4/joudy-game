@@ -111,6 +111,18 @@ export default function WorldMapScreen({
   const worldSave = useWorldSave();
   const [gateNotice, setGateNotice] = useState<{ chapter: ChapterNumber; text: string } | null>(null);
   const [rewardsPage, setRewardsPage] = useState<'map' | 'shop' | 'awards' | 'wheel'>('map');
+
+  useEffect(() => {
+    if (rewardsPage !== 'wheel') return;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousRootOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousRootOverflow;
+    };
+  }, [rewardsPage]);
   const chapterSettings: Record<ChapterNumber, { price: number; requiredLevel: number; flag: ChapterFlag; region: string }> = {
     2: { price: 40_000, requiredLevel: 15, flag: 'coastalRegionUnlocked', region: 'مدينة الظلال' },
     3: { price: 65_000, requiredLevel: 20, flag: 'thirdChapterUnlocked', region: 'غابة الكائنات الغريبة' },
@@ -189,7 +201,7 @@ export default function WorldMapScreen({
   ];
 
   if (rewardsPage !== 'map') {
-    return <div className="min-h-dvh w-full px-3 py-5 sm:px-6 sm:py-8"><RewardsHub progress={progress} page={rewardsPage} onBack={() => setRewardsPage('map')} /></div>;
+    return <div className={rewardsPage === 'wheel' ? 'fixed inset-0 z-[90] h-[100dvh] w-full overflow-hidden px-2 py-2' : 'min-h-dvh w-full px-3 py-5 sm:px-6 sm:py-8'}><RewardsHub progress={progress} page={rewardsPage} onBack={() => setRewardsPage('map')} /></div>;
   }
 
   return (

@@ -20,6 +20,7 @@ import {
   Shield,
   Maximize2,
   Minimize2,
+  Wind,
 } from 'lucide-react';
 import { soundEngine } from '@/lib/soundEffects';
 import { loadTransparentSprite } from '@/lib/spriteUtils';
@@ -294,6 +295,7 @@ export default function GameArena({
   const [counts, setCounts] = useState({ cats: 0, roses: 0, chocolates: 0, obstaclesHit: 0 });
   const [combo, setCombo] = useState(0);
   const [magnetSecondsLeft, setMagnetSecondsLeft] = useState(0);
+  const [slowMonsterSecondsLeft, setSlowMonsterSecondsLeft] = useState(0);
   const [doubleScoreSecondsLeft, setDoubleScoreSecondsLeft] = useState(0);
   const [isPaused, setIsPaused] = useState(true);
   const [tutorialPage, setTutorialPage] = useState(0);
@@ -322,6 +324,7 @@ export default function GameArena({
   const comboRef = useRef(0);
   const comboTimerRef = useRef(0);
   const magnetTimerRef = useRef(0);
+  const slowMonsterTimerRef = useRef(0);
   const doubleScoreTimerRef = useRef(0);
   const startTimeRef = useRef<number>(0);
   const shakeRef = useRef(0);
@@ -330,9 +333,8 @@ export default function GameArena({
   const reviveCountRef = useRef(worldSave.reviveCountsByLevel[levelConfig.level] ?? 0);
   const [typedGuideText, setTypedGuideText] = useState('');
 
-  // Use an in-page immersive layout instead of the browser Fullscreen API.
-  // Android Chrome displays an unavoidable system hint when a website requests
-  // native fullscreen; keeping this mode CSS-based avoids triggering that hint.
+  // Prefer the native Fullscreen API, with a CSS immersive fallback on browsers
+  // that do not expose fullscreen support (notably some mobile webviews).
   useEffect(() => {
     if (!isFullscreen) return;
     const previousOverflow = document.body.style.overflow;
@@ -347,8 +349,22 @@ export default function GameArena({
     };
   }, [isFullscreen]);
 
-  const toggleFullscreen = useCallback(() => {
-    setIsFullscreen((current) => !current);
+  const toggleFullscreen = useCallback(async () => {
+    if (document.fullscreenElement) {
+      try { await document.exitFullscreen(); } catch { setIsFullscreen(false); }
+      return;
+    }
+    const root = document.documentElement as HTMLElement & { requestFullscreen?: () => Promise<void> };
+    if (root.requestFullscreen) {
+      try { await root.requestFullscreen(); setIsFullscreen(true); }
+      catch { setIsFullscreen(true); }
+    } else { setIsFullscreen((current) => !current); }
+  }, []);
+
+  useEffect(() => {
+    const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen);
   }, []);
 
   useEffect(() => {
@@ -496,6 +512,20 @@ export default function GameArena({
     soundEngine.playMagnetCollect();
   }, []);
 
+  const activateSlowMonsters = useCallback(() => {
+    if (slowMonsterTimerRef.current > 0 || isPausedRef.current || isGameOverRef.current) return;
+    let activated = false;
+    saveWorld((current) => {
+      if (current.slowMonsterCharges <= 0) return current;
+      activated = true;
+      return { ...current, slowMonsterCharges: current.slowMonsterCharges - 1 };
+    });
+    if (!activated) return;
+    slowMonsterTimerRef.current = 60;
+    setSlowMonsterSecondsLeft(60);
+    soundEngine.playMagnetCollect();
+  }, []);
+
   const requestExitToMap = useCallback(() => {
     exitWasPausedRef.current = isPausedRef.current;
     isPausedRef.current = true;
@@ -527,6 +557,8 @@ export default function GameArena({
     comboRef.current = 0;
     comboTimerRef.current = 0;
     magnetTimerRef.current = 0;
+    slowMonsterTimerRef.current = 0;
+    setSlowMonsterSecondsLeft(0);
     doubleScoreTimerRef.current = 0;
     shieldTimerRef.current = 0;
     setShieldSecondsLeft(0);
@@ -608,6 +640,7 @@ export default function GameArena({
     let spawnAccumulator = 0;
     let trailAccumulator = 0;
     let magnetHudTick = 0;
+    let slowMonsterHudTick = 0;
     let doubleScoreHudTick = 0;
     let lastHeartSpawnAt = -999;
     let lightningCooldown = 8 + Math.random() * 5;
@@ -1035,6 +1068,14 @@ export default function GameArena({
             setMagnetSecondsLeft(Math.ceil(magnetTimerRef.current));
           }
         }
+        if (slowMonsterTimerRef.current > 0) {
+          slowMonsterTimerRef.current = Math.max(0, slowMonsterTimerRef.current - dt);
+          slowMonsterHudTick += dt;
+          if (slowMonsterHudTick >= 0.25 || slowMonsterTimerRef.current === 0) {
+            slowMonsterHudTick = 0;
+            setSlowMonsterSecondsLeft(Math.ceil(slowMonsterTimerRef.current));
+          }
+        }
         if (doubleScoreTimerRef.current > 0) {
           doubleScoreTimerRef.current = Math.max(0, doubleScoreTimerRef.current - dt);
           doubleScoreHudTick += dt;
@@ -1127,7 +1168,8 @@ export default function GameArena({
 
         const surviving: FallingEntity[] = [];
         for (const item of entities) {
-          item.y += item.vy * dt;
+          const enemySlowFactor = slowMonsterTimerRef.current > 0 && isHazardKind(item.kind) ? 0.42 : 1;
+          item.y += item.vy * dt * enemySlowFactor;
           if (item.kind === 'runner') {
             const chaseLimit = (levelConfig.level < 5
               ? 125
@@ -1137,7 +1179,7 @@ export default function GameArena({
             const chaseSpeed = (player.x - item.baseX) * 1.28;
             item.vx = Math.max(-chaseLimit, Math.min(chaseLimit, chaseSpeed));
           }
-          item.baseX += item.vx * dt;
+          item.baseX += item.vx * dt * enemySlowFactor;
           item.rotation += item.vr * dt;
 
           if (item.baseX < item.radius + 10) {
@@ -2124,6 +2166,9 @@ export default function GameArena({
                     <Shield className="h-4 w-4" />{shieldSecondsLeft > 0 ? `${Math.floor(shieldSecondsLeft / 60)}:${String(shieldSecondsLeft % 60).padStart(2,'0')}` : `×${worldSave.shieldCharges}`}
                   </button>
                 )}
+                <button type="button" onClick={activateSlowMonsters} disabled={slowMonsterSecondsLeft > 0 || worldSave.slowMonsterCharges <= 0 || isPaused || isGameOver} className={`inline-flex min-h-9 items-center gap-1 rounded-full border px-2.5 py-2 text-[9px] font-black shadow-lg backdrop-blur-sm transition sm:text-[10px] ${slowMonsterSecondsLeft > 0 ? 'border-lime-200/50 bg-lime-950/90 text-lime-100' : 'border-lime-200/30 bg-slate-950/75 text-lime-100 disabled:opacity-50'}`} aria-label={slowMonsterSecondsLeft > 0 ? `إبطاء الوحوش نشط ${slowMonsterSecondsLeft} ثانية` : `إبطاء الوحوش، ${worldSave.slowMonsterCharges} شحنة`} title="إبطاء الوحوش لمدة دقيقة">
+                  <Wind className="h-4 w-4" />{slowMonsterSecondsLeft > 0 ? `${slowMonsterSecondsLeft}ث` : `×${worldSave.slowMonsterCharges}`}
+                </button>
                 <button type="button" onClick={activateMagnet} disabled={magnetSecondsLeft > 0 || worldSave.magnetCharges <= 0 || isPaused || isGameOver} className={`inline-flex min-h-9 items-center gap-1 rounded-full border px-2.5 py-2 text-[9px] font-black shadow-lg backdrop-blur-sm transition sm:text-[10px] ${magnetSecondsLeft > 0 ? 'border-sky-200/50 bg-sky-950/90 text-sky-100' : 'border-sky-200/30 bg-slate-950/75 text-sky-100 disabled:opacity-50'}`} aria-label={magnetSecondsLeft > 0 ? `المغناطيس نشط ${magnetSecondsLeft} ثانية` : `تفعيل المغناطيس، ${worldSave.magnetCharges} شحنة متبقية`} title="تفعيل المغناطيس">
                   <Magnet className="h-4 w-4" />{magnetSecondsLeft > 0 ? `${magnetSecondsLeft}ث` : `×${worldSave.magnetCharges}`}
                 </button>

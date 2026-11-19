@@ -27,6 +27,7 @@ export interface WorldSave {
   extraHearts: number;
   shieldCharges: number;
   magnetCharges: number;
+  slowMonsterCharges: number;
   shieldFreeGranted: boolean;
   claimedAchievementRewards: string[];
 }
@@ -57,6 +58,7 @@ const DEFAULT_SAVE: WorldSave = {
   extraHearts: 0,
   shieldCharges: 0,
   magnetCharges: 0,
+  slowMonsterCharges: 0,
   shieldFreeGranted: false,
   claimedAchievementRewards: [],
 };
@@ -149,6 +151,7 @@ function parse(raw: string | null): WorldSave {
       extraHearts: Math.max(0, Number(value.extraHearts ?? 0) || 0),
       shieldCharges: Math.max(0, Number(value.shieldCharges ?? 0) || 0),
       magnetCharges: Math.max(0, Number(value.magnetCharges ?? 0) || 0),
+      slowMonsterCharges: Math.max(0, Number(value.slowMonsterCharges ?? 0) || 0),
       shieldFreeGranted: value.shieldFreeGranted === true,
       claimedAchievementRewards: Array.isArray(value.claimedAchievementRewards) ? value.claimedAchievementRewards.filter((id): id is string => typeof id === 'string') : [],
     };
