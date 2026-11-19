@@ -290,6 +290,19 @@ class MagicalSoundEngine {
     });
   }
 
+  public playWheelWin() {
+    if (!this.sfxEnabled) return;
+    const notes = [659.25, 830.61, 987.77, 1318.51, 1567.98];
+    notes.forEach((frequency, index) => this.playTone(frequency, index === 4 ? 0.48 : 0.2, { type: 'triangle', volume: 0.17, delay: index * 0.105 }));
+    this.playTone(1975.53, 0.34, { type: 'sine', volume: 0.1, delay: 0.58 });
+  }
+
+  public playAchievementWin() {
+    if (!this.sfxEnabled) return;
+    const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51];
+    notes.forEach((frequency, index) => this.playTone(frequency, index === 4 ? 0.62 : 0.17, { type: 'sine', volume: 0.13, delay: index * 0.13 }));
+  }
+
   public playDialoguePop() {
     if (!this.sfxEnabled) return;
     this.playTone(620, 0.08, {

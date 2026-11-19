@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import Image from 'next/image';
 import { ShoppingBag, Trophy, Lock, Check, Coins, KeyRound, Heart, ArrowRight, Shield, Magnet, Sparkles, type LucideIcon } from 'lucide-react';
 import { loadWorldSave, saveWorld, useWorldSave } from '@/lib/joudyWorld';
+import { soundEngine } from '@/lib/soundEffects';
 import type { JoudyGameProgress } from '@/lib/storage';
 
 type Achievement = { id: string; title: string; detail: string; icon: string; unlocked: boolean; tier: string; progress: number };
@@ -32,6 +33,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
   const [activeAchievement, setActiveAchievement] = useState<Achievement | null>(null);
   const [wheelRotation, setWheelRotation] = useState(0);
   const [wheelSpinning, setWheelSpinning] = useState(false);
+  const [wheelRewardPending, setWheelRewardPending] = useState(false);
   const [wheelPrize, setWheelPrize] = useState<{ label: string; kind: 'coins' | 'score' | 'key' | 'magnet' | 'heart' | 'shield'; amount: number } | null>(null);
   const achievements = useMemo<Achievement[]>(() => {
     const completed = Object.keys(progress.completedLevels).length;
@@ -139,6 +141,10 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     if (next) setActiveAchievement(next);
   }, [page, achievements, save.claimedAchievementRewards, activeAchievement]);
 
+  useEffect(() => {
+    if (activeAchievement) soundEngine.playAchievementWin();
+  }, [activeAchievement]);
+
   const claimAchievement = () => {
     if (!activeAchievement) return;
     const reward = rewardForAchievement(activeAchievement);
@@ -175,6 +181,13 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
   };
   const finishWheelSpin = () => {
     if (!wheelSpinning || !wheelPrize) return;
+    setWheelSpinning(false);
+    setWheelRewardPending(true);
+    soundEngine.playWheelWin();
+  };
+
+  const claimWheelPrize = () => {
+    if (!wheelPrize || !wheelRewardPending) return;
     saveWorld((current) => ({ ...current,
       coins: current.coins + (wheelPrize.kind === 'coins' ? wheelPrize.amount : 0),
       totalScore: current.totalScore + (wheelPrize.kind === 'score' ? wheelPrize.amount : 0),
@@ -183,8 +196,8 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
       extraHearts: current.extraHearts + (wheelPrize.kind === 'heart' ? wheelPrize.amount : 0),
       shieldCharges: current.shieldCharges + (wheelPrize.kind === 'shield' ? wheelPrize.amount : 0),
     }));
-    setWheelSpinning(false);
-    setNotice(`مبروك! كسبت ${wheelPrize.label} 🎉`);
+    setWheelRewardPending(false);
+    setNotice(`تم استلام ${wheelPrize.label} بنجاح!`);
   };
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
@@ -210,17 +223,21 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     </div>
     <button type="button" onClick={onBack} className="mb-5 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-200 transition hover:bg-white/10"><ArrowRight className="h-4 w-4"/> رجوع للخريطة</button>
     {notice && <p role="status" className="mb-4 rounded-xl border border-emerald-200/20 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-100">{notice}</p>}
-    {isWheel ? <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 py-5">
-      <div className="rounded-2xl border border-amber-200/20 bg-amber-300/10 px-5 py-3 text-center"><p className="text-xs font-bold text-amber-100">تكلفة اللفة الواحدة</p><p className="mt-1 text-2xl font-black text-white">500 🪙</p></div>
-      <div className="relative grid h-[min(78vw,390px)] w-[min(78vw,390px)] place-items-center">
-        <div className="absolute -top-3 z-20 h-0 w-0 border-x-[15px] border-t-[28px] border-x-transparent border-t-amber-300 drop-shadow-lg"/>
-        <motion.div className="relative h-full w-full rounded-full border-[10px] border-amber-200/70 shadow-[0_0_55px_rgba(251,191,36,.25)]" style={{ background: 'conic-gradient(#f59e0b 0deg 51.43deg,#2563eb 51.43deg 102.86deg,#0e7490 102.86deg 154.29deg,#7c3aed 154.29deg 205.72deg,#db2777 205.72deg 257.15deg,#059669 257.15deg 308.58deg,#b45309 308.58deg 360deg)' }} animate={{ rotate: wheelRotation }} transition={{ duration: 5, ease: [0.12,0.75,0.12,1] }} onAnimationComplete={finishWheelSpin}>
-          {wheelPrizes.map((prize,index)=><div key={prize.label} className="absolute left-1/2 top-1/2 flex h-[44%] w-20 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-start pt-2 text-center text-[10px] font-black text-white drop-shadow-md" style={{ transform: `translate(-50%,-50%) rotate(${index*360/7+25.7}deg) translateY(-72px) rotate(-${index*360/7+25.7}deg)` }}><span className="text-2xl">{prize.icon}</span><span>{prize.label}</span></div>)}
-        </motion.div><div className="absolute z-10 grid h-20 w-20 place-items-center rounded-full border-4 border-amber-100 bg-slate-950 text-3xl shadow-xl">🎡</div>
+    {isWheel ? <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 py-5">
+      <div className="rounded-2xl border border-amber-200/25 bg-gradient-to-br from-amber-300/15 to-orange-500/5 px-6 py-3 text-center shadow-lg"><p className="text-xs font-bold text-amber-100">تكلفة اللفة الواحدة</p><p className="mt-1 text-2xl font-black text-white">500 🪙</p></div>
+      <div className="relative w-full max-w-[430px] px-2">
+        <div className="pointer-events-none absolute left-1/2 top-[-5px] z-30 -translate-x-1/2 drop-shadow-[0_4px_5px_rgba(0,0,0,.7)]"><svg width="42" height="52" viewBox="0 0 42 52"><path d="M21 50 3 5Q21 14 39 5Z" fill="#fff1a8" stroke="#92400e" strokeWidth="3"/><circle cx="21" cy="8" r="5" fill="#f59e0b" stroke="#fff1a8" strokeWidth="2"/></svg></div>
+        <motion.div className="relative aspect-square w-full overflow-hidden rounded-full border-[12px] border-[#f8d778] bg-[#18243b] shadow-[0_0_0_5px_#75451f,0_0_45px_rgba(251,191,36,.3)]" animate={{ rotate: wheelRotation }} transition={{ duration: 5.4, ease: [0.12,0.75,0.12,1] }} onAnimationComplete={finishWheelSpin}>
+          <svg viewBox="0 0 420 420" className="h-full w-full" role="img" aria-label="عجلة الحظ مقسمة إلى سبع جوائز">
+            {wheelPrizes.map((prize,index)=>{ const n=wheelPrizes.length; const a1=(-90+index*360/n)*Math.PI/180; const a2=(-90+(index+1)*360/n)*Math.PI/180; const mid=(a1+a2)/2; const x1=210+190*Math.cos(a1), y1=210+190*Math.sin(a1), x2=210+190*Math.cos(a2), y2=210+190*Math.sin(a2); const tx=210+123*Math.cos(mid), ty=210+123*Math.sin(mid); const colors=['#e7a52d','#2563a8','#0f8790','#7852ad','#bd3976','#27875d','#a85a25']; return <g key={prize.label}><path d={`M210 210 L${x1} ${y1} A190 190 0 0 1 ${x2} ${y2} Z`} fill={colors[index]} stroke="#fff0b8" strokeWidth="3"/><path d={`M210 210 L${x1} ${y1}`} stroke="#fff7d6" strokeOpacity=".65" strokeWidth="2"/><text x={tx} y={ty-8} textAnchor="middle" dominantBaseline="middle" fontSize="30">{prize.icon}</text><text x={tx} y={ty+19} textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="12" fontWeight="900" stroke="#18243b" strokeWidth=".8" paintOrder="stroke">{prize.label}</text></g>; })}
+            <circle cx="210" cy="210" r="43" fill="#17243a" stroke="#ffe8a0" strokeWidth="7"/><circle cx="210" cy="210" r="31" fill="#e8b84d" stroke="#fff4cf" strokeWidth="3"/><text x="210" y="219" textAnchor="middle" fontSize="29">🎡</text>
+          </svg>
+        </motion.div>
+        <div className="pointer-events-none absolute inset-0 z-20 rounded-full border-[3px] border-white/35" />
       </div>
-      <button type="button" disabled={wheelSpinning} onClick={spinWheel} className="rounded-2xl border border-amber-100/40 bg-gradient-to-l from-amber-300 via-yellow-400 to-orange-500 px-12 py-4 text-lg font-black text-slate-950 shadow-[0_12px_35px_rgba(245,158,11,.28)] transition hover:scale-105 disabled:opacity-60">{wheelSpinning?'العجلة بتلف...':'🎯 لف العجلة · 500 عملة'}</button>
-      {wheelPrize && !wheelSpinning && <div className="rounded-2xl border border-emerald-200/25 bg-emerald-400/10 px-5 py-3 text-center text-sm font-black text-emerald-100">الجائزة: {wheelPrize.label} 🎉</div>}
-      <p className="text-center text-[11px] text-slate-400">الجائزة تُضاف إلى رصيدك أو مخزونك بعد توقف العجلة.</p>
+      <button type="button" disabled={wheelSpinning || wheelRewardPending} onClick={spinWheel} className="rounded-2xl border border-amber-100/50 bg-gradient-to-l from-amber-300 via-yellow-400 to-orange-500 px-12 py-4 text-lg font-black text-slate-950 shadow-[0_12px_35px_rgba(245,158,11,.32)] transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60">{wheelSpinning?'العجلة بتلف...':'🎯 لف العجلة · 500 عملة'}</button>
+      <p className="max-w-md text-center text-xs leading-6 text-slate-400">كل جائزة لها خانة مستقلة وواضحة. بعد توقف العجلة ستظهر لك نافذة لاستلام الجائزة بنفسك.</p>
+      {wheelRewardPending && wheelPrize && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md" role="dialog" aria-modal="true"><motion.div initial={{opacity:0,scale:.72,y:25}} animate={{opacity:1,scale:1,y:0}} className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-amber-200/45 bg-gradient-to-br from-[#263654] via-[#111c32] to-[#251333] p-6 text-center shadow-[0_30px_100px_rgba(0,0,0,.75)]"><div className="pointer-events-none absolute -left-10 -top-12 h-44 w-44 rounded-full bg-amber-300/20 blur-3xl"/><div className="relative mx-auto mb-3 grid h-24 w-24 place-items-center rounded-full border-2 border-amber-200/50 bg-amber-300/10 text-5xl shadow-[0_0_45px_rgba(251,191,36,.3)]">{wheelPrize.icon}</div><p className="text-[10px] font-black tracking-[.25em] text-amber-200">LUCKY WINNER</p><h3 className="mt-2 text-2xl font-black text-white">مبروك! كسبت 🎉</h3><p className="mt-3 rounded-2xl border border-emerald-200/25 bg-emerald-300/10 px-4 py-4 text-2xl font-black text-emerald-100">{wheelPrize.label}</p><button type="button" onClick={claimWheelPrize} className="mt-5 w-full rounded-xl border border-amber-100/50 bg-gradient-to-l from-amber-300 to-orange-400 px-5 py-3.5 text-sm font-black text-slate-950 shadow-lg">استلام الجائزة ومواصلة اللعب</button></motion.div></div>}
     </div> : isShop ? <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-cyan-200/15 bg-gradient-to-r from-cyan-400/[0.08] via-blue-500/[0.06] to-violet-500/[0.08] px-4 py-3">
         <div className="flex items-center gap-2 text-xs font-bold text-cyan-100"><Sparkles className="h-4 w-4 text-cyan-200"/> تجهيزات المغامرة</div>

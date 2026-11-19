@@ -301,6 +301,10 @@ const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
 
 };
 
+export function getCartoonSvgDataUri(kind: CartoonSpriteKind): string {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(CARTOON_SVGS[kind])}`;
+}
+
 export type CartoonSpriteMap = Partial<Record<CartoonSpriteKind, HTMLImageElement>>;
 
 export function loadCartoonSvgSprites(onReady: (sprites: CartoonSpriteMap) => void): () => void {

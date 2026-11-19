@@ -552,15 +552,15 @@ export default function OpenWorldArena({
     toastTimeoutRef.current = window.setTimeout(() => {
       setHudToast(null);
       toastTimeoutRef.current = null;
-    }, 30000);
+    }, 5000);
   }, []);
 
-  // Auto-hide initial notification after 30 seconds
+  // Auto-hide initial notification after five seconds
   useEffect(() => {
     toastTimeoutRef.current = window.setTimeout(() => {
       setHudToast(null);
       toastTimeoutRef.current = null;
-    }, 30000);
+    }, 5000);
     return () => {
       if (toastTimeoutRef.current !== null) {
         window.clearTimeout(toastTimeoutRef.current);

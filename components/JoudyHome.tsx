@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { AnimatePresence, motion } from 'motion/react';
 import { Coins, Shirt, Footprints, Settings, X, Check } from 'lucide-react';
 import { SHOP_ITEMS, useWorldSave, saveWorld } from '@/lib/joudyWorld';
+import { useJoudyProgress } from '@/lib/storage';
+import { getCartoonSvgDataUri, type CartoonSpriteKind } from '@/lib/cartoonSvgSprites';
 
 interface Props {
   soundEnabled: boolean;
@@ -16,6 +18,8 @@ interface Props {
 
 export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, initialWardrobeOpen = false, onCloseWardrobe }: Props) {
   const save = useWorldSave();
+  const gameProgress = useJoudyProgress();
+  const unlockedLevel = gameProgress.highestUnlockedLevel;
   const [category, setCategory] = useState<'outfit' | 'shoes'>('outfit');
   const [selectedId, setSelectedId] = useState(save.equippedOutfit);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -51,6 +55,11 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
         .joudy-eye-left { animation-delay: .08s; }
         .joudy-eye-right { animation-delay: .16s; }
         .joudy-eye-blink { transform-origin: center; animation: joudy-blink 4.6s ease-in-out infinite; }
+        @keyframes collection-float { 0%,100% { transform: translateY(0) rotate(-2deg) } 50% { transform: translateY(-7px) rotate(2deg) } }
+        @keyframes collection-glow { 0%,100% { filter: drop-shadow(0 2px 4px rgba(80,55,25,.12)) } 50% { filter: drop-shadow(0 5px 10px rgba(80,55,25,.24)) } }
+        .collection-float { animation: collection-float 3.2s ease-in-out infinite, collection-glow 3.2s ease-in-out infinite; }
+        .collection-float:nth-child(2n) { animation-delay: .45s; }
+        .collection-float:nth-child(3n) { animation-delay: .9s; }
       `}</style>
 
       {/* Quiet, natural home interior — intentionally kept uncluttered */}
@@ -99,6 +108,16 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
               </svg>
             </div>
           </div>
+
+          {!initialWardrobeOpen && !wardrobeOpen && <div className="col-span-full space-y-4 rounded-[1.6rem] border border-amber-900/10 bg-[#fffaf2]/90 p-3 shadow-lg backdrop-blur-md sm:p-5">
+            <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[10px] font-black tracking-[.18em] text-amber-800">JOUDY FIELD GUIDE</p><h2 className="text-xl font-black text-[#39271d] sm:text-2xl">موسوعة عالم جودي</h2><p className="mt-1 text-xs text-amber-950/65">العناصر التي تجمعيها والوحوش التي ستقابليها خلال المراحل</p></div><span className="rounded-full border border-amber-800/15 bg-amber-100 px-3 py-1.5 text-[10px] font-black text-amber-900">وصلتِ للمستوى {unlockedLevel} من 30</span></div>
+            <div><h3 className="mb-2 text-sm font-black text-amber-950">العناصر القابلة للجمع</h3><div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-9">
+              {[{name:'القطة الذهبية',emoji:'🐱',sprite:'cat' as const,desc:'تمنح نقاطًا إضافية',count:'تظهر في المراحل'},{name:'الشوكولاتة',emoji:'🍫',sprite:'chocolate' as const,desc:'10 نقاط لكل قطعة',count:`${save.totalChocolates.toLocaleString('ar-EG')} تم جمعها`},{name:'الوردة',emoji:'🌹',sprite:'rose' as const,desc:'15 نقطة لكل وردة',count:'تظهر في المراحل'},{name:'العملة',emoji:'🪙',sprite:'coin' as const,desc:'رصيد للمتجر والعجلة',count:`${save.coins.toLocaleString('ar-EG')} في رصيدك`},{name:'المفتاح الأزرق',emoji:'🔑',sprite:'blueKey' as const,desc:'إنقاذ ومواصلة المرحلة',count:`${save.blueKeys} في المخزون`},{name:'المغناطيس',emoji:'🧲',sprite:'magnet' as const,desc:'يجذب العناصر لجودي',count:`${save.magnetCharges} شحنة`},{name:'القلب الإضافي',emoji:'💗',sprite:'heart' as const,desc:'فرصة حياة إضافية',count:`${save.extraHearts} في المخزون`},{name:'الدرع الدائري',emoji:'🛡️',desc:'حماية من الوحوش',count:`${save.shieldCharges} شحنة`},{name:'مضاعف النقاط',emoji:'✨',sprite:'doubleScore' as const,desc:'يضاعف النقاط لفترة محدودة',count:'عنصر خاص يظهر أثناء اللعب'}].map((item,index)=><div key={item.name} className="rounded-xl border border-amber-900/10 bg-white/85 p-3 text-center"><div className="collection-float mx-auto mb-1 grid h-12 w-12 place-items-center" style={{animationDelay:`${index*.12}s`}}>{item.sprite ? <Image src={getCartoonSvgDataUri(item.sprite)} alt={item.name} width={56} height={56} unoptimized className="h-12 w-12 object-contain"/> : <span className="text-3xl">{item.emoji}</span>}</div><p className="text-xs font-black text-amber-950">{item.name}</p><p className="mt-1 text-[10px] leading-4 text-slate-600">{item.desc}</p><p className="mt-1 text-[9px] font-bold text-emerald-800">{item.count}</p></div>)}
+            </div></div>
+            <div><div className="mb-2 flex items-center justify-between gap-2"><h3 className="text-sm font-black text-amber-950">دليل الوحوش والحراس</h3><span className="text-[10px] font-bold text-amber-900/60">الأسماء والظهور حسب المستوى</span></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+              {[{name:'غيمة العرقلة',emoji:'☁️',sprite:'obstacle',level:1,desc:'عائق يبطّئ جودي ويخصم نقاطًا'},{name:'رامي السهام',emoji:'🏹',sprite:'monster',level:1,desc:'يطلق مقذوفات باتجاه جودي'},{name:'عدّاء البرق',emoji:'🏃',sprite:'runner',level:1,desc:'وحش سريع يطارد جودي'},{name:'الضخم الناري',emoji:'🔥',sprite:'fierceMonster',level:6,desc:'قوي ويسبب خسارة أكبر عند الاصطدام'},{name:'المفجّر',emoji:'💥',sprite:'exploder',level:11,desc:'ينفجر بعد ظهوره؛ ابتعدي عنه'},{name:'الزعيم القرمزي',emoji:'👹',sprite:'boss',level:15,desc:'حارس المواجهة الكبرى'},{name:'صيّاد الظلال',emoji:'🌙',sprite:'shadowHunter',level:16,desc:'رامٍ متخفٍ في مدينة الظلال'},{name:'عدّاء الظلال',emoji:'🌑',sprite:'shadowRunner',level:16,desc:'مطارد سريع من عالم الظلال'},{name:'العملاق الظلي',emoji:'🔥',sprite:'shadowBrute',level:18,desc:'وحش ضخم من مدينة الظلال'},{name:'حارس الظلال',emoji:'👑',sprite:'shadowBoss',level:20,desc:'زعيم الفصل الثاني'},{name:'صيّاد البلورات',emoji:'💎',sprite:'crystalHunter',level:21,desc:'يطلق مقذوفات بلورية'},{name:'عدّاء البلورات',emoji:'⚡',sprite:'crystalRunner',level:21,desc:'مخلوق سريع من الغابة البلورية'},{name:'العملاق البلوري',emoji:'🪨',sprite:'crystalBrute',level:23,desc:'ضخم وقوي الاصطدام'},{name:'حارس الغابة',emoji:'💠',sprite:'crystalBoss',level:25,desc:'زعيم الفصل الثالث'},{name:'صيّاد اللهب',emoji:'🔥',sprite:'emberHunter',level:26,desc:'يطلق نيرانًا باتجاه جودي'},{name:'عدّاء اللهب',emoji:'🌋',sprite:'emberRunner',level:26,desc:'مطارد سريع من القلعة'},{name:'عملاق الحمم',emoji:'🌋',sprite:'emberBrute',level:28,desc:'وحش ناري بالغ القوة'},{name:'ملك القلعة',emoji:'👑',sprite:'emberBoss',level:30,desc:'الزعيم الأخير للمغامرة'}].map((enemy,index)=>{const open=unlockedLevel>=enemy.level;return <div key={enemy.name} className={`relative overflow-hidden rounded-xl border p-3 text-center ${open?'border-amber-900/10 bg-white/90':'border-slate-300/70 bg-slate-200/75'}`}><div className={`mx-auto mb-1 grid h-16 w-16 place-items-center ${open?'collection-float':'grayscale opacity-55'}`} style={{animationDelay:`${index*.08}s`}}>{open?<Image src={getCartoonSvgDataUri(enemy.sprite as CartoonSpriteKind)} alt={enemy.name} width={68} height={68} unoptimized className="h-16 w-16 object-contain drop-shadow-md"/>:<span className="text-3xl">🔒</span>}</div><p className="text-xs font-black text-slate-900">{enemy.name}</p><p className="mt-1 min-h-8 text-[10px] leading-4 text-slate-600">{open?enemy.desc:`يفتح في المستوى ${enemy.level}`}</p><span className={`mt-1 inline-block rounded-full px-2 py-1 text-[9px] font-black ${open?'bg-emerald-100 text-emerald-800':'bg-slate-300 text-slate-700'}`}>{open?'تم اكتشافه':`المستوى ${enemy.level}`}</span></div>})}
+            </div></div>
+          </div>}
 
           {wardrobeOpen && <aside className="flex min-h-0 flex-col gap-3 rounded-[1.6rem] border border-white/60 bg-[#fffaf2]/90 p-3 shadow-lg backdrop-blur-md sm:p-4">
             <div className="flex items-center justify-between"><div><p className="text-xs font-bold text-amber-800">غرفة تغيير الملابس</p><h2 className="text-xl font-black">اختاري إطلالة جودي</h2></div><Shirt className="h-6 w-6 text-amber-800"/></div>

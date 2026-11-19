@@ -372,7 +372,7 @@ export default function GameArena({
 
   useEffect(() => {
     setShowBossBanner(true);
-    const timer = window.setTimeout(() => setShowBossBanner(false), 10_000);
+    const timer = window.setTimeout(() => setShowBossBanner(false), 5_000);
     return () => window.clearTimeout(timer);
   }, [levelConfig.level]);
 
