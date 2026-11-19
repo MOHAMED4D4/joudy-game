@@ -20,7 +20,7 @@ const scoring = [
   { icon: '🧲', sprite: 'magnet' as CartoonSpriteKind, name: 'المغناطيس', points: 'جذب العناصر', detail: 'يساعدك على جمع العناصر القريبة' },
   { icon: '🌟', sprite: 'doubleScore' as CartoonSpriteKind, name: 'مضاعف النقاط', points: '×2 لمدة 10 ثوانٍ', detail: 'ضاعف نقاط التجميع لفترة مؤقتة' },
   { icon: '⚡', sprite: 'obstacle' as CartoonSpriteKind, name: 'تجنب العوائق', points: 'حركة ومراوغة', detail: 'ابتعد عن الوحوش والمقذوفات' },
-  { icon: '❤️', sprite: 'heart' as CartoonSpriteKind, name: 'حافظ على القلوب', points: '3 قلوب حياة', detail: 'لديك عدد محدود من القلوب؛ الاصطدام يقللها' },
+  { icon: '❤️', sprite: 'heart' as CartoonSpriteKind, name: 'استعادة القلوب', points: 'قلب إضافي عند جمعه', detail: 'يظهر القلب أثناء اللعب عندما ينقص رصيد جودي من القلوب. التقطه لاستعادة قلب أحمر مفقود، حتى الحد الأقصى وهو 3 قلوب.' },
 ];
 
 

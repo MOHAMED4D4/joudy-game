@@ -340,8 +340,17 @@ export default function GameArena({
       isPausedRef.current = true;
       setIsPaused(true);
     };
+    const resumeFromBackground = () => {
+      if (isGameOverRef.current) return;
+      isPausedRef.current = false;
+      setIsPaused(false);
+    };
     window.addEventListener('joudy:background', pauseForBackground);
-    return () => window.removeEventListener('joudy:background', pauseForBackground);
+    window.addEventListener('joudy:resume', resumeFromBackground);
+    return () => {
+      window.removeEventListener('joudy:background', pauseForBackground);
+      window.removeEventListener('joudy:resume', resumeFromBackground);
+    };
   }, []);
   const [typedGuideText, setTypedGuideText] = useState('');
 
@@ -2152,7 +2161,7 @@ export default function GameArena({
             >
               المستوى {levelConfig.level}
             </div>
-            <div className="absolute right-3 top-[9.1rem] z-40 flex flex-col items-end gap-1.5 sm:right-5 sm:top-[8.1rem]">
+            <div className="absolute right-1 top-[9.1rem] z-40 flex flex-col items-end gap-1.5 sm:right-2 sm:top-[8.1rem]">
               <div className="pointer-events-none flex flex-col items-end gap-1 rounded-2xl border border-white/20 bg-slate-950/65 px-2 py-1.5 shadow-lg backdrop-blur-sm" aria-label={`القلوب الأساسية: ${hearts} من 3، القلوب الإضافية: ${bonusHearts} من 5`}>
                 <div className="flex items-center gap-0.5" aria-label="القلوب الأساسية">
                   {[1, 2, 3].map((idx) => (

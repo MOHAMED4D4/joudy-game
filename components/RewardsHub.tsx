@@ -30,7 +30,7 @@ const TIER_STYLES: Record<string, { border: string; glow: string; chip: string; 
   'الخبراء': { border: 'border-blue-200/25', glow: 'from-blue-300/15 to-indigo-400/5', chip: 'bg-blue-300/10 text-blue-100', text: 'text-blue-100' },
   'أسطوري': { border: 'border-violet-200/30', glow: 'from-violet-300/20 to-fuchsia-400/8', chip: 'bg-violet-300/10 text-violet-100', text: 'text-violet-100' },
 };
-type RewardsPage = 'shop' | 'awards' | 'wheel';
+type RewardsPage = 'shop' | 'exchange' | 'awards' | 'wheel';
 const MAX_EXTRA_HEARTS = 5;
 
 export default function RewardsHub({ progress, page, onBack }: { progress: JoudyGameProgress; page: RewardsPage; onBack: () => void }) {
@@ -228,6 +228,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
   const grouped = ['البدايات','التقدم','المهارة','الخبراء','أسطوري'];
   const isShop = page === 'shop';
+  const isExchange = page === 'exchange';
   const isWheel = page === 'wheel';
   const shopProducts: { id: 'key' | 'heart' | 'shield' | 'magnet' | 'slow'; name: string; eyebrow: string; description: string; icon: LucideIcon; artwork: string; image: string; tint: string; stock: number; stockLabel: string; action: string; locked?: boolean }[] = [
     { id: 'key', name: 'المفتاح الأزرق', eyebrow: 'إنقاذ ومواصلة', description: 'احتفظي به في مخزونك لإنقاذ جودي ومتابعة المرحلة بعد نفاد القلوب.', icon: KeyRound, artwork: '🔑', image: '/images/powerups/key.svg', tint: 'from-sky-400/25 via-blue-500/10 to-indigo-500/10', stock: save.blueKeys, stockLabel: 'مفتاح في المخزون', action: 'شراء مفتاح' },
@@ -240,7 +241,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     <div className={`relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-2.5 sm:p-3 ${isWheel ? 'mb-2 shrink-0' : 'mb-5'}`}>
       <div className="flex items-center gap-3">
         <div className={`grid h-14 w-14 place-items-center rounded-2xl border shadow-inner ${isShop?'border-cyan-200/25 bg-gradient-to-br from-cyan-300/20 to-blue-700/20 text-cyan-100':'border-amber-200/20 bg-amber-300/10 text-amber-200'}`}>{isShop?<ShoppingBag className="h-7 w-7"/>:isWheel?<span className="text-3xl">🎡</span>:<Trophy className="h-6 w-6"/>}</div>
-        <div><p className="text-[10px] font-black tracking-[.22em] text-cyan-200">JOUDY · {isShop?'PREMIUM STORE':isWheel?'LUCKY WHEEL':'ACHIEVEMENTS'}</p><h2 className="text-2xl font-black text-white sm:text-3xl">{isShop?'متجر الأدوات':isWheel?'عجلة الحظ':'الإنجازات'}</h2><p className="text-xs text-slate-400">{isShop?'عزّزي فرصك بأدوات مصممة للمغامرات الصعبة':isWheel?'لفة واحدة قد تغيّر مغامرتك':'مرتبة من الأسهل للأصعب'}</p></div>
+        <div><p className="text-[10px] font-black tracking-[.22em] text-cyan-200">JOUDY · {isShop?'PREMIUM STORE':isExchange?'SCORE EXCHANGE':isWheel?'LUCKY WHEEL':'ACHIEVEMENTS'}</p><h2 className="text-2xl font-black text-white sm:text-3xl">{isShop?'متجر الأدوات':isExchange?'تبادل العملات بالنقاط':isWheel?'عجلة الحظ':'الإنجازات'}</h2><p className="text-xs text-slate-400">{isShop?'عزّزي فرصك بأدوات مصممة للمغامرات الصعبة':isExchange?'حوّلي العملات الذهبية إلى نقاط Score وفق باقات واضحة.':'مرتبة من الأسهل للأصعب'}</p></div>
       </div>
       <div className="flex items-center gap-3">
         {page === 'awards' && <span className="rounded-xl border border-amber-200/20 bg-amber-300/10 px-3 py-2 text-xs font-black text-amber-100">{unlockedCount} / {achievements.length} مكتمل</span>}
@@ -249,7 +250,20 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     </div>
     <button type="button" onClick={onBack} className={`inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-slate-200 transition hover:bg-white/10 ${isWheel ? 'mb-2 self-start text-xs' : 'mb-5 px-4 py-2.5'}`}><ArrowRight className="h-4 w-4"/> رجوع للخريطة</button>
     {notice && <motion.p initial={{opacity:0,y:-8,scale:.98}} animate={{opacity:1,y:0,scale:purchasePulse?1.025:1}} transition={{type:'spring',stiffness:260,damping:18}} role="status" className={`rounded-xl border px-3 py-2 text-xs font-bold ${notice.includes('مش معاك') || notice.includes('تحتاج') || notice.includes('تعذر') || notice.includes('يفتح عند') ? 'border-rose-300/25 bg-rose-500/10 text-rose-200' : 'border-emerald-200/20 bg-emerald-400/10 text-emerald-100'} ${isWheel ? 'mb-1 shrink-0 text-center text-[10px]' : 'mb-4'}`}>{notice}</motion.p>}
-    {isWheel ? <div className="mx-auto flex min-h-0 w-full flex-1 flex-col items-center justify-evenly gap-2 overflow-hidden py-1">
+    {isExchange ? <div className="mx-auto w-full max-w-3xl space-y-4">
+      <section className="rounded-[1.6rem] border border-amber-200/20 bg-gradient-to-br from-amber-300/[0.10] via-[#111b2d] to-cyan-400/[0.06] p-4 sm:p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div><h3 className="text-lg font-black text-white">تبادل العملات بالنقاط</h3><p className="mt-1 text-[11px] text-slate-400">كل 500 عملة صفراء = 1,000 نقطة Score تضاف لرصيدك فورًا.</p></div>
+          <span className="rounded-xl border border-amber-200/20 bg-amber-300/10 px-3 py-2 text-xs font-black text-amber-100">⭐ {save.totalScore.toLocaleString('ar-EG')} نقطة</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[500, 1000, 1500, 2000].map((amount) => <button key={amount} type="button" onClick={() => buyScore(amount)} className="rounded-xl border border-amber-200/20 bg-black/20 px-3 py-3 text-center transition hover:-translate-y-0.5 hover:border-amber-200/50 hover:bg-amber-300/10">
+            <span className="block text-sm font-black text-amber-100">{amount.toLocaleString('ar-EG')} 🪙</span><span className="mt-1 block text-[10px] font-bold text-cyan-200">+{(amount * 2).toLocaleString('ar-EG')} ⭐ Score</span>
+          </button>)}
+        </div>
+      </section>
+      <div className="rounded-2xl border border-cyan-200/15 bg-cyan-300/[.05] p-4 text-xs leading-6 text-slate-300"><b className="text-cyan-100">آلية التحويل:</b> اختر الباقة المناسبة؛ تُخصم العملات الذهبية ويُضاف ضعف قيمتها إلى رصيد Score مباشرة بعد نجاح العملية. إذا لم يكن رصيدك كافيًا ستظهر رسالة توضح المبلغ الناقص مع صوت تنبيه.</div>
+    </div> : isWheel ? <div className="mx-auto flex min-h-0 w-full flex-1 flex-col items-center justify-evenly gap-2 overflow-hidden py-1">
       <div className="shrink-0 rounded-xl border border-amber-200/25 bg-gradient-to-br from-amber-300/15 to-orange-500/5 px-5 py-1.5 text-center shadow-lg"><p className="text-xs font-bold text-amber-100">تكلفة اللفة الواحدة</p><p className="mt-1 text-2xl font-black text-white">500 🪙</p></div>
       <div className="relative aspect-square w-[min(58vh,78vw)] max-w-[370px] shrink-0">
         <div className="pointer-events-none absolute left-1/2 top-[-5px] z-30 -translate-x-1/2 drop-shadow-[0_4px_5px_rgba(0,0,0,.7)]"><svg width="42" height="52" viewBox="0 0 42 52"><path d="M21 50 3 5Q21 14 39 5Z" fill="#fff1a8" stroke="#92400e" strokeWidth="3"/><circle cx="21" cy="8" r="5" fill="#f59e0b" stroke="#fff1a8" strokeWidth="2"/></svg></div>
@@ -269,17 +283,6 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
         <div className="flex items-center gap-2 text-xs font-bold text-cyan-100"><Sparkles className="h-4 w-4 text-cyan-200"/> تجهيزات المغامرة</div>
         <p className="text-[10px] font-semibold text-slate-400">كل أداة تُضاف مباشرة إلى مخزونك</p>
       </div>
-      <section className="rounded-[1.6rem] border border-amber-200/20 bg-gradient-to-br from-amber-300/[0.10] via-[#111b2d] to-cyan-400/[0.06] p-4 sm:p-5">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <div><h3 className="text-lg font-black text-white">تبادل العملات بالنقاط</h3><p className="mt-1 text-[11px] text-slate-400">كل 500 عملة صفراء = 1,000 نقطة Score تضاف لرصيدك فورًا.</p></div>
-          <span className="rounded-xl border border-amber-200/20 bg-amber-300/10 px-3 py-2 text-xs font-black text-amber-100">⭐ {save.totalScore.toLocaleString('ar-EG')} نقطة</span>
-        </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {[500, 1000, 1500, 2000].map((amount) => <button key={amount} type="button" onClick={() => buyScore(amount)} className="rounded-xl border border-amber-200/20 bg-black/20 px-3 py-3 text-center transition hover:-translate-y-0.5 hover:border-amber-200/50 hover:bg-amber-300/10">
-            <span className="block text-sm font-black text-amber-100">{amount.toLocaleString('ar-EG')} 🪙</span><span className="mt-1 block text-[10px] font-bold text-cyan-200">+{(amount * 2).toLocaleString('ar-EG')} ⭐ Score</span>
-          </button>)}
-        </div>
-      </section>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {shopProducts.map((product) => {
           const Icon = product.icon;

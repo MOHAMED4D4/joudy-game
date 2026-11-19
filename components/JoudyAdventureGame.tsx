@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
-import { Volume2, VolumeX } from 'lucide-react';
 import { addWorldCoins, loadWorldSave, saveWorld } from '@/lib/joudyWorld';
 import CharacterSelectScreen from './CharacterSelectScreen';
 import WorldMapScreen from './WorldMapScreen';
@@ -27,6 +26,8 @@ export default function JoudyAdventureGame() {
 
   // Restore the original welcome page before the stages map.
   const [gameState, setGameState] = useState<GameState>('TITLE_MENU');
+  const gameStateRef = useRef<GameState>('TITLE_MENU');
+  gameStateRef.current = gameState;
   // Keep Joudy's original V3 costume fixed; no wardrobe overlays or equipment bonuses.
   const characterSpeedBonus = 1;
   const characterShieldBonus = 0;
@@ -82,24 +83,27 @@ export default function JoudyAdventureGame() {
   }, []);
 
   useEffect(() => {
-    let wasHidden = false;
-    const onVisibility = () => {
-      if (document.visibilityState === 'hidden') {
-        wasHidden = true;
-        soundEngine.suspendForBackground();
-        lossAudioRefs.current.forEach((audio) => audio.pause());
-        window.dispatchEvent(new Event('joudy:background'));
-      } else if (wasHidden) {
-        wasHidden = false;
-        setRestOverlay(true);
-      }
-    };
-    const onPageHide = () => {
+    let wasHiddenDuringGameplay = false;
+    const suspendForBackground = () => {
       soundEngine.suspendForBackground();
       lossAudioRefs.current.forEach((audio) => audio.pause());
-      window.dispatchEvent(new Event('joudy:background'));
+      if (gameStateRef.current === 'PLAYING') {
+        wasHiddenDuringGameplay = true;
+        window.dispatchEvent(new Event('joudy:background'));
+      }
     };
-    const onPageShow = (event: PageTransitionEvent) => { if (event.persisted) setRestOverlay(true); };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        suspendForBackground();
+      } else if (wasHiddenDuringGameplay) {
+        wasHiddenDuringGameplay = false;
+        if (gameStateRef.current === 'PLAYING') setRestOverlay(true);
+      }
+    };
+    const onPageHide = () => suspendForBackground();
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted && wasHiddenDuringGameplay && gameStateRef.current === 'PLAYING') setRestOverlay(true);
+    };
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('pagehide', onPageHide);
     window.addEventListener('pageshow', onPageShow);
@@ -257,14 +261,7 @@ export default function JoudyAdventureGame() {
 
   return (
     <main onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} onSelect={(event) => event.preventDefault()} onClickCapture={(event) => { if ((event.target as HTMLElement).closest('button')) soundEngine.playButtonClick(); }} className="relative min-h-dvh w-full overflow-x-clip bg-[#080f1b] flex flex-col">
-      {/* Minimal audio control */}
-      {gameState !== 'PLAYING' && (
-        <div className="absolute left-4 top-4 z-30">
-          <button type="button" onClick={handleToggleSound} aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'} className="rounded-full border border-white/10 bg-slate-950/70 p-3 text-slate-200 shadow-lg backdrop-blur">
-            {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-          </button>
-        </div>
-      )}
+      {/* التحكم بالصوت موجود داخل ساحة اللعب فقط؛ لا يظهر في صفحات الموقع الأخرى. */}
 
       {/* Active Screen State Machine (2D Arcade & Winding Map) */}
       <div className="relative z-10 flex-1 flex items-stretch justify-center w-full">
@@ -302,6 +299,8 @@ export default function JoudyAdventureGame() {
               characterShieldBonus={characterShieldBonus}
               onHighScoreUpdate={handleHighScoreUpdate}
               onExitToMap={() => {
+                setRestOverlay(false);
+                stopTransitionAudio();
                 soundEngine.stopBackgroundMusic();
                 setGameState('WORLD_MAP');
               }}
@@ -330,7 +329,7 @@ export default function JoudyAdventureGame() {
         </AnimatePresence>
       </div>
       {updateReady && <div className="fixed inset-x-3 bottom-4 z-[180] mx-auto max-w-lg rounded-2xl border border-cyan-200/25 bg-[#10263b]/95 p-4 text-white shadow-2xl backdrop-blur-xl" role="status"><p className="text-sm font-black">تحديث جديد لجودي جاهز</p><p className="mt-1 text-xs text-slate-300">يمكن تثبيت النسخة الجديدة وإعادة تشغيل اللعبة بأمان.</p><button type="button" onClick={applyAppUpdate} className="mt-3 w-full rounded-xl bg-gradient-to-l from-cyan-300 to-blue-500 px-4 py-2.5 text-sm font-black text-slate-950">تحديث الآن</button></div>}
-      {restOverlay && <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#070d19]/90 p-5 backdrop-blur-xl"><div className="w-full max-w-md rounded-[2rem] border border-cyan-100/20 bg-gradient-to-br from-[#18314a] via-[#172039] to-[#211934] p-7 text-center text-white shadow-2xl"><div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl border border-cyan-100/20 bg-cyan-200/10 text-cyan-100"><span className="text-3xl">🌙</span></div><p className="text-[10px] font-black tracking-[.22em] text-cyan-200">JOUDY REST MODE</p><h2 className="mt-2 text-2xl font-black">جودي أخذت استراحة</h2><p className="mt-3 text-sm leading-7 text-slate-300">تم إيقاف الصوت مؤقتًا وإيقاف اللعب لحين عودتك. تقدمك لم يُحذف.</p><button type="button" onClick={() => { soundEngine.resumeAfterUserGesture(); setRestOverlay(false); }} className="mt-6 w-full rounded-xl bg-gradient-to-l from-cyan-300 to-blue-500 px-5 py-3 font-black text-slate-950">العودة إلى المغامرة</button></div></div>}
+      {restOverlay && gameState === 'PLAYING' && <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#070d19]/90 p-5 backdrop-blur-xl"><div className="w-full max-w-md rounded-[2rem] border border-cyan-100/20 bg-gradient-to-br from-[#18314a] via-[#172039] to-[#211934] p-7 text-center text-white shadow-2xl"><div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl border border-cyan-100/20 bg-cyan-200/10 text-cyan-100"><span className="text-3xl">🌙</span></div><p className="text-[10px] font-black tracking-[.22em] text-cyan-200">JOUDY REST MODE</p><h2 className="mt-2 text-2xl font-black">جودي أخذت استراحة</h2><p className="mt-3 text-sm leading-7 text-slate-300">تم إيقاف الصوت مؤقتًا وإيقاف اللعب لحين عودتك. تقدمك لم يُحذف.</p><button type="button" onClick={() => { soundEngine.resumeAfterUserGesture(); window.dispatchEvent(new Event('joudy:resume')); setRestOverlay(false); }} className="mt-6 w-full rounded-xl bg-gradient-to-l from-cyan-300 to-blue-500 px-5 py-3 font-black text-slate-950">العودة إلى المغامرة</button></div></div>}
 
       {gameState === 'WORLD_MAP' && achievementNotices.length > 0 && (
         <div className="fixed inset-x-3 top-4 z-[120] mx-auto max-w-md animate-in slide-in-from-top-6 duration-500" role="status">
