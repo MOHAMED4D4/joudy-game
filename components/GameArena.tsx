@@ -689,6 +689,7 @@ export default function GameArena({
                               : 245;
 
       const x = radius + 16 + Math.random() * Math.max(40, worldWidth - (radius + 16) * 2);
+      const y = -radius - 12;
       if (isHazardKind(kind) && !seenEnemyTipsRef.current.has(kind)) {
         let alreadySeen = false;
         try {
@@ -720,7 +721,7 @@ export default function GameArena({
         kind,
         baseX: x,
         x,
-        y: -radius - 12,
+        y,
         vy: (baseSpeed + Math.random() * (isHazardKind(kind) ? 70 : 55)) * levelConfig.speedMultiplier / cameraZoom,
         vx: (Math.random() - 0.5) * (30 + levelConfig.windStrength),
         zigzagAmp: hasZigzag
