@@ -34,7 +34,7 @@ export default function WorldMapScreen({
   const worldSave = useWorldSave();
   const [gateNotice, setGateNotice] = useState('');
   const [rewardsPage, setRewardsPage] = useState<'map' | 'shop' | 'awards'>('map');
-  const regionPrice = 150_000;
+  const regionPrice = 60_000;
   const hasCompletedFirstCity = Boolean(progress.completedLevels[15]);
   const canUnlockCoast = hasCompletedFirstCity && !worldSave.coastalRegionUnlocked && worldSave.totalScore >= regionPrice;
   const unlockCoast = () => {
@@ -367,7 +367,7 @@ export default function WorldMapScreen({
                       <div className="min-w-0">
                         <p className="text-[10px] font-black tracking-[.22em] text-amber-200/80">نهاية الفصل الأول · المستويات 1–15</p>
                         <h2 className="mt-1 text-xl font-black text-white sm:text-2xl">{worldSave.coastalRegionUnlocked ? 'بوابة مدينة الظلال مفتوحة' : 'الفصل الثاني ينتظركِ بعد الزعيم'}</h2>
-                        <p className="mt-1 max-w-2xl text-xs leading-6 text-slate-300 sm:text-sm">{worldSave.coastalRegionUnlocked ? 'تم فتح العالم الجديد. استعدي للمستويات 16–30 والوحوش الأكثر شراسة.' : 'اهزمي زعيم المستوى 15 أولاً، ثم افتحي مدينة الظلال مقابل 150,000 نقطة للانتقال إلى المستويات 16–30.'}</p>
+                        <p className="mt-1 max-w-2xl text-xs leading-6 text-slate-300 sm:text-sm">{worldSave.coastalRegionUnlocked ? 'تم فتح العالم الجديد. استعدي للمستويات 16–30 والوحوش الأكثر شراسة.' : 'اهزمي زعيم المستوى 15 أولاً، ثم افتحي مدينة الظلال مقابل 60,000 نقطة للانتقال إلى المستويات 16–30.'}</p>
                       </div>
                     </div>
                     <div className="relative flex w-full shrink-0 flex-col items-center gap-2 sm:w-auto sm:min-w-[250px]">
@@ -375,7 +375,7 @@ export default function WorldMapScreen({
                         <span>⭐</span>
                         <span className="tabular-nums">{worldSave.totalScore.toLocaleString('ar-EG')}</span>
                         <span className="text-amber-200/50">/</span>
-                        <span>150,000 نقطة</span>
+                        <span>60,000 نقطة</span>
                       </div>
                       {worldSave.coastalRegionUnlocked ? (
                         <button type="button" onClick={() => onSelectLevel(16)} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-100/35 bg-gradient-to-l from-emerald-300 to-teal-500 px-5 py-3 font-black text-slate-950 shadow-[0_10px_28px_rgba(16,185,129,.2)] transition hover:-translate-y-0.5">
@@ -387,7 +387,7 @@ export default function WorldMapScreen({
                         </button>
                       ) : canUnlockCoast ? (
                         <button type="button" onClick={unlockCoast} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-100/45 bg-gradient-to-l from-amber-200 via-yellow-400 to-orange-500 px-5 py-3 font-black text-slate-950 shadow-[0_10px_30px_rgba(245,158,11,.25)] transition hover:-translate-y-0.5 hover:brightness-110">
-                          <Lock className="h-4 w-4" /> افتحي مدينة الظلال · 150,000 نقطة
+                          <Lock className="h-4 w-4" /> افتحي مدينة الظلال · 60,000 نقطة
                         </button>
                       ) : (
                         <button type="button" onClick={unlockCoast} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200/40 bg-gradient-to-l from-rose-500 to-red-800 px-5 py-3 font-black text-white shadow-[0_10px_28px_rgba(220,38,38,.24)] transition hover:brightness-110">
