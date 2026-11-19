@@ -2,13 +2,13 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { ShoppingBag, Trophy, Lock, Check, Coins, KeyRound, Heart, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Trophy, Lock, Check, Coins, KeyRound, Heart, ArrowRight, Shield } from 'lucide-react';
 import { loadWorldSave, saveWorld, useWorldSave } from '@/lib/joudyWorld';
 import type { JoudyGameProgress } from '@/lib/storage';
 
 type Achievement = { id: string; title: string; detail: string; icon: string; unlocked: boolean; tier: string };
 type RewardsPage = 'shop' | 'awards';
-const MAX_EXTRA_HEARTS = 3;
+const MAX_EXTRA_HEARTS = 5;
 
 export default function RewardsHub({ progress, page, onBack }: { progress: JoudyGameProgress; page: RewardsPage; onBack: () => void }) {
   const save = useWorldSave();
@@ -68,8 +68,9 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     return defs.map((item) => ({...item,unlocked:Boolean(unlock[item.id])}));
   }, [progress.completedLevels, save.totalChocolates, save.totalScore, save.perfectRuns, save.totalBosses]);
 
-  const buy = (kind: 'key' | 'heart') => {
-    const price = kind === 'key' ? 350 : 300;
+  const buy = (kind: 'key' | 'heart' | 'shield') => {
+    if (kind === 'shield' && progress.highestUnlockedLevel < 5) { setNotice('الدرع الدائري يفتح عند الوصول إلى المستوى الخامس.'); return; }
+    const price = 100;
     const latest = loadWorldSave();
     if (latest.coins < price) {
       setNotice(`مش معاك عملات كفاية — ناقصك ${(price - latest.coins).toLocaleString('ar-EG')} عملة.`);
@@ -79,9 +80,9 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     saveWorld((current) => {
       if (current.coins < price) return current;
       purchased = true;
-      return { ...current, coins: current.coins - price, blueKeys: kind === 'key' ? current.blueKeys + 1 : current.blueKeys, extraHearts: kind === 'heart' ? current.extraHearts + 1 : current.extraHearts };
+      return { ...current, coins: current.coins - price, blueKeys: kind === 'key' ? current.blueKeys + 1 : current.blueKeys, extraHearts: kind === 'heart' ? current.extraHearts + 1 : current.extraHearts, shieldCharges: kind === 'shield' ? current.shieldCharges + 1 : current.shieldCharges };
     });
-    setNotice(purchased ? (kind === 'key' ? 'تم شراء المفتاح الأزرق وإضافته للمخزون!' : 'تم شراء قلب إضافي! سيظهر بجانب القلوب الأساسية في المحاولة القادمة.') : 'تعذر إتمام الشراء؛ راجع رصيدك.');
+    setNotice(purchased ? (kind === 'key' ? 'تم شراء المفتاح الأزرق وإضافته للمخزون!' : kind === 'heart' ? 'تم شراء قلب إضافي! سيظهر بجانب القلوب الأساسية في المحاولة القادمة.' : 'تم شراء شحنة درع دائري لمدة دقيقتين!') : 'تعذر إتمام الشراء؛ راجع رصيدك.');
   };
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
@@ -99,13 +100,14 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
       </div>
     </div>
     <button type="button" onClick={onBack} className="mb-5 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-200 transition hover:bg-white/10"><ArrowRight className="h-4 w-4"/> رجوع للخريطة</button>
+    {notice && <p role="status" className="mb-4 rounded-xl border border-emerald-200/20 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-100">{notice}</p>}
     {isShop ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div className="rounded-2xl border border-blue-200/20 bg-gradient-to-br from-blue-950/70 to-slate-900 p-5"><div className="mb-3 flex items-center justify-between"><KeyRound className="h-8 w-8 text-sky-300"/><span className="text-3xl">🔑</span></div><h3 className="font-black text-white">المفتاح الأزرق</h3><p className="mt-2 min-h-10 text-xs leading-6 text-slate-300">مفتاح إضافي يُضاف إلى مخزونك لاستخدامه داخل اللعبة.</p><p className="my-4 text-sm font-black text-amber-200">350 عملة</p><button onClick={()=>buy('key')} className="w-full rounded-xl bg-gradient-to-l from-sky-500 to-blue-700 px-4 py-3 text-sm font-black text-white shadow-lg">شراء مفتاح</button><p className="mt-3 text-center text-xs text-slate-400">في المخزون: {save.blueKeys}</p></div>
-      <div className="rounded-2xl border border-sky-200/25 bg-gradient-to-br from-indigo-950/80 via-blue-950/70 to-slate-900 p-5"><div className="mb-3 flex items-center justify-between"><Heart className="h-8 w-8 fill-sky-400 text-cyan-100 drop-shadow-[0_0_10px_rgba(56,189,248,.65)]"/><span className="text-3xl">💠</span></div><h3 className="font-black text-white">قلب إضافي</h3><p className="mt-2 min-h-10 text-xs leading-6 text-slate-300">قلب احتياطي أزرق يظهر بجانب القلوب الأساسية. تستخدم حتى 3 قلوب إضافية في كل محاولة، والباقي يظل في المخزون.</p><p className="my-4 text-sm font-black text-amber-200">300 عملة</p><button onClick={()=>buy('heart')} className="w-full rounded-xl bg-gradient-to-l from-cyan-500 to-blue-700 px-4 py-3 text-sm font-black text-white shadow-lg">شراء قلب إضافي</button><div className="mt-3 flex items-center justify-center gap-1.5">{Array.from({length:MAX_EXTRA_HEARTS},(_,i)=><Heart key={i} className={`h-5 w-5 ${i<Math.min(MAX_EXTRA_HEARTS,save.extraHearts)?'fill-sky-400 text-cyan-100':'fill-slate-700 text-slate-500'}`}/>)}</div><p className="mt-1 text-center text-xs text-slate-400">في المخزون: {save.extraHearts} قلب</p></div>
+      <div className="rounded-2xl border border-blue-200/20 bg-gradient-to-br from-blue-950/70 to-slate-900 p-5"><div className="mb-3 flex items-center justify-between"><KeyRound className="h-8 w-8 text-sky-300"/><span className="text-3xl">🔑</span></div><h3 className="font-black text-white">المفتاح الأزرق</h3><p className="mt-2 min-h-10 text-xs leading-6 text-slate-300">مفتاح إضافي يُضاف إلى مخزونك لاستخدامه داخل اللعبة.</p><p className="my-4 text-sm font-black text-amber-200">100 عملة</p><button onClick={()=>buy('key')} className="w-full rounded-xl bg-gradient-to-l from-sky-500 to-blue-700 px-4 py-3 text-sm font-black text-white shadow-lg">شراء مفتاح</button><p className="mt-3 text-center text-xs text-slate-400">في المخزون: {save.blueKeys}</p></div>
+      <div className="rounded-2xl border border-sky-200/25 bg-gradient-to-br from-indigo-950/80 via-blue-950/70 to-slate-900 p-5"><div className="mb-3 flex items-center justify-between"><Heart className="h-8 w-8 fill-sky-400 text-cyan-100 drop-shadow-[0_0_10px_rgba(56,189,248,.65)]"/><span className="text-3xl">💠</span></div><h3 className="font-black text-white">قلب إضافي</h3><p className="mt-2 min-h-10 text-xs leading-6 text-slate-300">قلب احتياطي أزرق يظهر بجانب القلوب الأساسية. تستخدم حتى 5 قلوب إضافية في كل محاولة، والباقي يظل في المخزون.</p><p className="my-4 text-sm font-black text-amber-200">100 عملة</p><button onClick={()=>buy('heart')} className="w-full rounded-xl bg-gradient-to-l from-cyan-500 to-blue-700 px-4 py-3 text-sm font-black text-white shadow-lg">شراء قلب إضافي</button><div className="mt-3 flex items-center justify-center gap-1.5">{Array.from({length:MAX_EXTRA_HEARTS},(_,i)=><Heart key={i} className={`h-5 w-5 ${i<Math.min(MAX_EXTRA_HEARTS,save.extraHearts)?'fill-sky-400 text-cyan-100':'fill-slate-700 text-slate-500'}`}/>)}</div><p className="mt-1 text-center text-xs text-slate-400">في المخزون: {save.extraHearts} قلب</p></div>
+      <div className={`rounded-2xl border border-emerald-200/25 bg-gradient-to-br from-emerald-950/80 via-teal-950/70 to-slate-900 p-5 ${progress.highestUnlockedLevel < 5 ? 'opacity-75' : ''}`}><div className="mb-3 flex items-center justify-between"><Shield className="h-8 w-8 text-emerald-200"/><span className="text-3xl">🛡️</span></div><h3 className="font-black text-white">الدرع الدائري</h3><p className="mt-2 min-h-10 text-xs leading-6 text-slate-300">يحمي جودي من الوحوش لمدة دقيقتين كاملتين. يُفعّل بلمسة واحدة أثناء اللعب. يُفتح من المستوى الخامس.</p><p className="my-4 text-sm font-black text-amber-200">100 عملة · لكل استخدام</p><button disabled={progress.highestUnlockedLevel < 5} onClick={()=>buy('shield')} className="w-full rounded-xl bg-gradient-to-l from-emerald-500 to-teal-700 px-4 py-3 text-sm font-black text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-40">{progress.highestUnlockedLevel < 5 ? 'يفتح عند المستوى 5' : 'شراء شحنة درع'}</button><p className="mt-3 text-center text-xs text-slate-400">في المخزون: {save.shieldCharges} شحنة · 20 مجانية عند فتحه</p></div>
     </div> : <div className="space-y-6">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4"><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">إجمالي الإنجازات</p><p className="mt-1 text-xl font-black text-white">{achievements.length}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">المكتملة</p><p className="mt-1 text-xl font-black text-emerald-300">{unlockedCount}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">المتبقية</p><p className="mt-1 text-xl font-black text-amber-200">{achievements.length-unlockedCount}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">نسبة الإنجاز</p><p className="mt-1 text-xl font-black text-cyan-200">{Math.round(unlockedCount/achievements.length*100)}%</p></div></div>
       {grouped.map((tier,index)=><div key={tier}><div className="mb-3 flex items-center gap-2"><span className="grid h-7 w-7 place-items-center rounded-lg bg-amber-300/10 text-xs font-black text-amber-200">{index+1}</span><h3 className="text-sm font-black text-white">{tier}</h3><span className="h-px flex-1 bg-white/10"/></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">{achievements.filter(a=>a.tier===tier).map((a,i)=><motion.div key={a.id} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{duration:.2,delay:Math.min(i*.025,.15)}} className={`relative flex min-h-36 flex-col items-center justify-center overflow-hidden rounded-xl border p-3 text-center ${a.unlocked?'border-amber-200/30 bg-gradient-to-br from-amber-300/15 to-orange-500/5':'border-white/10 bg-slate-950/55'}`}><div className={`mb-2 grid h-11 w-11 place-items-center rounded-xl text-2xl ${a.unlocked?'border border-amber-200/20 bg-amber-300/10':'border border-white/5 bg-black/50 grayscale'}`}>{a.unlocked?a.icon:'🔒'}</div><h4 className={`text-[11px] font-black leading-5 ${a.unlocked?'text-amber-100':'text-slate-300'}`}>{a.title}</h4><p className="mt-1 text-[10px] leading-4 text-slate-400">{a.detail}</p><span className={`mt-2 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-black ${a.unlocked?'bg-emerald-400/10 text-emerald-200':'bg-black/30 text-slate-500'}`}>{a.unlocked?<><Check className="h-3 w-3"/> مكتمل</>:<><Lock className="h-3 w-3"/> مقفول</>}</span></motion.div>)}</div></div>)}
     </div>}
-    {notice && <p role="status" className="mt-4 rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-center text-xs font-bold text-cyan-100">{notice}</p>}
   </section>;
 }

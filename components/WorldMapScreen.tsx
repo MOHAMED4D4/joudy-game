@@ -64,6 +64,12 @@ export default function WorldMapScreen({
   // Restore the older map behavior: when STAGES opens, smoothly bring the
   // currently unlocked level into view; repeat this after progress advances.
   useEffect(() => {
+    if (progress.highestUnlockedLevel >= 5 && !worldSave.shieldFreeGranted) {
+      saveWorld((current) => current.shieldFreeGranted ? current : { ...current, shieldCharges: current.shieldCharges + 20, shieldFreeGranted: true });
+    }
+  }, [progress.highestUnlockedLevel, worldSave.shieldFreeGranted]);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       currentLevelRef.current?.scrollIntoView({
         behavior: 'smooth',
@@ -148,14 +154,9 @@ export default function WorldMapScreen({
 
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <button type="button" onClick={() => setRewardsPage('shop')} className="group flex min-h-24 items-center gap-3 rounded-2xl border border-cyan-200/20 bg-gradient-to-l from-cyan-950/80 to-blue-950/70 p-4 text-right shadow-lg transition hover:-translate-y-0.5 hover:border-cyan-200/40">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-cyan-200/20 bg-cyan-300/10 text-cyan-200"><span className="text-2xl">🛒</span></span>
-          <span><span className="block text-base font-black text-white">المتجر</span><span className="mt-1 block text-[10px] text-cyan-100/70">افتح صفحة المشتريات</span></span>
-        </button>
-        <button type="button" onClick={() => setRewardsPage('awards')} className="group flex min-h-24 items-center gap-3 rounded-2xl border border-amber-200/20 bg-gradient-to-l from-amber-950/80 to-orange-950/70 p-4 text-right shadow-lg transition hover:-translate-y-0.5 hover:border-amber-200/40">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-amber-200/20 bg-amber-300/10 text-amber-200"><Trophy className="h-6 w-6"/></span>
-          <span><span className="block text-base font-black text-white">الإنجازات</span><span className="mt-1 block text-[10px] text-amber-100/70">استعرض كل التحديات</span></span>
+      <div className="flex justify-center">
+        <button type="button" onClick={() => setRewardsPage('shop')} className="inline-flex items-center gap-2 rounded-xl border border-cyan-200/20 bg-gradient-to-l from-cyan-950/80 to-blue-950/70 px-5 py-2.5 text-sm font-black text-white shadow-md transition hover:-translate-y-0.5 hover:border-cyan-200/40">
+          <span className="text-lg">🛒</span> المتجر <span className="text-[10px] font-semibold text-cyan-100/70">· مشتريات ومساعدات</span>
         </button>
       </div>
 
@@ -428,6 +429,12 @@ export default function WorldMapScreen({
             </React.Fragment>
           );
         })}
+
+        <div className="mt-6 flex justify-center">
+          <button type="button" onClick={() => setRewardsPage('awards')} className="inline-flex items-center gap-2 rounded-xl border border-amber-200/20 bg-gradient-to-l from-amber-950/70 to-orange-950/60 px-5 py-3 text-sm font-black text-amber-100 shadow-md transition hover:border-amber-200/40">
+            <Trophy className="h-5 w-5"/> الإنجازات والتحديات
+          </button>
+        </div>
 
         <div className="relative isolate mt-5 min-h-[180px] overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#050914] shadow-[0_18px_55px_rgba(0,0,0,.5)] sm:min-h-[210px]">
           <Image src="/images/anime-night.jpg" alt="معاينة معتمة للموسم القادم" fill sizes="(max-width: 1024px) 100vw, 1024px" className="object-cover object-center opacity-20 grayscale" />

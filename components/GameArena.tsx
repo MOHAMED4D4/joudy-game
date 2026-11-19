@@ -16,6 +16,7 @@ import {
   VolumeX,
   KeyRound,
   Sparkles,
+  Shield,
 } from 'lucide-react';
 import { soundEngine } from '@/lib/soundEffects';
 import { loadTransparentSprite } from '@/lib/spriteUtils';
@@ -110,6 +111,8 @@ const COMBO_WINDOW_SEC = 3.2;
 const MAGNET_DURATION_SEC = 6.5;
 const DOUBLE_SCORE_DURATION_SEC = 10;
 const MAX_HEARTS = 3;
+const MAX_EXTRA_HEARTS = 5;
+const SHIELD_DURATION_SEC = 120;
 
 const CAT_QUOTES = ['قطة تستحق الرعاية 🐱', 'صوت خرخرة هادئ', 'رفيقة صغيرة للمغامرة'];
 const ROSE_QUOTES = ['تحفة! 🌹', 'يا جمالها! ✨', 'أجمل وردة! 🌹'];
@@ -214,7 +217,9 @@ export default function GameArena({
 
   const [score, setScore] = useState(0);
   const [hearts, setHearts] = useState(MAX_HEARTS);
-  const [bonusHearts, setBonusHearts] = useState(() => Math.min(3, worldSave.extraHearts));
+  const [bonusHearts, setBonusHearts] = useState(() => Math.min(MAX_EXTRA_HEARTS, worldSave.extraHearts));
+  const [shieldSecondsLeft, setShieldSecondsLeft] = useState(0);
+  const [showBossBanner, setShowBossBanner] = useState(true);
   const [counts, setCounts] = useState({ cats: 0, roses: 0, chocolates: 0, obstaclesHit: 0 });
   const [combo, setCombo] = useState(0);
   const [magnetSecondsLeft, setMagnetSecondsLeft] = useState(0);
@@ -230,7 +235,9 @@ export default function GameArena({
   const dragPointerIdRef = useRef<number | null>(null);
   const scoreRef = useRef(0);
   const heartsRef = useRef(MAX_HEARTS);
-  const bonusHeartsRef = useRef(Math.min(3, worldSave.extraHearts));
+  const bonusHeartsRef = useRef(Math.min(MAX_EXTRA_HEARTS, worldSave.extraHearts));
+  const shieldTimerRef = useRef(0);
+  const shieldHudTickRef = useRef(0);
   const countsRef = useRef({ cats: 0, roses: 0, chocolates: 0, obstaclesHit: 0 });
   const comboRef = useRef(0);
   const comboTimerRef = useRef(0);
@@ -241,6 +248,18 @@ export default function GameArena({
   const resetSignalRef = useRef(0);
   const reviveRequestRef = useRef(false);
   const reviveCountRef = useRef(worldSave.reviveCountsByLevel[levelConfig.level] ?? 0);
+
+  useEffect(() => {
+    if (levelConfig.level >= 5 && !loadWorldSave().shieldFreeGranted) {
+      saveWorld((current) => current.shieldFreeGranted ? current : { ...current, shieldCharges: current.shieldCharges + 20, shieldFreeGranted: true });
+    }
+  }, [levelConfig.level]);
+
+  useEffect(() => {
+    setShowBossBanner(true);
+    const timer = window.setTimeout(() => setShowBossBanner(false), 10_000);
+    return () => window.clearTimeout(timer);
+  }, [levelConfig.level]);
 
   const spriteRef = useRef<HTMLImageElement | null>(null);
   const outfitSpriteRef = useRef<HTMLImageElement | null>(null);
@@ -332,10 +351,25 @@ export default function GameArena({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  const activateShield = useCallback(() => {
+    if (levelConfig.level < 5 || shieldTimerRef.current > 0 || isPausedRef.current || isGameOverRef.current) return;
+    let activated = false;
+    saveWorld((current) => {
+      if (current.shieldCharges <= 0) return current;
+      activated = true;
+      return { ...current, shieldCharges: current.shieldCharges - 1 };
+    });
+    if (!activated) return;
+    shieldTimerRef.current = SHIELD_DURATION_SEC;
+    shieldHudTickRef.current = 0;
+    setShieldSecondsLeft(SHIELD_DURATION_SEC);
+    soundEngine.playMagnetCollect();
+  }, [levelConfig.level]);
+
   const resetRun = useCallback(() => {
     scoreRef.current = 0;
     heartsRef.current = MAX_HEARTS;
-    const remainingBonusHearts = Math.min(3, loadWorldSave().extraHearts);
+    const remainingBonusHearts = Math.min(MAX_EXTRA_HEARTS, loadWorldSave().extraHearts);
     bonusHeartsRef.current = remainingBonusHearts;
     setBonusHearts(remainingBonusHearts);
     countsRef.current = { cats: 0, roses: 0, chocolates: 0, obstaclesHit: 0 };
@@ -343,6 +377,8 @@ export default function GameArena({
     comboTimerRef.current = 0;
     magnetTimerRef.current = 0;
     doubleScoreTimerRef.current = 0;
+    shieldTimerRef.current = 0;
+    setShieldSecondsLeft(0);
     reviveRequestRef.current = false;
     victoryFiredRef.current = false;
     isGameOverRef.current = false;
@@ -678,7 +714,14 @@ export default function GameArena({
       }
     };
 
-    const damagePlayer = (impactX: number, impactY: number, scorePenalty: number, message = 'احترس! ⚠️') => {
+    const damagePlayer = (impactX: number, impactY: number, scorePenalty: number, message = 'احترس! ⚠️', shieldable = true) => {
+      if (shieldable && shieldTimerRef.current > 0) {
+        popups.push({ x: impactX, y: impactY - 20, text: 'الدرع صدّ الوحش! 🛡️', color: '#6EE7B7', life: 0, maxLife: 0.9 });
+        player.bubbleText = 'الدرع حماكي! 🛡️';
+        player.bubbleTone = 'good';
+        player.bubbleTimer = 0.9;
+        return;
+      }
       if (player.invulnTimer > 0) return;
       scoreRef.current = Math.max(0, scoreRef.current + scorePenalty);
       comboRef.current = 0;
@@ -801,6 +844,14 @@ export default function GameArena({
             setDoubleScoreSecondsLeft(Math.ceil(doubleScoreTimerRef.current));
           }
         }
+        if (shieldTimerRef.current > 0) {
+          shieldTimerRef.current = Math.max(0, shieldTimerRef.current - dt);
+          shieldHudTickRef.current += dt;
+          if (shieldHudTickRef.current >= 0.25 || shieldTimerRef.current === 0) {
+            shieldHudTickRef.current = 0;
+            setShieldSecondsLeft(Math.ceil(shieldTimerRef.current));
+          }
+        }
 
         if (player.invulnTimer > 0) player.invulnTimer = Math.max(0, player.invulnTimer - dt);
         if (player.happyTimer > 0) player.happyTimer = Math.max(0, player.happyTimer - dt);
@@ -816,7 +867,7 @@ export default function GameArena({
               lightningFlash = 0.34;
               soundEngine.playThunder();
               if (Math.abs(player.x - lightningX) < 112) {
-                damagePlayer(lightningX, player.y - 24, -6, 'ضربة برق! ابتعدي عن الوميض ⚡');
+                damagePlayer(lightningX, player.y - 24, -6, 'ضربة برق! ابتعدي عن الوميض ⚡', false);
               } else {
                 popups.push({ x: lightningX, y: worldHeight - 125, text: 'تفاديتِ البرق!', color: '#BAE6FD', life: 0, maxLife: 0.85 });
               }
@@ -971,7 +1022,7 @@ export default function GameArena({
             spawnBurst(item.x, item.y, item.kind);
 
             if (isHazardKind(item.kind)) {
-              damagePlayer(item.x, item.y, item.points);
+              damagePlayer(item.x, item.y, item.points, 'احترس! ⚠️', item.kind !== 'obstacle');
             } else if (item.kind === 'coin') {
               addWorldCoins(25);
               player.catchBounce = 1;
@@ -1479,6 +1530,28 @@ export default function GameArena({
         ctx.restore();
       }
 
+      // Circular emerald shield purchased/unlocked from level five; blocks monster hits.
+      if (shieldTimerRef.current > 0) {
+        ctx.save();
+        ctx.translate(drawPlayerX, drawPlayerY);
+        const ringPulse = 1 + Math.sin(totalElapsed * 7) * 0.035;
+        ctx.fillStyle = 'rgba(16,185,129,.10)';
+        ctx.strokeStyle = 'rgba(110,231,183,.95)';
+        ctx.lineWidth = 5;
+        ctx.shadowColor = 'rgba(16,185,129,.8)';
+        ctx.shadowBlur = 24;
+        ctx.beginPath();
+        ctx.arc(0, 0, player.size * 0.78 * ringPulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.setLineDash([9, 7]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, player.size * 0.88 * ringPulse, -totalElapsed * 1.8, -totalElapsed * 1.8 + Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
       // Blue revive protection aura (three-second grace period after spending a key)
       if (player.invulnTimer > 1.4) {
         ctx.save();
@@ -1804,9 +1877,10 @@ export default function GameArena({
         >
           المستوى {levelConfig.level}
         </div>
+        <div className="absolute right-3 top-[9.5rem] z-40 flex items-center gap-1.5 sm:right-5 sm:top-[8.25rem]">
         <div
-          className="pointer-events-none absolute right-3 top-[9.5rem] z-40 inline-flex items-center gap-1 rounded-full border border-white/20 bg-slate-950/55 px-2.5 py-1.5 shadow-lg backdrop-blur-sm sm:right-5 sm:top-[8.25rem]"
-          aria-label={`القلوب الأساسية: ${hearts} من 3، القلوب الإضافية: ${bonusHearts} من 3`}
+          className="pointer-events-none inline-flex items-center gap-1 rounded-full border border-white/20 bg-slate-950/55 px-2 py-1.5 shadow-lg backdrop-blur-sm"
+          aria-label={`القلوب الأساسية: ${hearts} من 3، القلوب الإضافية: ${bonusHearts} من 5`}
         >
           <div className="flex items-center gap-0.5">
             {[1, 2, 3].map((idx) => (
@@ -1825,8 +1899,14 @@ export default function GameArena({
           </div>
           {worldSave.extraHearts > bonusHearts && <span className="mr-1 rounded-full border border-sky-200/25 bg-sky-400/15 px-1.5 py-0.5 text-[9px] font-black text-cyan-100" title="قلوب إضافية محفوظة للمحاولات القادمة">+{worldSave.extraHearts - bonusHearts}</span>}
         </div>
+        {levelConfig.level >= 5 && (
+          <button type="button" onClick={activateShield} disabled={shieldSecondsLeft > 0 || worldSave.shieldCharges <= 0 || isPaused || isGameOver} className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-2 text-[9px] font-black shadow-lg backdrop-blur-sm transition sm:px-2.5 sm:text-[10px] ${shieldSecondsLeft > 0 ? 'border-emerald-200/50 bg-emerald-950/80 text-emerald-100' : 'border-emerald-200/30 bg-slate-950/65 text-emerald-100 disabled:opacity-50'}`} aria-label={shieldSecondsLeft > 0 ? `الدرع نشط ${shieldSecondsLeft} ثانية` : `تفعيل الدرع، ${worldSave.shieldCharges} شحنة متبقية`}>
+            <Shield className="h-4 w-4"/>{shieldSecondsLeft > 0 ? `${Math.floor(shieldSecondsLeft / 60)}:${String(shieldSecondsLeft % 60).padStart(2,'0')}` : `×${worldSave.shieldCharges}`}
+          </button>
+        )}
+        </div>
 
-        {(levelConfig.level === 15 || levelConfig.level === 30) && (
+        {(levelConfig.level === 15 || levelConfig.level === 30) && showBossBanner && (
           <div className={`pointer-events-none absolute left-1/2 top-[9.2rem] z-40 -translate-x-1/2 rounded-full border px-4 py-1.5 text-center text-[10px] font-black shadow-xl backdrop-blur-md sm:top-[8.2rem] sm:text-xs ${levelConfig.level === 15 ? 'border-amber-200/60 bg-gradient-to-r from-rose-950/90 via-red-700/90 to-amber-700/90 text-amber-100 shadow-rose-950/30' : 'border-fuchsia-200/60 bg-gradient-to-r from-slate-950/90 via-violet-800/90 to-rose-900/90 text-fuchsia-100 shadow-violet-950/40'}`}>
             {levelConfig.level === 15 ? '⚔ المعركة الكبرى · زعيم المدينة الأولى' : '👑 المواجهة النهائية · زعيم المستوى 30'}
           </div>
@@ -1876,7 +1956,7 @@ export default function GameArena({
           </div>
         )}
 
-        {/* Game Over (3 Hearts Depleted) Overlay */}
+        {/* Game Over (all available hearts depleted) Overlay */}
         {isGameOver && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-md">
             <motion.div

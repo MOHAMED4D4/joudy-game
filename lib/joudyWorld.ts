@@ -23,6 +23,8 @@ export interface WorldSave {
   perfectRuns: number;
   totalBosses: number;
   extraHearts: number;
+  shieldCharges: number;
+  shieldFreeGranted: boolean;
 }
 
 const KEY = 'joudy_world_save_v1';
@@ -47,6 +49,8 @@ const DEFAULT_SAVE: WorldSave = {
   perfectRuns: 0,
   totalBosses: 0,
   extraHearts: 0,
+  shieldCharges: 0,
+  shieldFreeGranted: false,
 };
 
 export interface ShopItem {
@@ -133,6 +137,8 @@ function parse(raw: string | null): WorldSave {
       perfectRuns: Math.max(0, Number(value.perfectRuns ?? 0) || 0),
       totalBosses: Math.max(0, Number(value.totalBosses ?? 0) || 0),
       extraHearts: Math.max(0, Number(value.extraHearts ?? 0) || 0),
+      shieldCharges: Math.max(0, Number(value.shieldCharges ?? 0) || 0),
+      shieldFreeGranted: value.shieldFreeGranted === true,
     };
   } catch {
     return DEFAULT_SAVE;
