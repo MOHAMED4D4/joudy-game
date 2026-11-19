@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Flame,
   Heart,
@@ -26,7 +26,7 @@ import {
 } from '@/lib/cartoonSvgSprites';
 import type { LevelConfig } from '@/lib/levels';
 import WorldAtmosphereOverlay from './WorldAtmosphereOverlay';
-import { addWorldCoins, saveWorld, useWorldSave } from '@/lib/joudyWorld';
+import { addWorldCoins, loadWorldSave, saveWorld, useWorldSave } from '@/lib/joudyWorld';
 
 export interface GameRunStats {
   level: number;
@@ -214,6 +214,7 @@ export default function GameArena({
 
   const [score, setScore] = useState(0);
   const [hearts, setHearts] = useState(MAX_HEARTS);
+  const [bonusHearts, setBonusHearts] = useState(() => Math.min(3, worldSave.extraHearts));
   const [counts, setCounts] = useState({ cats: 0, roses: 0, chocolates: 0, obstaclesHit: 0 });
   const [combo, setCombo] = useState(0);
   const [magnetSecondsLeft, setMagnetSecondsLeft] = useState(0);
@@ -229,6 +230,7 @@ export default function GameArena({
   const dragPointerIdRef = useRef<number | null>(null);
   const scoreRef = useRef(0);
   const heartsRef = useRef(MAX_HEARTS);
+  const bonusHeartsRef = useRef(Math.min(3, worldSave.extraHearts));
   const countsRef = useRef({ cats: 0, roses: 0, chocolates: 0, obstaclesHit: 0 });
   const comboRef = useRef(0);
   const comboTimerRef = useRef(0);
@@ -333,6 +335,9 @@ export default function GameArena({
   const resetRun = useCallback(() => {
     scoreRef.current = 0;
     heartsRef.current = MAX_HEARTS;
+    const remainingBonusHearts = Math.min(3, loadWorldSave().extraHearts);
+    bonusHeartsRef.current = remainingBonusHearts;
+    setBonusHearts(remainingBonusHearts);
     countsRef.current = { cats: 0, roses: 0, chocolates: 0, obstaclesHit: 0 };
     comboRef.current = 0;
     comboTimerRef.current = 0;
@@ -679,33 +684,34 @@ export default function GameArena({
       comboRef.current = 0;
       comboTimerRef.current = 0;
       countsRef.current.obstaclesHit += 1;
-      heartsRef.current = Math.max(0, heartsRef.current - 1);
-      if (heartsRef.current <= 0 && worldSave.extraHearts > 0) {
-        let consumed = false;
-        saveWorld((current) => {
-          if (current.extraHearts <= 0) return current;
-          consumed = true;
-          return { ...current, extraHearts: current.extraHearts - 1 };
-        });
-        if (consumed) {
-          heartsRef.current = 1;
-          player.bubbleText = 'قلب إضافي أنقذك! ❤️';
-        }
+      let consumedBonusHeart = false;
+      if (heartsRef.current > 0) {
+        // The three original red hearts are always consumed first.
+        heartsRef.current = Math.max(0, heartsRef.current - 1);
+      } else if (bonusHeartsRef.current > 0) {
+        // Purchased blue hearts sit beside the base hearts and pop one by one.
+        saveWorld((current) => ({
+          ...current,
+          extraHearts: Math.max(0, current.extraHearts - 1),
+        }));
+        bonusHeartsRef.current = Math.max(0, bonusHeartsRef.current - 1);
+        setBonusHearts(bonusHeartsRef.current);
+        consumedBonusHeart = true;
       }
       player.invulnTimer = 1.25 + characterShieldBonus;
       player.hurtShake = 1;
       player.happyTimer = 0;
-      player.bubbleText = message;
+      player.bubbleText = consumedBonusHeart ? 'القلب الإضافي اتكسر! 💠' : message;
       player.bubbleTone = 'bad';
       player.bubbleTimer = 1.3;
       shakeRef.current = Math.max(shakeRef.current, 11);
       soundEngine.playObstacleHit();
-      popups.push({ x: impactX, y: impactY - 12, text: '-1 ❤️', color: '#E11D48', life: 0, maxLife: 0.9 });
+      popups.push({ x: impactX, y: impactY - 12, text: consumedBonusHeart ? '-1 💠' : '-1 ❤️', color: consumedBonusHeart ? '#38BDF8' : '#E11D48', life: 0, maxLife: 0.9 });
       setHearts(heartsRef.current);
       setScore(scoreRef.current);
       setCombo(0);
       setCounts({ ...countsRef.current });
-      if (heartsRef.current <= 0 && !isGameOverRef.current) {
+      if (heartsRef.current <= 0 && bonusHeartsRef.current <= 0 && !isGameOverRef.current) {
         isGameOverRef.current = true;
         soundEngine.stopBackgroundMusic();
         setIsGameOver(true);
@@ -1799,19 +1805,25 @@ export default function GameArena({
           المستوى {levelConfig.level}
         </div>
         <div
-          className="pointer-events-none absolute right-3 top-[9.5rem] z-40 inline-flex items-center gap-1 rounded-full border border-white/20 bg-slate-950/45 px-2.5 py-1.5 shadow-lg backdrop-blur-sm sm:right-5 sm:top-[8.25rem]"
-          aria-label={`قلوب الحياة: ${hearts} من ${MAX_HEARTS}`}
+          className="pointer-events-none absolute right-3 top-[9.5rem] z-40 inline-flex items-center gap-1 rounded-full border border-white/20 bg-slate-950/55 px-2.5 py-1.5 shadow-lg backdrop-blur-sm sm:right-5 sm:top-[8.25rem]"
+          aria-label={`القلوب الأساسية: ${hearts} من 3، القلوب الإضافية: ${bonusHearts} من 3`}
         >
-          {[1, 2, 3].map((idx) => (
-            <Heart
-              key={idx}
-              className={`h-6 w-6 sm:h-7 sm:w-7 drop-shadow-[0_3px_5px_rgba(0,0,0,.65)] ${
-                idx <= hearts
-                  ? 'fill-[#ff315d] text-[#ffe4eb] [filter:drop-shadow(0_0_5px_rgba(244,63,94,.65))]'
-                  : 'fill-slate-500/70 text-slate-200/80'
-              }`}
-            />
-          ))}
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3].map((idx) => (
+              <Heart key={`base-${idx}`} className={`h-6 w-6 sm:h-7 sm:w-7 drop-shadow-[0_3px_5px_rgba(0,0,0,.65)] ${idx <= hearts ? 'fill-[#ff315d] text-[#ffe4eb] [filter:drop-shadow(0_0_5px_rgba(244,63,94,.65))]' : 'fill-slate-600/80 text-slate-300/70'}`} />
+            ))}
+          </div>
+          {bonusHearts > 0 && <div className="mx-1 h-6 w-px bg-white/25" />}
+          <div className="flex items-center gap-0.5">
+            <AnimatePresence initial={false}>
+              {Array.from({ length: bonusHearts }, (_, idx) => (
+                <motion.div key={`bonus-${idx}`} initial={{ scale: .5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0, rotate: 35, y: -8 }} transition={{ duration: .22 }}>
+                  <Heart className="h-6 w-6 fill-sky-400 text-cyan-50 drop-shadow-[0_0_7px_rgba(56,189,248,.85)] sm:h-7 sm:w-7" />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+          {worldSave.extraHearts > bonusHearts && <span className="mr-1 rounded-full border border-sky-200/25 bg-sky-400/15 px-1.5 py-0.5 text-[9px] font-black text-cyan-100" title="قلوب إضافية محفوظة للمحاولات القادمة">+{worldSave.extraHearts - bonusHearts}</span>}
         </div>
 
         {(levelConfig.level === 15 || levelConfig.level === 30) && (
@@ -1889,7 +1901,7 @@ export default function GameArena({
                 <span className="font-black tabular-nums text-white">{levelConfig.targetScore.toLocaleString('ar-EG')}</span> نقطة.
               </p>
               <div className="relative mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold text-slate-300">
-                <span>المحاولات المتبقية</span><span className="tabular-nums text-rose-200">{hearts} / {MAX_HEARTS} ❤️</span>
+                <span>المحاولات المتبقية</span><span className="tabular-nums text-rose-200">{hearts} أساسية + {bonusHearts} إضافية</span>
               </div>
               <div className="relative mt-4 flex flex-col gap-2.5">
                 {worldSave.blueKeys >= 2 ** reviveCountRef.current && (
