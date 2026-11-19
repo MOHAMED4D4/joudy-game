@@ -46,7 +46,7 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
   };
 
   return (
-    <motion.main dir="rtl" initial={{ opacity: 0, y: 7, scale: 0.995 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} className="relative min-h-[100dvh] w-full overflow-hidden bg-[#d9c8ae] text-slate-900">
+    <motion.main dir="rtl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.16, ease: "linear" }} className="relative min-h-[100dvh] w-full overflow-hidden bg-[#d9c8ae] text-slate-900">
       <style jsx global>{`
         @keyframes joudy-idle { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
         @keyframes joudy-eyes-look { 0%,18%,100% { transform: translate(0,0) } 30%,44% { transform: translate(2px,-1px) } 58%,72% { transform: translate(-2px,0) } 84% { transform: translate(1px,1px) } }
@@ -56,8 +56,7 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
         .joudy-eye-right { animation-delay: .16s; }
         .joudy-eye-blink { transform-origin: center; animation: joudy-blink 4.6s ease-in-out infinite; }
         @keyframes collection-float { 0%,100% { transform: translateY(0) rotate(-2deg) } 50% { transform: translateY(-7px) rotate(2deg) } }
-        @keyframes collection-glow { 0%,100% { filter: drop-shadow(0 2px 4px rgba(80,55,25,.12)) } 50% { filter: drop-shadow(0 5px 10px rgba(80,55,25,.24)) } }
-        .collection-float { animation: collection-float 3.2s ease-in-out infinite, collection-glow 3.2s ease-in-out infinite; }
+        .collection-float { animation: collection-float 4.2s ease-in-out infinite; }
         .collection-float:nth-child(2n) { animation-delay: .45s; }
         .collection-float:nth-child(3n) { animation-delay: .9s; }
       `}</style>

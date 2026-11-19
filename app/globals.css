@@ -108,3 +108,28 @@ img, svg { -webkit-user-drag: none; user-drag: none; }
 @keyframes rewardBob { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-6px) rotate(2deg); } }
 
 .product-art-float { animation: rewardBob 3.2s ease-in-out infinite; transform-origin: 50% 65%; }
+
+
+/* V4.2.4 performance pass: prioritize responsive touch and inexpensive composited motion. */
+html { scroll-behavior: auto; }
+body { touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+button, a, [role="button"] { touch-action: manipulation; }
+button:active, a:active, [role="button"]:active { transform: scale(.985); }
+
+@media (max-width: 768px) {
+  /* Large blurred animated background layers are costly on mid-range phones. */
+  .hub-orb { filter: none; opacity: .12; animation: none; }
+  .hub-grid { opacity: .08; }
+  .home-action { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(9,19,32,.72); transition: background .12s; }
+  .room-window { box-shadow: 0 8px 22px rgba(13,28,44,.14); }
+  .season-particle { animation: none; opacity: .45; box-shadow: 0 0 5px rgba(226,232,240,.55); }
+  .chapter-gate-locked, .chapter-gate-open { animation: none; }
+  .chapter-gate-locked::after, .chapter-gate-open::after { animation: none; display: none; }
+  .product-art-float { animation-duration: 5s; }
+  /* Keep scroll and taps immediate; avoid browser smooth-scroll interpolation. */
+  * { scroll-behavior: auto !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
