@@ -1,0 +1,12 @@
+Joudy Game V4.2.9 — First-party Game Analytics
+
+- Vercel serverless endpoints: /api/game.js and /api/player.js.
+- Supabase SQL schema: supabase/schema.sql. Run it in Supabase SQL Editor.
+- Environment variables: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_PASSWORD.
+- Session-scoped random ID only (no cross-session persistent player identifier).
+- Coarse device/browser category, language/timezone, screen dimensions, orientation, DPR, referrer host/UTM source, load time.
+- Events: session start/end, level start, wins/losses, score updates, aggregate control labels, tab visibility, idle state and JS errors.
+- No IP/location storage, GPS, precise touch coordinates, battery access, device fingerprinting or VPN inference.
+- Private dashboard URL: https://YOUR-DOMAIN/panel-k9x2m7p4.html (password required). The URL is an obscurity measure, not an authentication substitute.
+- Admin reads/deletes are server-side; Supabase service-role key stays in Vercel environment variables.
+- Deploy the project to Vercel and add the three environment variables in Project Settings → Environment Variables.

@@ -15,6 +15,7 @@ import {
   useJoudyProgress,
 } from '@/lib/storage';
 import { soundEngine } from '@/lib/soundEffects';
+import { telemetry } from '@/lib/telemetry';
 
 type GameState = 'TITLE_MENU' | 'WORLD_MAP' | 'PLAYING' | 'VICTORY';
 
@@ -121,6 +122,10 @@ export default function JoudyAdventureGame() {
 
 
   useEffect(() => {
+    telemetry.start();
+  }, []);
+
+  useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
     let registration: ServiceWorkerRegistration | undefined;
     let reloaded = false;
@@ -210,6 +215,7 @@ export default function JoudyAdventureGame() {
       soundEngine.setSfxEnabled(soundEnabled);
       soundEngine.setMusicEnabled(soundEnabled);
       soundEngine.playStartAdventure();
+      telemetry.level(levelNumber);
       setSelectedLevel(levelNumber);
       setRunId((id) => id + 1);
       setIsNewHighScore(false);
@@ -219,17 +225,20 @@ export default function JoudyAdventureGame() {
   );
 
   const handleGameOver = useCallback(() => {
+    telemetry.loss(selectedLevel, lastStats.score);
     stopTransitionAudio();
     if (!soundEnabled) return;
     // Play the preloaded ambience and voice through the audio context unlocked at level start.
     playOutcomeAudio([{ key: 'lossMusic', volume: 0.24 }, { key: 'loss', volume: 1 }]);
-  }, [soundEnabled, stopTransitionAudio, playOutcomeAudio]);
+  }, [soundEnabled, stopTransitionAudio, playOutcomeAudio, selectedLevel, lastStats.score]);
 
   const handleHighScoreUpdate = useCallback((candidateScore: number) => {
+    telemetry.score(candidateScore, selectedLevel ?? activeLevel);
     updateHighScoreOnly(candidateScore);
-  }, []);
+  }, [selectedLevel, activeLevel]);
 
   const handleVictory = useCallback((stats: GameRunStats) => {
+    telemetry.win(stats.level, stats.score, stats.elapsedSeconds * 1000);
     stopTransitionAudio();
     if (soundEnabled) playOutcomeAudio([{ key: 'win', volume: 1 }]);
     setLastStats(stats);
