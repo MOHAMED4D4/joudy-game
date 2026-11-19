@@ -34,30 +34,30 @@ export default function WorldMapScreen({
   const worldSave = useWorldSave();
   const [gateNotice, setGateNotice] = useState('');
   const [rewardsPage, setRewardsPage] = useState<'map' | 'shop' | 'awards'>('map');
-  const regionPrice = 10_000;
+  const regionPrice = 150_000;
   const hasCompletedFirstCity = Boolean(progress.completedLevels[15]);
-  const canUnlockCoast = hasCompletedFirstCity && !worldSave.coastalRegionUnlocked && worldSave.coins >= regionPrice;
+  const canUnlockCoast = hasCompletedFirstCity && !worldSave.coastalRegionUnlocked && worldSave.totalScore >= regionPrice;
   const unlockCoast = () => {
     if (worldSave.coastalRegionUnlocked) return;
     if (!hasCompletedFirstCity) {
       setGateNotice('أكملي المستويات من 1 إلى 15 واهزمي زعيم المدينة الأولى أولاً.');
       return;
     }
-    if (worldSave.coins < regionPrice) {
-      setGateNotice(`تحتاجين إلى ${(regionPrice - worldSave.coins).toLocaleString('ar-EG')} عملة ذهبية إضافية لفتح مدينة الظلال.`);
+    if (worldSave.totalScore < regionPrice) {
+      setGateNotice(`تحتاجين إلى ${(regionPrice - worldSave.totalScore).toLocaleString('ar-EG')} نقطة إضافية لفتح مدينة الظلال.`);
       return;
     }
     let purchased = false;
     const updatedSave = saveWorld((current) => {
-      // Recheck the wallet inside the saved transaction to prevent double-spending.
-      if (current.coastalRegionUnlocked || current.coins < regionPrice) return current;
+      // Recheck the points balance inside the saved transaction to prevent double-spending.
+      if (current.coastalRegionUnlocked || current.totalScore < regionPrice) return current;
       purchased = true;
-      return { ...current, coins: current.coins - regionPrice, coastalRegionUnlocked: true };
+      return { ...current, totalScore: current.totalScore - regionPrice, coastalRegionUnlocked: true };
     });
     if (updatedSave.coastalRegionUnlocked) {
       setGateNotice(purchased ? 'تم فتح مدينة الظلال! أصبحت المستويات 16–30 متاحة.' : 'البوابة مفتوحة بالفعل.');
     } else {
-      setGateNotice(`تحتاجين إلى ${(regionPrice - updatedSave.coins).toLocaleString('ar-EG')} عملة ذهبية إضافية لفتح مدينة الظلال.`);
+      setGateNotice(`تحتاجين إلى ${(regionPrice - updatedSave.totalScore).toLocaleString('ar-EG')} نقطة إضافية لفتح مدينة الظلال.`);
     }
   };
 
@@ -154,9 +154,12 @@ export default function WorldMapScreen({
 
       </div>
 
-      <div className="flex justify-center">
+      <div className="flex flex-wrap items-center justify-center gap-3">
         <button type="button" onClick={() => setRewardsPage('shop')} className="inline-flex items-center gap-2 rounded-xl border border-cyan-200/20 bg-gradient-to-l from-cyan-950/80 to-blue-950/70 px-5 py-2.5 text-sm font-black text-white shadow-md transition hover:-translate-y-0.5 hover:border-cyan-200/40">
-          <span className="text-lg">🛒</span> المتجر <span className="text-[10px] font-semibold text-cyan-100/70">· مشتريات ومساعدات</span>
+          <span className="text-lg">🛒</span> المتجر
+        </button>
+        <button type="button" onClick={() => setRewardsPage('awards')} className="inline-flex items-center gap-2 rounded-xl border border-amber-200/20 bg-gradient-to-l from-amber-950/70 to-orange-950/60 px-5 py-2.5 text-sm font-black text-amber-100 shadow-md transition hover:-translate-y-0.5 hover:border-amber-200/40">
+          <Trophy className="h-5 w-5"/> الإنجازات والتحديات
         </button>
       </div>
 
@@ -364,15 +367,15 @@ export default function WorldMapScreen({
                       <div className="min-w-0">
                         <p className="text-[10px] font-black tracking-[.22em] text-amber-200/80">نهاية الفصل الأول · المستويات 1–15</p>
                         <h2 className="mt-1 text-xl font-black text-white sm:text-2xl">{worldSave.coastalRegionUnlocked ? 'بوابة مدينة الظلال مفتوحة' : 'الفصل الثاني ينتظركِ بعد الزعيم'}</h2>
-                        <p className="mt-1 max-w-2xl text-xs leading-6 text-slate-300 sm:text-sm">{worldSave.coastalRegionUnlocked ? 'تم فتح العالم الجديد. استعدي للمستويات 16–30 والوحوش الأكثر شراسة.' : 'اهزمي زعيم المستوى 15 أولاً، ثم افتحي مدينة الظلال مقابل 10,000 عملة ذهبية للانتقال إلى المستويات 16–30.'}</p>
+                        <p className="mt-1 max-w-2xl text-xs leading-6 text-slate-300 sm:text-sm">{worldSave.coastalRegionUnlocked ? 'تم فتح العالم الجديد. استعدي للمستويات 16–30 والوحوش الأكثر شراسة.' : 'اهزمي زعيم المستوى 15 أولاً، ثم افتحي مدينة الظلال مقابل 150,000 نقطة للانتقال إلى المستويات 16–30.'}</p>
                       </div>
                     </div>
                     <div className="relative flex w-full shrink-0 flex-col items-center gap-2 sm:w-auto sm:min-w-[250px]">
                       <div className="inline-flex items-center gap-2 rounded-full border border-amber-200/20 bg-black/25 px-3 py-1.5 text-xs font-black text-amber-100">
-                        <span>🪙</span>
-                        <span className="tabular-nums">{worldSave.coins.toLocaleString('ar-EG')}</span>
+                        <span>⭐</span>
+                        <span className="tabular-nums">{worldSave.totalScore.toLocaleString('ar-EG')}</span>
                         <span className="text-amber-200/50">/</span>
-                        <span>10,000</span>
+                        <span>150,000 نقطة</span>
                       </div>
                       {worldSave.coastalRegionUnlocked ? (
                         <button type="button" onClick={() => onSelectLevel(16)} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-100/35 bg-gradient-to-l from-emerald-300 to-teal-500 px-5 py-3 font-black text-slate-950 shadow-[0_10px_28px_rgba(16,185,129,.2)] transition hover:-translate-y-0.5">
@@ -384,11 +387,11 @@ export default function WorldMapScreen({
                         </button>
                       ) : canUnlockCoast ? (
                         <button type="button" onClick={unlockCoast} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-100/45 bg-gradient-to-l from-amber-200 via-yellow-400 to-orange-500 px-5 py-3 font-black text-slate-950 shadow-[0_10px_30px_rgba(245,158,11,.25)] transition hover:-translate-y-0.5 hover:brightness-110">
-                          <Lock className="h-4 w-4" /> افتحي مدينة الظلال · 10,000 🪙
+                          <Lock className="h-4 w-4" /> افتحي مدينة الظلال · 150,000 نقطة
                         </button>
                       ) : (
                         <button type="button" onClick={unlockCoast} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200/40 bg-gradient-to-l from-rose-500 to-red-800 px-5 py-3 font-black text-white shadow-[0_10px_28px_rgba(220,38,38,.24)] transition hover:brightness-110">
-                          <Lock className="h-4 w-4" /> تحتاجين {(regionPrice - worldSave.coins).toLocaleString('ar-EG')} عملة إضافية
+                          <Lock className="h-4 w-4" /> تحتاجين {(regionPrice - worldSave.totalScore).toLocaleString('ar-EG')} نقطة إضافية
                         </button>
                       )}
                       {gateNotice && <p role="status" className={`max-w-xs text-[11px] font-bold leading-5 ${gateNotice.startsWith('تم فتح') || gateNotice.includes('مفتوحة بالفعل') ? 'text-emerald-200' : 'text-rose-200'}`}>{gateNotice}</p>}
@@ -429,12 +432,6 @@ export default function WorldMapScreen({
             </React.Fragment>
           );
         })}
-
-        <div className="mt-6 flex justify-center">
-          <button type="button" onClick={() => setRewardsPage('awards')} className="inline-flex items-center gap-2 rounded-xl border border-amber-200/20 bg-gradient-to-l from-amber-950/70 to-orange-950/60 px-5 py-3 text-sm font-black text-amber-100 shadow-md transition hover:border-amber-200/40">
-            <Trophy className="h-5 w-5"/> الإنجازات والتحديات
-          </button>
-        </div>
 
         <div className="relative isolate mt-5 min-h-[180px] overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#050914] shadow-[0_18px_55px_rgba(0,0,0,.5)] sm:min-h-[210px]">
           <Image src="/images/anime-night.jpg" alt="معاينة معتمة للموسم القادم" fill sizes="(max-width: 1024px) 100vw, 1024px" className="object-cover object-center opacity-20 grayscale" />
