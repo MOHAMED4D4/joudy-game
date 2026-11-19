@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, RotateCcw } from 'lucide-react';
 import { addWorldCoins, loadWorldSave, saveWorld } from '@/lib/joudyWorld';
 import CharacterSelectScreen from './CharacterSelectScreen';
 import WorldMapScreen from './WorldMapScreen';
@@ -24,22 +24,65 @@ const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
 export default function JoudyAdventureGame() {
   const progress = useJoudyProgress();
 
-  // One-time welcome voice on the visitor's first entry. If autoplay is blocked,
-  // retry on the first real interaction and mark it complete only after playback starts.
+  // Joudy's welcome voice: retry after blocked autoplay and only mark it played
+  // after the browser confirms that playback has started.
+  const welcomeAudioRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
     const key = 'joudy_welcome_voice_played_v1';
-    if (localStorage.getItem(key) === '1') return;
     const audio = new Audio('/audio/joudy-welcome.mp3');
     audio.preload = 'auto';
-    let done = false;
-    const playOnce = () => {
-      if (done || localStorage.getItem(key) === '1') return;
-      audio.play().then(() => { done = true; localStorage.setItem(key, '1'); }).catch(() => {});
+    welcomeAudioRef.current = audio;
+    let disposed = false;
+    let completed = localStorage.getItem(key) === '1';
+    let attempting = false;
+
+    const removeRetryListeners = () => {
+      window.removeEventListener('pointerdown', tryWelcomePlayback);
+      window.removeEventListener('keydown', tryWelcomePlayback);
+      window.removeEventListener('touchstart', tryWelcomePlayback);
     };
-    playOnce();
-    window.addEventListener('pointerdown', playOnce, { once: true });
-    window.addEventListener('keydown', playOnce, { once: true });
-    return () => { window.removeEventListener('pointerdown', playOnce); window.removeEventListener('keydown', playOnce); audio.pause(); };
+    const tryWelcomePlayback = () => {
+      if (disposed || completed || attempting) return;
+      attempting = true;
+      audio.play().then(() => {
+        attempting = false;
+        if (disposed) return;
+        completed = true;
+        localStorage.setItem(key, '1');
+        removeRetryListeners();
+      }).catch(() => {
+        attempting = false;
+        // Autoplay was blocked; keep retry listeners active for the next gesture.
+      });
+    };
+
+    if (!completed) {
+      tryWelcomePlayback();
+      window.addEventListener('pointerdown', tryWelcomePlayback);
+      window.addEventListener('keydown', tryWelcomePlayback);
+      window.addEventListener('touchstart', tryWelcomePlayback, { passive: true });
+    }
+
+    return () => {
+      disposed = true;
+      removeRetryListeners();
+      audio.pause();
+      if (welcomeAudioRef.current === audio) welcomeAudioRef.current = null;
+    };
+  }, []);
+
+  const handleReplayWelcome = useCallback(() => {
+    let audio = welcomeAudioRef.current;
+    if (!audio) {
+      audio = new Audio('/audio/joudy-welcome.mp3');
+      audio.preload = 'auto';
+      welcomeAudioRef.current = audio;
+    }
+    audio.pause();
+    audio.currentTime = 0;
+    void audio.play().catch(() => {
+      // The browser may require another user gesture; the replay button remains available.
+    });
   }, []);
 
   // Restore the original welcome page before the stages map.
@@ -153,9 +196,14 @@ export default function JoudyAdventureGame() {
       {/* Minimal audio control */}
       {gameState !== 'PLAYING' && (
         <div className="absolute left-4 top-4 z-30">
-          <button type="button" onClick={handleToggleSound} aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'} className="rounded-full border border-white/10 bg-slate-950/70 p-3 text-slate-200 shadow-lg backdrop-blur">
-            {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={handleToggleSound} aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'} className="rounded-full border border-white/10 bg-slate-950/70 p-3 text-slate-200 shadow-lg backdrop-blur">
+              {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </button>
+            <button type="button" onClick={handleReplayWelcome} aria-label="إعادة تشغيل صوت جودي الترحيبي" title="إعادة صوت جودي" className="rounded-full border border-white/10 bg-slate-950/70 p-3 text-slate-200 shadow-lg backdrop-blur">
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
 
