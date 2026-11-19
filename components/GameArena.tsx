@@ -55,6 +55,7 @@ interface GameArenaProps {
   onHighScoreUpdate: (score: number) => void;
   onExitToMap: () => void;
   onVictory: (stats: GameRunStats) => void;
+  onGameOver: () => void;
 }
 
 interface FallingEntity {
@@ -203,6 +204,7 @@ export default function GameArena({
   onHighScoreUpdate,
   onExitToMap,
   onVictory,
+  onGameOver,
 }: GameArenaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -244,10 +246,10 @@ export default function GameArena({
   const bgRef = useRef<HTMLImageElement | null>(null);
   const cartoonSpritesRef = useRef<CartoonSpriteMap>({});
 
-  const callbacksRef = useRef({ onHighScoreUpdate, onVictory });
+  const callbacksRef = useRef({ onHighScoreUpdate, onVictory, onGameOver });
   useEffect(() => {
-    callbacksRef.current = { onHighScoreUpdate, onVictory };
-  }, [onHighScoreUpdate, onVictory]);
+    callbacksRef.current = { onHighScoreUpdate, onVictory, onGameOver };
+  }, [onHighScoreUpdate, onVictory, onGameOver]);
 
   useEffect(() => {
     isPausedRef.current = isPaused;
@@ -703,10 +705,11 @@ export default function GameArena({
       setScore(scoreRef.current);
       setCombo(0);
       setCounts({ ...countsRef.current });
-      if (heartsRef.current <= 0) {
+      if (heartsRef.current <= 0 && !isGameOverRef.current) {
         isGameOverRef.current = true;
         soundEngine.stopBackgroundMusic();
         setIsGameOver(true);
+        callbacksRef.current.onGameOver();
       }
     };
 
