@@ -48,7 +48,11 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
   return (
     <motion.main dir="rtl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.16, ease: "linear" }} className="relative min-h-[100dvh] w-full overflow-hidden bg-[#d9c8ae] text-slate-900">
       <style jsx global>{`
-        @keyframes joudy-idle { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+        @keyframes joudy-enter { 0% { opacity:0; transform:translate3d(0,22px,0) scale(.965); filter:blur(5px) } 70% { opacity:1; filter:blur(0) } 100% { opacity:1; transform:translate3d(0,0,0) scale(1); filter:blur(0) } }
+        @keyframes joudy-idle { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+        .joudy-hero-enter { animation: joudy-enter .48s cubic-bezier(.2,.75,.25,1) both; will-change:transform,opacity; }
+        .joudy-idle-motion { animation: joudy-idle 4.2s ease-in-out .48s infinite; will-change:transform; }
+        @media (prefers-reduced-motion: reduce) { .joudy-hero-enter,.joudy-idle-motion { animation:none; } }
         @keyframes joudy-eyes-look { 0%,18%,100% { transform: translate(0,0) } 30%,44% { transform: translate(2px,-1px) } 58%,72% { transform: translate(-2px,0) } 84% { transform: translate(1px,1px) } }
         @keyframes joudy-blink { 0%, 46%, 49%, 100% { transform: scaleY(1) } 47.5% { transform: scaleY(.12) } }
         .joudy-eye-pupil { transform-box: fill-box; transform-origin: center; animation: joudy-eyes-look 5.8s ease-in-out infinite; }
@@ -90,21 +94,24 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
 
         <section className={`relative mt-3 grid flex-1 gap-3 ${wardrobeOpen ? 'lg:grid-cols-[minmax(0,1fr)_minmax(350px,410px)]' : 'grid-cols-1'}`}>
           {/* Character stands in the same room, alone; pupils move continuously */}
-          <div className="relative flex min-h-[54vh] items-end justify-center overflow-hidden rounded-[1.6rem] border border-white/45 bg-white/10 lg:min-h-[690px]">
+          <div className="relative flex min-h-[54vh] items-end justify-center overflow-hidden lg:min-h-[690px]">
+            <div className="pointer-events-none absolute inset-x-[8%] bottom-[7%] h-[34%] rounded-full bg-[radial-gradient(ellipse,rgba(255,226,166,.34)_0%,rgba(255,226,166,.12)_42%,transparent_72%)] blur-2xl" />
             {wardrobeOpen && <div className="absolute right-3 top-3 z-20 flex max-w-[230px] flex-col gap-1 rounded-xl border border-amber-900/15 bg-[#fffaf2]/95 p-2.5 shadow-xl backdrop-blur"><span className="text-[10px] font-bold text-amber-900">{selected.name} · {selected.price} عملة</span><button onClick={purchaseOrEquip} disabled={(!isOwned && save.coins < selected.price) || isEquipped} className="rounded-lg bg-gradient-to-l from-amber-700 to-orange-700 px-4 py-2.5 text-xs font-black text-white disabled:opacity-50">{isEquipped ? 'مُجهّز بالفعل' : isOwned ? 'تجهيز القطعة' : save.coins < selected.price ? 'عملات غير كافية' : 'شراء وتجهيز'}</button></div>}
             <div className="absolute bottom-0 h-[23%] w-full bg-gradient-to-t from-[#63452f]/35 via-[#79583f]/10 to-transparent" />
             <div className="absolute bottom-[4%] left-1/2 h-[4%] w-[25%] -translate-x-1/2 rounded-[50%] bg-[#38271d]/30 blur-xl" />
-            <div className="relative mb-[2%] aspect-square w-[min(78vw,570px)]" style={{animation:'joudy-idle 4.2s ease-in-out infinite'}}>
-              <Image src="/images/joudy-original-transparent.png" alt="جودي" fill priority sizes="(max-width: 1024px) 76vw, 520px" className="object-contain drop-shadow-[0_18px_18px_rgba(25,20,16,.32)]" />
+            <div className="joudy-hero-enter relative mb-[2%] aspect-[704/963] w-[min(78vw,470px)] sm:w-[min(66vw,510px)]">
+              <div className="joudy-idle-motion relative h-full w-full">
+              <Image src="/images/joudy-home-hero.png" alt="جودي" fill priority sizes="(max-width: 1024px) 76vw, 510px" className="object-contain drop-shadow-[0_22px_24px_rgba(25,20,16,.28)]" />
               {previewOutfit?.overlaySrc && <Image src={previewOutfit.overlaySrc} alt="ملابس جودي" fill sizes="(max-width: 1024px) 76vw, 520px" className="pointer-events-none object-contain" unoptimized />}
               {previewShoes?.overlaySrc && <Image src={previewShoes.overlaySrc} alt="حذاء جودي" fill sizes="(max-width: 1024px) 76vw, 520px" className="pointer-events-none object-contain" unoptimized />}
               {/* Small animated pupils layered over the original eyes to give the character a living idle gaze. */}
-              <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1024 1024" aria-hidden="true">
+              <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 704 963" aria-hidden="true">
                 <g className="joudy-eye-blink">
-                  <g className="joudy-eye-pupil joudy-eye-left"><ellipse cx="414" cy="320" rx="7.2" ry="9" fill="#253b32"/><circle cx="411" cy="316" r="2.4" fill="#fff"/></g>
-                  <g className="joudy-eye-pupil joudy-eye-right"><ellipse cx="594" cy="320" rx="7.2" ry="9" fill="#253b32"/><circle cx="591" cy="316" r="2.4" fill="#fff"/></g>
+                  <g className="joudy-eye-pupil joudy-eye-left"><ellipse cx="249" cy="291" rx="7.2" ry="9" fill="#253b32"/><circle cx="246" cy="287" r="2.4" fill="#fff"/></g>
+                  <g className="joudy-eye-pupil joudy-eye-right"><ellipse cx="429" cy="291" rx="7.2" ry="9" fill="#253b32"/><circle cx="426" cy="287" r="2.4" fill="#fff"/></g>
                 </g>
               </svg>
+              </div>
             </div>
           </div>
 
