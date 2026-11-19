@@ -84,6 +84,21 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     return defs.map((item) => ({...item,unlocked:Boolean(unlock[item.id])}));
   }, [progress.completedLevels, save.totalChocolates, save.totalScore, save.perfectRuns, save.totalBosses]);
 
+  const buyScore = (coinAmount: number) => {
+    const latest = loadWorldSave();
+    if (latest.coins < coinAmount) {
+      setNotice(`مش معاك عملات كفاية — ناقصك ${(coinAmount - latest.coins).toLocaleString('ar-EG')} عملة.`);
+      return;
+    }
+    let purchased = false;
+    saveWorld((current) => {
+      if (current.coins < coinAmount) return current;
+      purchased = true;
+      return { ...current, coins: current.coins - coinAmount, totalScore: current.totalScore + coinAmount * 2 };
+    });
+    setNotice(purchased ? `تم تحويل ${coinAmount.toLocaleString('ar-EG')} عملة إلى ${(coinAmount * 2).toLocaleString('ar-EG')} نقطة Score!` : 'تعذر إتمام التحويل؛ راجع رصيدك.');
+  };
+
   const buy = (kind: 'key' | 'heart' | 'shield' | 'magnet') => {
     if (kind === 'shield' && progress.highestUnlockedLevel < 5) { setNotice('الدرع الدائري يفتح عند الوصول إلى المستوى الخامس.'); return; }
     const price = 500;
@@ -128,6 +143,17 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
         <div className="flex items-center gap-2 text-xs font-bold text-cyan-100"><Sparkles className="h-4 w-4 text-cyan-200"/> تجهيزات المغامرة</div>
         <p className="text-[10px] font-semibold text-slate-400">كل أداة تُضاف مباشرة إلى مخزونك</p>
       </div>
+      <section className="rounded-[1.6rem] border border-amber-200/20 bg-gradient-to-br from-amber-300/[0.10] via-[#111b2d] to-cyan-400/[0.06] p-4 sm:p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div><h3 className="text-lg font-black text-white">تبادل العملات بالنقاط</h3><p className="mt-1 text-[11px] text-slate-400">كل 500 عملة صفراء = 1,000 نقطة Score تضاف لرصيدك فورًا.</p></div>
+          <span className="rounded-xl border border-amber-200/20 bg-amber-300/10 px-3 py-2 text-xs font-black text-amber-100">⭐ {save.totalScore.toLocaleString('ar-EG')} نقطة</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[500, 1000, 1500, 2000].map((amount) => <button key={amount} type="button" onClick={() => buyScore(amount)} className="rounded-xl border border-amber-200/20 bg-black/20 px-3 py-3 text-center transition hover:-translate-y-0.5 hover:border-amber-200/50 hover:bg-amber-300/10">
+            <span className="block text-sm font-black text-amber-100">{amount.toLocaleString('ar-EG')} 🪙</span><span className="mt-1 block text-[10px] font-bold text-cyan-200">+{(amount * 2).toLocaleString('ar-EG')} ⭐ Score</span>
+          </button>)}
+        </div>
+      </section>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {shopProducts.map((product) => {
           const Icon = product.icon;

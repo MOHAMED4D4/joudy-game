@@ -40,22 +40,24 @@ function ChapterGateCard({
   const remaining = Math.max(0, price - totalScore);
   return (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32 }}
-      className={`relative my-5 overflow-hidden rounded-[2rem] border ${palette.edge} bg-gradient-to-br from-[#171b31] via-[#10182a] to-[#080e19] p-4 shadow-[0_20px_60px_rgba(0,0,0,.42)] sm:my-7 sm:p-6`}
+      className={`relative my-10 overflow-hidden rounded-[2rem] border ${palette.edge} bg-gradient-to-br from-[#171b31] via-[#10182a] to-[#080e19] p-4 shadow-[0_20px_60px_rgba(0,0,0,.42)] sm:my-14 sm:p-6`}
       aria-label={`بوابة الفصل ${chapter}`}>
       <div className={`pointer-events-none absolute -left-12 -top-14 h-44 w-44 rounded-full ${palette.glow} blur-3xl`} />
       <div className={`pointer-events-none absolute -right-12 -bottom-16 h-48 w-48 rounded-full ${palette.glow} blur-3xl`} />
-      <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-right">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl border shadow-inner ${palette.icon}`}>
-            {unlocked ? <Sparkles className="h-7 w-7" /> : <Lock className="h-7 w-7" />}
-          </div>
-          <div className="min-w-0">
+      <div className="relative mb-5 flex h-16 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#090f1a]" aria-hidden="true">
+        <div className="absolute inset-x-0 top-1/2 h-8 -translate-y-1/2 bg-[#252d3a] shadow-inner" />
+        <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 border-t-2 border-dashed border-amber-100/55" />
+        <div className={`relative z-10 grid h-14 w-14 place-items-center rounded-full border-[3px] ${palette.icon} bg-[#111a2b] shadow-[0_0_28px_rgba(0,0,0,.7)]`}>
+          {unlocked ? <Sparkles className="h-7 w-7" /> : <Lock className="h-7 w-7" />}
+        </div>
+      </div>
+      <div className="relative flex flex-col items-center gap-4 text-center">
+        <div className="min-w-0 max-w-3xl">
             <p className={`text-[10px] font-black tracking-[.22em] ${palette.label}`}>نهاية {previousChapter}</p>
             <h2 className="mt-1 text-xl font-black text-white sm:text-2xl">{unlocked ? `${regionName} مفتوحة` : `الفصل ${chapter} ينتظركِ`}</h2>
             <p className="mt-1 max-w-2xl text-xs leading-6 text-slate-300 sm:text-sm">{unlocked ? `تم فتح ${regionName}. ${description}` : `${description} يلزم إنهاء ${prerequisiteLabel} أولاً، ثم فتح البوابة بالنقاط المطلوبة.`}</p>
           </div>
-        </div>
-        <div className="relative flex w-full shrink-0 flex-col items-center gap-2 sm:w-auto sm:min-w-[250px]">
+        <div className="relative flex w-full max-w-md shrink-0 flex-col items-center gap-2">
           <div className={`inline-flex items-center gap-2 rounded-full border ${palette.pill} bg-black/25 px-3 py-1.5 text-xs font-black`}>
             <span>⭐</span><span className="tabular-nums">{totalScore.toLocaleString('ar-EG')}</span><span className="opacity-50">/</span><span>{price.toLocaleString('ar-EG')} نقطة</span>
           </div>
@@ -467,22 +469,20 @@ export default function WorldMapScreen({
               {/* Winding Dotted Connector Bridge between World Chapters */}
               {hasNextWorld && (
                 <div
-                  className={`flex px-12 sm:px-20 py-1 ${
-                    isEvenRow ? 'justify-start' : 'justify-end'
-                  }`}
+                  className="flex min-h-24 items-center justify-center px-12 py-7"
                   aria-hidden="true"
                 >
-                  <svg width="64" height="36" viewBox="0 0 64 36" className="overflow-visible">
+                  <svg width="104" height="64" viewBox="0 0 104 64" className="overflow-visible">
                     <path
                       d={
                         isEvenRow
-                          ? 'M 18 0 C 8 14, 52 22, 34 36'
-                          : 'M 46 0 C 56 14, 12 22, 30 36'
+                          ? 'M 28 0 C 8 24, 96 40, 76 64'
+                          : 'M 76 0 C 96 24, 8 40, 28 64'
                       }
                       fill="none"
                       stroke="rgba(244, 63, 94, 0.38)"
-                      strokeWidth="5"
-                      strokeDasharray="7 7"
+                      strokeWidth="8"
+                      strokeDasharray="9 9"
                       strokeLinecap="round"
                     />
                   </svg>
