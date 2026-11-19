@@ -7,7 +7,7 @@ import { ShoppingBag, Trophy, Lock, Check, Coins, KeyRound, Heart, ArrowRight, S
 import { loadWorldSave, saveWorld, useWorldSave } from '@/lib/joudyWorld';
 import type { JoudyGameProgress } from '@/lib/storage';
 
-type Achievement = { id: string; title: string; detail: string; icon: string; unlocked: boolean; tier: string };
+type Achievement = { id: string; title: string; detail: string; icon: string; unlocked: boolean; tier: string; progress: number };
 
 const MEDAL_ART: Record<string, string> = {
   'البدايات': '/images/achievements/start.svg',
@@ -81,7 +81,13 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
       'score-250k':score>=250000,'stars-60':stars>=60,'three-star-20':threeStarLevels>=20,'choco-1500':chocolates>=1500,
       'levels-25':completed>=25,'bosses-6':defeated>=6,'all-stars':stars>=90,'final':Boolean(progress.completedLevels[30]),'score-500k':score>=500000,
     };
-    return defs.map((item) => ({...item,unlocked:Boolean(unlock[item.id])}));
+    const progressValues: Record<string, number> = {
+      'levels-1':completed/1,'choco-25':chocolates/25,'score-5k':score/5000,'levels-5':completed/5,'choco-100':chocolates/100,'stars-10':stars/10,'score-25k':score/25000,'levels-10':completed/10,
+      'perfect-1':perfect/1,'three-star-3':threeStarLevels/3,'choco-300':chocolates/300,'boss-1':defeated/1,'levels-15':Number(Boolean(progress.completedLevels[15])),'bosses-3':defeated/3,
+      'score-100k':score/100000,'perfect-5':perfect/5,'stars-30':stars/30,'three-star-10':threeStarLevels/10,'choco-750':chocolates/750,'levels-20':completed/20,'highscore-5':highScores/5,'bosses-5':defeated/5,
+      'perfect-10':perfect/10,'score-250k':score/250000,'stars-60':stars/60,'three-star-20':threeStarLevels/20,'choco-1500':chocolates/1500,'levels-25':completed/25,'bosses-6':defeated/6,'all-stars':stars/90,'final':Number(Boolean(progress.completedLevels[30])),'score-500k':score/500000,
+    };
+    return defs.map((item) => ({...item,unlocked:Boolean(unlock[item.id]),progress:Math.max(0,Math.min(100,Math.round((progressValues[item.id] ?? 0)*100)))}));
   }, [progress.completedLevels, save.totalChocolates, save.totalScore, save.perfectRuns, save.totalBosses]);
 
   const buyScore = (coinAmount: number) => {
@@ -199,8 +205,9 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
               className={`group relative flex min-h-[190px] flex-col overflow-hidden rounded-[1.35rem] border bg-gradient-to-br ${a.unlocked ? `${tierStyle.border} ${tierStyle.glow}` : 'border-white/8 from-slate-900/95 to-slate-950/95'} p-3 text-center shadow-[0_12px_28px_rgba(0,0,0,.22)] transition duration-300 hover:-translate-y-1 hover:border-white/25`}>
               <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/[.035] blur-2xl" />
               <div className="relative mx-auto mb-2 h-[76px] w-[68px] transition duration-300 group-hover:scale-105">
-                <Image src={MEDAL_ART[a.tier] || MEDAL_ART['أسطوري']} alt="وسام الإنجاز" fill sizes="68px" className={`object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,.4)] ${a.unlocked ? '' : 'grayscale opacity-45'}`} />
-                <span className={`absolute inset-0 flex items-center justify-center pt-1 text-[23px] drop-shadow-[0_2px_3px_rgba(0,0,0,.7)] ${a.unlocked ? '' : 'grayscale'}`}>{a.unlocked ? a.icon : '🔒'}</span>
+                <Image src={`/images/achievements/badges/${a.id}.svg`} alt={`وسام ${a.title}`} fill sizes="68px" className="object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,.4)]" />
+                {!a.unlocked && <span className="absolute inset-x-2 bottom-1 rounded-b-full bg-amber-300/35 transition-all duration-700" style={{ height: `${Math.max(4, a.progress * .58)}%`, clipPath: 'polygon(12% 0,88% 0,100% 100%,0 100%)' }} />}
+                <span className={`absolute inset-0 flex items-center justify-center pt-1 text-[23px] drop-shadow-[0_2px_3px_rgba(0,0,0,.7)] ${a.unlocked ? '' : 'grayscale'}`}>{a.unlocked ? '' : '🔒'}</span>
               </div>
               <span className={`relative mx-auto mb-1 rounded-full px-2 py-0.5 text-[8px] font-black ${a.unlocked ? tierStyle.chip : 'bg-white/5 text-slate-500'}`}>{a.unlocked ? 'وسام مكتسب' : 'تحدٍ قادم'}</span>
               <h4 className={`relative text-[11px] font-black leading-5 ${a.unlocked ? tierStyle.text : 'text-slate-300'}`}>{a.title}</h4>

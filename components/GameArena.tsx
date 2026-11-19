@@ -17,6 +17,8 @@ import {
   KeyRound,
   Sparkles,
   Shield,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { soundEngine } from '@/lib/soundEffects';
 import { loadTransparentSprite } from '@/lib/spriteUtils';
@@ -57,6 +59,7 @@ interface GameArenaProps {
   onExitToMap: () => void;
   onVictory: (stats: GameRunStats) => void;
   onGameOver: () => void;
+  onStopTransitionAudio: () => void;
 }
 
 interface FallingEntity {
@@ -273,6 +276,7 @@ export default function GameArena({
   onExitToMap,
   onVictory,
   onGameOver,
+  onStopTransitionAudio,
 }: GameArenaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -281,6 +285,7 @@ export default function GameArena({
   const cameraZoom = levelConfig.level >= 30 ? 0.72 : levelConfig.level >= 15 ? 0.78 : levelConfig.level >= 5 ? 0.84 : 0.90;
 
   const [score, setScore] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [hearts, setHearts] = useState(MAX_HEARTS);
   const [bonusHearts, setBonusHearts] = useState(() => Math.min(MAX_EXTRA_HEARTS, worldSave.extraHearts));
   const [shieldSecondsLeft, setShieldSecondsLeft] = useState(0);
@@ -323,6 +328,19 @@ export default function GameArena({
   const reviveRequestRef = useRef(false);
   const reviveCountRef = useRef(worldSave.reviveCountsByLevel[levelConfig.level] ?? 0);
   const [typedGuideText, setTypedGuideText] = useState('');
+
+  useEffect(() => {
+    const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen);
+  }, []);
+
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await (stageRef.current?.closest('main') as HTMLElement | null)?.requestFullscreen?.();
+    } catch { /* Fullscreen is optional; keep normal gameplay available. */ }
+  }, []);
 
   useEffect(() => {
     const guide = enemyTip?.text ?? (levelConfig.level === 1
@@ -483,11 +501,13 @@ export default function GameArena({
     }
   }, []);
   const confirmExitToMap = useCallback(() => {
+    onStopTransitionAudio();
     setExitConfirmOpen(false);
     onExitToMap();
-  }, [onExitToMap]);
+  }, [onExitToMap, onStopTransitionAudio]);
 
   const resetRun = useCallback(() => {
+    onStopTransitionAudio();
     setExitConfirmOpen(false);
     scoreRef.current = 0;
     heartsRef.current = MAX_HEARTS;
@@ -521,7 +541,7 @@ export default function GameArena({
     setEnemyTipMarker(null); setEnemyTipTop(48);
     isPausedRef.current = true;
     setIsPaused(true);
-  }, []);
+  }, [onStopTransitionAudio]);
 
   // Main 60FPS 2D Canvas Arcade Loop
   useEffect(() => {
@@ -1943,6 +1963,7 @@ export default function GameArena({
   };
 
   const handleRevive = useCallback(() => {
+    onStopTransitionAudio();
     const price = 2 ** reviveCountRef.current;
     const current = worldSave;
     if (current.blueKeys < price) return;
@@ -1954,7 +1975,7 @@ export default function GameArena({
     isGameOverRef.current = false;
     setIsGameOver(false);
 
-  }, [worldSave, levelConfig.level]);
+  }, [worldSave, levelConfig.level, onStopTransitionAudio]);
 
   const progressPct = Math.min(100, Math.round((score / levelConfig.targetScore) * 100));
   const displayedHighScore = Math.max(highScore, score);
@@ -2032,6 +2053,9 @@ export default function GameArena({
           <div className="flex shrink-0 items-center gap-1.5">
             <button type="button" onClick={onToggleSound} aria-label={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'} title={soundEnabled ? 'كتم الصوت' : 'تشغيل الصوت'} className="grid h-9 w-9 place-items-center rounded-xl border border-cyan-200/25 bg-gradient-to-br from-cyan-400/20 to-sky-700/20 text-cyan-100 shadow-inner transition hover:border-cyan-200/50 hover:bg-cyan-400/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
               {soundEnabled ? <Volume2 className="h-[18px] w-[18px]" /> : <VolumeX className="h-[18px] w-[18px]" />}
+            </button>
+            <button type="button" onClick={toggleFullscreen} aria-label={isFullscreen ? 'الخروج من ملء الشاشة' : 'ملء الشاشة'} title={isFullscreen ? 'الخروج من ملء الشاشة' : 'ملء الشاشة'} className="grid h-9 w-9 place-items-center rounded-xl border border-violet-200/25 bg-gradient-to-br from-violet-400/20 to-indigo-700/20 text-violet-100 shadow-inner transition hover:border-violet-200/50">
+              {isFullscreen ? <Minimize2 className="h-[18px] w-[18px]" /> : <Maximize2 className="h-[18px] w-[18px]" />}
             </button>
             <button type="button" onClick={() => setIsPaused((p) => !p)} aria-label={isPaused ? 'استئناف اللعب' : 'إيقاف مؤقت'} title={isPaused ? 'استئناف اللعب' : 'إيقاف مؤقت'} className="grid h-9 w-9 place-items-center rounded-xl border border-amber-200/25 bg-gradient-to-br from-amber-400/20 to-orange-700/20 text-amber-100 shadow-inner transition hover:border-amber-200/50 hover:bg-amber-400/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
               {isPaused ? <Play className="h-[18px] w-[18px] fill-current" /> : <Pause className="h-[18px] w-[18px]" />}

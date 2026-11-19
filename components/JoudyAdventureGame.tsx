@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { addWorldCoins, loadWorldSave, saveWorld } from '@/lib/joudyWorld';
@@ -11,6 +11,7 @@ import VictoryScreen from './VictoryScreen';
 import { getLevelConfig } from '@/lib/levels';
 import {
   recordLevelCompletion,
+  loadProgress,
   updateHighScoreOnly,
   useJoudyProgress,
 } from '@/lib/storage';
@@ -35,6 +36,9 @@ export default function JoudyAdventureGame() {
   const [runId, setRunId] = useState(1);
   const [isNewHighScore, setIsNewHighScore] = useState(false);
   const [lastRewardCoins, setLastRewardCoins] = useState(0);
+  const [achievementNotices, setAchievementNotices] = useState<{ title: string; amount: number; type: 'coins' | 'score' }[]>([]);
+  const lossAudioRefs = useRef<HTMLAudioElement[]>([]);
+  const stopTransitionAudio = useCallback(() => { lossAudioRefs.current.forEach((audio) => { audio.pause(); audio.currentTime = 0; }); lossAudioRefs.current = []; }, []);
 
   const [lastStats, setLastStats] = useState<GameRunStats>({
     level: 1,
@@ -73,14 +77,7 @@ export default function JoudyAdventureGame() {
         setGameState('WORLD_MAP');
         return;
       }
-      // Enter immersive browser fullscreen directly from the level-selection tap.
-      // Browsers may decline fullscreen when the page is not installed or the API is unavailable.
-      try {
-        const root = document.documentElement as HTMLElement & { requestFullscreen?: () => Promise<void> };
-        if (!document.fullscreenElement && root.requestFullscreen) {
-          void root.requestFullscreen().catch(() => undefined);
-        }
-      } catch { /* Keep the game playable when fullscreen is unsupported. */ }
+      stopTransitionAudio();
       soundEngine.setSfxEnabled(soundEnabled);
       soundEngine.setMusicEnabled(soundEnabled);
       soundEngine.playStartAdventure();
@@ -89,31 +86,30 @@ export default function JoudyAdventureGame() {
       setIsNewHighScore(false);
       setGameState('PLAYING');
     },
-    [soundEnabled, progress.highestUnlockedLevel],
+    [soundEnabled, progress.highestUnlockedLevel, stopTransitionAudio],
   );
 
   const handleGameOver = useCallback(() => {
-    // The voice and the original melancholy game-over cue play together.
-    // Both are intentionally independent from the regular game mute toggle.
+    stopTransitionAudio();
     const lossMusic = new Audio('/audio/joudy-loss-music.mp3');
     lossMusic.volume = 0.24;
-    lossMusic.loop = false;
-    void lossMusic.play().catch(() => {
-      // Playback is attempted directly at the game-over event.
-    });
-
     const lossVoice = new Audio('/audio/joudy-loss.mp3');
     lossVoice.volume = 1;
-    void lossVoice.play().catch(() => {
-      // Playback is attempted directly at the game-over event.
-    });
-  }, []);
+    lossAudioRefs.current = [lossMusic, lossVoice];
+    void lossMusic.play().catch(() => undefined);
+    void lossVoice.play().catch(() => undefined);
+  }, [stopTransitionAudio]);
 
   const handleHighScoreUpdate = useCallback((candidateScore: number) => {
     updateHighScoreOnly(candidateScore);
   }, []);
 
   const handleVictory = useCallback((stats: GameRunStats) => {
+    stopTransitionAudio();
+    const winAudio = new Audio('/audio/joudy-win.mp3');
+    winAudio.volume = 1;
+    lossAudioRefs.current = [winAudio];
+    void winAudio.play().catch(() => undefined);
     setLastStats(stats);
     const beforeReward = loadWorldSave();
     const reward = stats.level === 30
@@ -139,9 +135,35 @@ export default function JoudyAdventureGame() {
       stats.score,
       stats.obstaclesHit,
     );
+    const achievementSave = loadWorldSave();
+    const updatedProgress = loadProgress();
+    const completedCount = Object.keys(updatedProgress.completedLevels).length;
+    const starsTotal = Object.values(updatedProgress.completedLevels).reduce((sum, item) => sum + item.stars, 0);
+    const threeStarCount = Object.values(updatedProgress.completedLevels).filter((item) => item.stars === 3).length;
+    const highScoreLevels = Object.values(updatedProgress.completedLevels).filter((item) => item.bestScore >= 1000).length;
+    const achievementChecks: { id: string; title: string; done: boolean; type: 'coins' | 'score'; amount: number }[] = [
+      ['levels-1','أول خطوة',completedCount>=1,'coins',1000],['choco-25','حلوى البداية',achievementSave.totalChocolates>=25,'score',5000],['score-5k','جامع النقاط',achievementSave.totalScore>=5000,'coins',1500],
+      ['levels-5','مغامر ناشئ',completedCount>=5,'coins',2500],['choco-100','عاشق الشوكولاتة',achievementSave.totalChocolates>=100,'score',5500],['stars-10','عين على النجوم',starsTotal>=10,'coins',3000],['score-25k','صياد النقاط',achievementSave.totalScore>=25000,'score',6000],['levels-10','رحّالة',completedCount>=10,'coins',5000],
+      ['perfect-1','قلب من حديد',achievementSave.perfectRuns>=1,'coins',4000],['three-star-3','ثلاث نجوم',threeStarCount>=3,'score',6500],['choco-300','كنز الحلوى',achievementSave.totalChocolates>=300,'coins',6000],['boss-1','مواجهة الزعيم',achievementSave.totalBosses>=1,'coins',7000],['levels-15','حامي المدينة',Boolean(updatedProgress.completedLevels[15]),'score',7000],
+      ['bosses-3','صياد الزعماء',achievementSave.totalBosses>=3,'coins',9000],['score-100k','أسطورة النقاط',achievementSave.totalScore>=100000,'score',7500],['perfect-5','مراوغ أسطوري',achievementSave.perfectRuns>=5,'coins',12000],['stars-30','جامع النجوم',starsTotal>=30,'coins',13000],['three-star-10','لا يخطئ',threeStarCount>=10,'score',8000],
+      ['choco-750','مصنع الشوكولاتة',achievementSave.totalChocolates>=750,'coins',15000],['levels-20','سيد المغامرة',completedCount>=20,'coins',18000],['highscore-5','صاحب الأرقام',highScoreLevels>=5,'score',8500],['bosses-5','كابوس الزعماء',achievementSave.totalBosses>=5,'coins',20000],
+      ['perfect-10','لم تُمس',achievementSave.perfectRuns>=10,'coins',22000],['score-250k','مليون؟ ليس بعد!',achievementSave.totalScore>=250000,'score',9000],['stars-60','سماء مرصعة',starsTotal>=60,'coins',25000],['three-star-20','الكمال المطلق',threeStarCount>=20,'coins',28000],['choco-1500','إمبراطورية الحلوى',achievementSave.totalChocolates>=1500,'coins',30000],
+      ['levels-25','أسطورة العالم',completedCount>=25,'coins',35000],['bosses-6','قاهر العمالقة',achievementSave.totalBosses>=6,'score',9500],['all-stars','كل نجمة في مكانها',starsTotal>=90,'coins',40000],['final','أسطورة جودي',Boolean(updatedProgress.completedLevels[30]),'coins',50000],['score-500k','الرقم المستحيل',achievementSave.totalScore>=500000,'score',10000],
+    ].map(([id,title,done,type,amount]) => ({id:String(id),title:String(title),done:Boolean(done),type:type as 'coins'|'score',amount:Number(amount)}));
+    const claimed = new Set(achievementSave.claimedAchievementRewards ?? []);
+    const newlyEarned = achievementChecks.filter((item) => item.done && !claimed.has(item.id));
+    if (newlyEarned.length) {
+      setAchievementNotices((current) => [...current, ...newlyEarned.map((item) => ({ title: item.title, amount: item.amount, type: item.type }))]);
+      saveWorld((current) => ({
+        ...current,
+        coins: current.coins + newlyEarned.filter((item) => item.type === 'coins').reduce((sum, item) => sum + item.amount, 0),
+        totalScore: current.totalScore + newlyEarned.filter((item) => item.type === 'score').reduce((sum, item) => sum + item.amount, 0),
+        claimedAchievementRewards: [...new Set([...(current.claimedAchievementRewards ?? []), ...newlyEarned.map((item) => item.id)])],
+      }));
+    }
     setIsNewHighScore(beatRecord);
     setGameState('VICTORY');
-  }, [characterCoinBonus]);
+  }, [characterCoinBonus, stopTransitionAudio]);
 
   const handleNextLevel = useCallback(() => {
     // Chapter transitions return to the map until the next gate is purchased.
@@ -222,6 +244,7 @@ export default function JoudyAdventureGame() {
               }}
               onVictory={handleVictory}
               onGameOver={handleGameOver}
+              onStopTransitionAudio={stopTransitionAudio}
             />
           )}
 
@@ -237,12 +260,24 @@ export default function JoudyAdventureGame() {
               isNewHighScore={isNewHighScore}
               onNextLevel={handleNextLevel}
               onPlayAgain={handleReplayCurrent}
-              onOpenWorldMap={() => setGameState('WORLD_MAP')}
+              onOpenWorldMap={() => { stopTransitionAudio(); setGameState('WORLD_MAP'); }}
             />
           )}
 
         </AnimatePresence>
       </div>
+      {gameState === 'WORLD_MAP' && achievementNotices.length > 0 && (
+        <div className="fixed inset-x-3 top-4 z-[120] mx-auto max-w-md animate-in slide-in-from-top-6 duration-500" role="status">
+          <div className="relative overflow-hidden rounded-2xl border border-amber-200/50 bg-gradient-to-br from-[#38275c] via-[#182746] to-[#0b1729] p-4 text-white shadow-[0_18px_60px_rgba(0,0,0,.65)]">
+            <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-amber-300/20 blur-2xl" />
+            <div className="relative flex items-center gap-3">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-amber-200/40 bg-amber-300/15 text-2xl">🏆</div>
+              <div className="min-w-0 flex-1"><p className="text-[10px] font-black tracking-widest text-amber-200">إنجاز جديد!</p><p className="text-lg font-black">{achievementNotices[0].title}</p><p className="text-xs font-bold text-emerald-200">+{achievementNotices[0].amount.toLocaleString('ar-EG')} {achievementNotices[0].type === 'coins' ? 'عملة' : 'نقطة Score'}</p></div>
+              <button type="button" onClick={() => setAchievementNotices((current) => current.slice(1))} className="rounded-lg px-2 py-1 text-white/70">✕</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

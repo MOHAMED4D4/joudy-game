@@ -28,6 +28,7 @@ export interface WorldSave {
   shieldCharges: number;
   magnetCharges: number;
   shieldFreeGranted: boolean;
+  claimedAchievementRewards: string[];
 }
 
 const KEY = 'joudy_world_save_v1';
@@ -57,6 +58,7 @@ const DEFAULT_SAVE: WorldSave = {
   shieldCharges: 0,
   magnetCharges: 0,
   shieldFreeGranted: false,
+  claimedAchievementRewards: [],
 };
 
 export interface ShopItem {
@@ -148,6 +150,7 @@ function parse(raw: string | null): WorldSave {
       shieldCharges: Math.max(0, Number(value.shieldCharges ?? 0) || 0),
       magnetCharges: Math.max(0, Number(value.magnetCharges ?? 0) || 0),
       shieldFreeGranted: value.shieldFreeGranted === true,
+      claimedAchievementRewards: Array.isArray(value.claimedAchievementRewards) ? value.claimedAchievementRewards.filter((id): id is string => typeof id === 'string') : [],
     };
   } catch {
     return DEFAULT_SAVE;
