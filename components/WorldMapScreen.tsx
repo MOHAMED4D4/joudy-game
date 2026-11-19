@@ -11,6 +11,7 @@ import {
   Sparkles,
   Star,
   Swords,
+  Trophy,
 } from 'lucide-react';
 import { LEVELS, WORLD_THEMES } from '@/lib/levels';
 import type { JoudyGameProgress } from '@/lib/storage';
@@ -32,6 +33,7 @@ export default function WorldMapScreen({
   const currentLevelRef = useRef<HTMLDivElement | null>(null);
   const worldSave = useWorldSave();
   const [gateNotice, setGateNotice] = useState('');
+  const [rewardsPage, setRewardsPage] = useState<'map' | 'shop' | 'awards'>('map');
   const regionPrice = 10_000;
   const hasCompletedFirstCity = Boolean(progress.completedLevels[15]);
   const canUnlockCoast = hasCompletedFirstCity && !worldSave.coastalRegionUnlocked && worldSave.coins >= regionPrice;
@@ -91,6 +93,10 @@ export default function WorldMapScreen({
     'sm:translate-y-2',
   ];
 
+  if (rewardsPage !== 'map') {
+    return <div className="min-h-dvh w-full px-3 py-5 sm:px-6 sm:py-8"><RewardsHub progress={progress} page={rewardsPage} onBack={() => setRewardsPage('map')} /></div>;
+  }
+
   return (
     <>
     <motion.section
@@ -142,7 +148,16 @@ export default function WorldMapScreen({
 
       </div>
 
-      <RewardsHub progress={progress} />
+      <div className="grid grid-cols-2 gap-3">
+        <button type="button" onClick={() => setRewardsPage('shop')} className="group flex min-h-24 items-center gap-3 rounded-2xl border border-cyan-200/20 bg-gradient-to-l from-cyan-950/80 to-blue-950/70 p-4 text-right shadow-lg transition hover:-translate-y-0.5 hover:border-cyan-200/40">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-cyan-200/20 bg-cyan-300/10 text-cyan-200"><span className="text-2xl">🛒</span></span>
+          <span><span className="block text-base font-black text-white">المتجر</span><span className="mt-1 block text-[10px] text-cyan-100/70">افتح صفحة المشتريات</span></span>
+        </button>
+        <button type="button" onClick={() => setRewardsPage('awards')} className="group flex min-h-24 items-center gap-3 rounded-2xl border border-amber-200/20 bg-gradient-to-l from-amber-950/80 to-orange-950/70 p-4 text-right shadow-lg transition hover:-translate-y-0.5 hover:border-amber-200/40">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-amber-200/20 bg-amber-300/10 text-amber-200"><Trophy className="h-6 w-6"/></span>
+          <span><span className="block text-base font-black text-white">الإنجازات</span><span className="mt-1 block text-[10px] text-amber-100/70">استعرض كل التحديات</span></span>
+        </button>
+      </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="rounded-xl border border-white/10 bg-[#101b2b]/80 p-3"><p className="text-[10px] text-slate-400">التقدم</p><p className="mt-1 text-sm font-black text-emerald-300">محفوظ تلقائيًا</p></div>
