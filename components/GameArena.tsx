@@ -36,6 +36,7 @@ export interface GameRunStats {
   chocolates: number;
   obstaclesHit: number;
   elapsedSeconds: number;
+  heartsRemaining: number;
 }
 
 interface GameArenaProps {
@@ -670,13 +671,25 @@ export default function GameArena({
       }
     };
 
-    const damagePlayer = (impactX: number, impactY: number, scorePenalty: number, message = 'أوه لا! ⚡') => {
+    const damagePlayer = (impactX: number, impactY: number, scorePenalty: number, message = 'احترس! ⚠️') => {
       if (player.invulnTimer > 0) return;
       scoreRef.current = Math.max(0, scoreRef.current + scorePenalty);
       comboRef.current = 0;
       comboTimerRef.current = 0;
       countsRef.current.obstaclesHit += 1;
       heartsRef.current = Math.max(0, heartsRef.current - 1);
+      if (heartsRef.current <= 0 && worldSave.extraHearts > 0) {
+        let consumed = false;
+        saveWorld((current) => {
+          if (current.extraHearts <= 0) return current;
+          consumed = true;
+          return { ...current, extraHearts: current.extraHearts - 1 };
+        });
+        if (consumed) {
+          heartsRef.current = 1;
+          player.bubbleText = 'قلب إضافي أنقذك! ❤️';
+        }
+      }
       player.invulnTimer = 1.25 + characterShieldBonus;
       player.hurtShake = 1;
       player.happyTimer = 0;
@@ -998,7 +1011,7 @@ export default function GameArena({
               setMagnetSecondsLeft(Math.ceil(MAGNET_DURATION_SEC));
               player.catchBounce = 1;
               player.happyTimer = 0.95;
-              player.bubbleText = 'مغناطيس سحري! 🧲';
+              player.bubbleText = 'جذب إجباري! 🧲';
               player.bubbleTone = 'magnet';
               player.bubbleTimer = 1.35;
               shakeRef.current = Math.max(shakeRef.current, 4.5);
@@ -1079,6 +1092,7 @@ export default function GameArena({
                   chocolates: countsRef.current.chocolates,
                   obstaclesHit: countsRef.current.obstaclesHit,
                   elapsedSeconds,
+                  heartsRemaining: heartsRef.current,
                 });
               }
             }

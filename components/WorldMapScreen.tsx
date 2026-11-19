@@ -15,6 +15,7 @@ import {
 import { LEVELS, WORLD_THEMES } from '@/lib/levels';
 import type { JoudyGameProgress } from '@/lib/storage';
 import WorldAtmosphereOverlay from './WorldAtmosphereOverlay';
+import RewardsHub from './RewardsHub';
 import { saveWorld, useWorldSave } from '@/lib/joudyWorld';
 
 interface WorldMapScreenProps {
@@ -140,6 +141,8 @@ export default function WorldMapScreen({
         </div>
 
       </div>
+
+      <RewardsHub progress={progress} />
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="rounded-xl border border-white/10 bg-[#101b2b]/80 p-3"><p className="text-[10px] text-slate-400">التقدم</p><p className="mt-1 text-sm font-black text-emerald-300">محفوظ تلقائيًا</p></div>

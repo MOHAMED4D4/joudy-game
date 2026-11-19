@@ -122,6 +122,12 @@ class MagicalSoundEngine {
     osc.stop(start + duration + 0.02);
   }
 
+  public playButtonClick() {
+    if (!this.sfxEnabled) return;
+    this.playTone(740, 0.055, { type: 'sine', volume: 0.055 });
+    this.playTone(988, 0.045, { type: 'triangle', volume: 0.035, delay: 0.025 });
+  }
+
   public playStartAdventure() {
     if (!this.sfxEnabled) return;
     const notes = [523.25, 659.25, 783.99, 1046.5];

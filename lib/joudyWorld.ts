@@ -18,6 +18,11 @@ export interface WorldSave {
   equippedPet: string;
   coastalRegionUnlocked: boolean;
   finalBossRewardClaimed: boolean;
+  totalChocolates: number;
+  totalScore: number;
+  perfectRuns: number;
+  totalBosses: number;
+  extraHearts: number;
 }
 
 const KEY = 'joudy_world_save_v1';
@@ -37,6 +42,11 @@ const DEFAULT_SAVE: WorldSave = {
   equippedPet: 'moon-cat',
   coastalRegionUnlocked: false,
   finalBossRewardClaimed: false,
+  totalChocolates: 0,
+  totalScore: 0,
+  perfectRuns: 0,
+  totalBosses: 0,
+  extraHearts: 0,
 };
 
 export interface ShopItem {
@@ -118,6 +128,11 @@ function parse(raw: string | null): WorldSave {
       equippedPet: typeof value.equippedPet === 'string' ? value.equippedPet : DEFAULT_SAVE.equippedPet,
       coastalRegionUnlocked: value.coastalRegionUnlocked === true,
       finalBossRewardClaimed: value.finalBossRewardClaimed === true,
+      totalChocolates: Math.max(0, Number(value.totalChocolates ?? 0) || 0),
+      totalScore: Math.max(0, Number(value.totalScore ?? 0) || 0),
+      perfectRuns: Math.max(0, Number(value.perfectRuns ?? 0) || 0),
+      totalBosses: Math.max(0, Number(value.totalBosses ?? 0) || 0),
+      extraHearts: Math.max(0, Number(value.extraHearts ?? 0) || 0),
     };
   } catch {
     return DEFAULT_SAVE;

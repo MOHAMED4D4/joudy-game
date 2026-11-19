@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { addWorldCoins, loadWorldSave, saveWorld } from '@/lib/joudyWorld';
@@ -24,6 +24,24 @@ const ANIME_IMAGE_SRC = '/images/joudy-anime.jpg';
 export default function JoudyAdventureGame() {
   const progress = useJoudyProgress();
 
+  // One-time welcome voice on the visitor's first entry. If autoplay is blocked,
+  // retry on the first real interaction and mark it complete only after playback starts.
+  useEffect(() => {
+    const key = 'joudy_welcome_voice_played_v1';
+    if (localStorage.getItem(key) === '1') return;
+    const audio = new Audio('/audio/joudy-welcome.mp3');
+    audio.preload = 'auto';
+    let done = false;
+    const playOnce = () => {
+      if (done || localStorage.getItem(key) === '1') return;
+      audio.play().then(() => { done = true; localStorage.setItem(key, '1'); }).catch(() => {});
+    };
+    playOnce();
+    window.addEventListener('pointerdown', playOnce, { once: true });
+    window.addEventListener('keydown', playOnce, { once: true });
+    return () => { window.removeEventListener('pointerdown', playOnce); window.removeEventListener('keydown', playOnce); audio.pause(); };
+  }, []);
+
   // Restore the original welcome page before the stages map.
   const [gameState, setGameState] = useState<GameState>('TITLE_MENU');
   // Keep Joudy's original V3 costume fixed; no wardrobe overlays or equipment bonuses.
@@ -44,6 +62,7 @@ export default function JoudyAdventureGame() {
     chocolates: 0,
     obstaclesHit: 0,
     elapsedSeconds: 0,
+    heartsRemaining: 3,
   });
 
   const activeLevel = selectedLevel ?? progress.highestUnlockedLevel;
@@ -93,11 +112,16 @@ export default function JoudyAdventureGame() {
     if (reward > 0) addWorldCoins(reward);
     const latest = loadWorldSave();
     const { [stats.level]: _completedRevives, ...remainingRevives } = latest.reviveCountsByLevel;
-    saveWorld({
+    saveWorld((current) => ({
+      ...current,
+      totalChocolates: current.totalChocolates + stats.chocolates,
+      totalScore: current.totalScore + stats.score,
+      perfectRuns: current.perfectRuns + (stats.heartsRemaining === 3 && stats.obstaclesHit === 0 ? 1 : 0),
+      totalBosses: current.totalBosses + ([5, 10, 15, 20, 25, 30].includes(stats.level) ? 1 : 0),
       reviveCountsByLevel: remainingRevives,
       highestAchievement: Math.max(latest.highestAchievement, stats.level >= 30 ? 3 : stats.level >= 15 ? 2 : stats.level >= 5 ? 1 : 0),
       finalBossRewardClaimed: latest.finalBossRewardClaimed || (stats.level === 30 && reward > 0),
-    });
+    }));
 
     const { isNewHighScore: beatRecord } = recordLevelCompletion(
       stats.level,
@@ -125,7 +149,7 @@ export default function JoudyAdventureGame() {
   const activeLevelConfig = getLevelConfig(activeLevel);
 
   return (
-    <main className="relative min-h-dvh w-full overflow-x-clip bg-[#080f1b] flex flex-col">
+    <main onClickCapture={(event) => { if ((event.target as HTMLElement).closest('button')) soundEngine.playButtonClick(); }} className="relative min-h-dvh w-full overflow-x-clip bg-[#080f1b] flex flex-col">
       {/* Minimal audio control */}
       {gameState !== 'PLAYING' && (
         <div className="absolute left-4 top-4 z-30">
