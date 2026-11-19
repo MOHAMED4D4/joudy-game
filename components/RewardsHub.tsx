@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
 import { ShoppingBag, Trophy, Lock, Check, Coins, KeyRound, Heart, ArrowRight, Shield, Magnet, Sparkles, type LucideIcon } from 'lucide-react';
@@ -23,12 +23,16 @@ const TIER_STYLES: Record<string, { border: string; glow: string; chip: string; 
   'الخبراء': { border: 'border-blue-200/25', glow: 'from-blue-300/15 to-indigo-400/5', chip: 'bg-blue-300/10 text-blue-100', text: 'text-blue-100' },
   'أسطوري': { border: 'border-violet-200/30', glow: 'from-violet-300/20 to-fuchsia-400/8', chip: 'bg-violet-300/10 text-violet-100', text: 'text-violet-100' },
 };
-type RewardsPage = 'shop' | 'awards';
+type RewardsPage = 'shop' | 'awards' | 'wheel';
 const MAX_EXTRA_HEARTS = 5;
 
 export default function RewardsHub({ progress, page, onBack }: { progress: JoudyGameProgress; page: RewardsPage; onBack: () => void }) {
   const save = useWorldSave();
   const [notice, setNotice] = useState('');
+  const [activeAchievement, setActiveAchievement] = useState<Achievement | null>(null);
+  const [wheelRotation, setWheelRotation] = useState(0);
+  const [wheelSpinning, setWheelSpinning] = useState(false);
+  const [wheelPrize, setWheelPrize] = useState<{ label: string; kind: 'coins' | 'score' | 'key' | 'magnet' | 'heart' | 'shield'; amount: number } | null>(null);
   const achievements = useMemo<Achievement[]>(() => {
     const completed = Object.keys(progress.completedLevels).length;
     const chocolates = save.totalChocolates ?? 0;
@@ -122,9 +126,71 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     setNotice(purchased ? (kind === 'key' ? 'تم شراء المفتاح الأزرق وإضافته للمخزون!' : kind === 'heart' ? 'تم شراء قلب إضافي! سيظهر أسفل القلوب الأساسية باللون الأزرق.' : kind === 'shield' ? 'تم شراء شحنة درع دائري لمدة دقيقتين!' : 'تم شراء شحنة مغناطيس وإضافتها إلى أدوات اللعب!') : 'تعذر إتمام الشراء؛ راجع رصيدك.');
   };
 
+  const rewardForAchievement = (achievement: Achievement) => {
+    if (achievement.id.startsWith('score-')) return { kind: 'score' as const, amount: achievement.id === 'score-500k' ? 10000 : 5000, label: `${achievement.id === 'score-500k' ? '10,000' : '5,000'} نقطة Score` };
+    const tierRewards: Record<string, number> = { 'البدايات': 1000, 'التقدم': 5000, 'المهارة': 10000, 'الخبراء': 25000, 'أسطوري': 50000 };
+    const amount = tierRewards[achievement.tier] ?? 1000;
+    return { kind: 'coins' as const, amount, label: `${amount.toLocaleString('ar-EG')} عملة` };
+  };
+
+  useEffect(() => {
+    if (page !== 'awards' || activeAchievement) return;
+    const next = achievements.find((a) => a.unlocked && !save.claimedAchievementRewards.includes(a.id));
+    if (next) setActiveAchievement(next);
+  }, [page, achievements, save.claimedAchievementRewards, activeAchievement]);
+
+  const claimAchievement = () => {
+    if (!activeAchievement) return;
+    const reward = rewardForAchievement(activeAchievement);
+    saveWorld((current) => {
+      if (current.claimedAchievementRewards.includes(activeAchievement.id)) return current;
+      return { ...current, coins: reward.kind === 'coins' ? current.coins + reward.amount : current.coins,
+        totalScore: reward.kind === 'score' ? current.totalScore + reward.amount : current.totalScore,
+        claimedAchievementRewards: [...current.claimedAchievementRewards, activeAchievement.id] };
+    });
+    setNotice(`تم استلام ${reward.label} بنجاح!`);
+    setActiveAchievement(null);
+  };
+
+  const wheelPrizes = [
+    { label: '10,000 عملة', kind: 'coins' as const, amount: 10000, icon: '🪙' },
+    { label: '5,000 Score', kind: 'score' as const, amount: 5000, icon: '⭐' },
+    { label: '10 مفاتيح', kind: 'key' as const, amount: 10, icon: '🔑' },
+    { label: '30 مفتاح', kind: 'key' as const, amount: 30, icon: '🗝️' },
+    { label: '10 مغناطيس', kind: 'magnet' as const, amount: 10, icon: '🧲' },
+    { label: '10 قلوب', kind: 'heart' as const, amount: 10, icon: '💙' },
+    { label: '10 دروع', kind: 'shield' as const, amount: 10, icon: '🛡️' },
+  ];
+  const spinWheel = () => {
+    if (wheelSpinning) return;
+    const latest = loadWorldSave();
+    if (latest.coins < 500) { setNotice('تحتاج إلى 500 عملة على الأقل لتدوير العجلة.'); return; }
+    const prize = wheelPrizes[Math.floor(Math.random() * wheelPrizes.length)];
+    saveWorld((current) => current.coins < 500 ? current : { ...current, coins: current.coins - 500 });
+    setNotice(''); setWheelPrize(prize); setWheelSpinning(true);
+    const index = wheelPrizes.findIndex((item) => item.label === prize.label);
+    const segment = 360 / wheelPrizes.length;
+    const target = 360 * 6 + (360 - (index * segment + segment / 2));
+    setWheelRotation((current) => current + target);
+  };
+  const finishWheelSpin = () => {
+    if (!wheelSpinning || !wheelPrize) return;
+    saveWorld((current) => ({ ...current,
+      coins: current.coins + (wheelPrize.kind === 'coins' ? wheelPrize.amount : 0),
+      totalScore: current.totalScore + (wheelPrize.kind === 'score' ? wheelPrize.amount : 0),
+      blueKeys: current.blueKeys + (wheelPrize.kind === 'key' ? wheelPrize.amount : 0),
+      magnetCharges: current.magnetCharges + (wheelPrize.kind === 'magnet' ? wheelPrize.amount : 0),
+      extraHearts: current.extraHearts + (wheelPrize.kind === 'heart' ? wheelPrize.amount : 0),
+      shieldCharges: current.shieldCharges + (wheelPrize.kind === 'shield' ? wheelPrize.amount : 0),
+    }));
+    setWheelSpinning(false);
+    setNotice(`مبروك! كسبت ${wheelPrize.label} 🎉`);
+  };
+
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
   const grouped = ['البدايات','التقدم','المهارة','الخبراء','أسطوري'];
   const isShop = page === 'shop';
+  const isWheel = page === 'wheel';
   const shopProducts: { id: 'key' | 'heart' | 'shield' | 'magnet'; name: string; eyebrow: string; description: string; icon: LucideIcon; artwork: string; image: string; tint: string; stock: number; stockLabel: string; action: string; locked?: boolean }[] = [
     { id: 'key', name: 'المفتاح الأزرق', eyebrow: 'إنقاذ ومواصلة', description: 'احتفظي به في مخزونك لإنقاذ جودي ومتابعة المرحلة بعد نفاد القلوب.', icon: KeyRound, artwork: '🔑', image: '/images/powerups/key.svg', tint: 'from-sky-400/25 via-blue-500/10 to-indigo-500/10', stock: save.blueKeys, stockLabel: 'مفتاح في المخزون', action: 'شراء مفتاح' },
     { id: 'heart', name: 'قلب إضافي', eyebrow: 'فرصة حياة إضافية', description: 'يمنحك فرصة إضافية في المحاولة. يظهر باللون الأزرق أسفل القلوب الحمراء الأساسية.', icon: Heart, artwork: '💠', image: '/images/powerups/heart.svg', tint: 'from-cyan-300/25 via-sky-500/10 to-blue-500/10', stock: save.extraHearts, stockLabel: 'قلب في المخزون', action: 'شراء قلب' },
@@ -134,17 +200,28 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
   return <section className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-[2rem] border border-cyan-100/10 bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,.12),transparent_38%),linear-gradient(145deg,#101c32_0%,#0b1425_54%,#11152c_100%)] p-4 text-slate-100 shadow-[0_28px_80px_rgba(0,0,0,.42)] sm:p-6">
     <div className="relative mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3 sm:p-4">
       <div className="flex items-center gap-3">
-        <div className={`grid h-14 w-14 place-items-center rounded-2xl border shadow-inner ${isShop?'border-cyan-200/25 bg-gradient-to-br from-cyan-300/20 to-blue-700/20 text-cyan-100':'border-amber-200/20 bg-amber-300/10 text-amber-200'}`}>{isShop?<ShoppingBag className="h-7 w-7"/>:<Trophy className="h-6 w-6"/>}</div>
-        <div><p className="text-[10px] font-black tracking-[.22em] text-cyan-200">JOUDY · {isShop?'PREMIUM STORE':'ACHIEVEMENTS'}</p><h2 className="text-2xl font-black text-white sm:text-3xl">{isShop?'متجر الأدوات':'الإنجازات'}</h2><p className="text-xs text-slate-400">{isShop?'عزّزي فرصك بأدوات مصممة للمغامرات الصعبة':'مرتبة من الأسهل للأصعب'}</p></div>
+        <div className={`grid h-14 w-14 place-items-center rounded-2xl border shadow-inner ${isShop?'border-cyan-200/25 bg-gradient-to-br from-cyan-300/20 to-blue-700/20 text-cyan-100':'border-amber-200/20 bg-amber-300/10 text-amber-200'}`}>{isShop?<ShoppingBag className="h-7 w-7"/>:isWheel?<span className="text-3xl">🎡</span>:<Trophy className="h-6 w-6"/>}</div>
+        <div><p className="text-[10px] font-black tracking-[.22em] text-cyan-200">JOUDY · {isShop?'PREMIUM STORE':isWheel?'LUCKY WHEEL':'ACHIEVEMENTS'}</p><h2 className="text-2xl font-black text-white sm:text-3xl">{isShop?'متجر الأدوات':isWheel?'عجلة الحظ':'الإنجازات'}</h2><p className="text-xs text-slate-400">{isShop?'عزّزي فرصك بأدوات مصممة للمغامرات الصعبة':isWheel?'لفة واحدة قد تغيّر مغامرتك':'مرتبة من الأسهل للأصعب'}</p></div>
       </div>
       <div className="flex items-center gap-3">
-        {!isShop && <span className="rounded-xl border border-amber-200/20 bg-amber-300/10 px-3 py-2 text-xs font-black text-amber-100">{unlockedCount} / {achievements.length} مكتمل</span>}
+        {page === 'awards' && <span className="rounded-xl border border-amber-200/20 bg-amber-300/10 px-3 py-2 text-xs font-black text-amber-100">{unlockedCount} / {achievements.length} مكتمل</span>}
         <div className="flex items-center gap-2 rounded-xl border border-amber-200/20 bg-amber-300/10 px-3 py-2 text-sm font-black text-amber-100"><Coins className="h-4 w-4"/>{save.coins.toLocaleString('ar-EG')}</div>
       </div>
     </div>
     <button type="button" onClick={onBack} className="mb-5 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-slate-200 transition hover:bg-white/10"><ArrowRight className="h-4 w-4"/> رجوع للخريطة</button>
     {notice && <p role="status" className="mb-4 rounded-xl border border-emerald-200/20 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-100">{notice}</p>}
-    {isShop ? <div className="space-y-4">
+    {isWheel ? <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 py-5">
+      <div className="rounded-2xl border border-amber-200/20 bg-amber-300/10 px-5 py-3 text-center"><p className="text-xs font-bold text-amber-100">تكلفة اللفة الواحدة</p><p className="mt-1 text-2xl font-black text-white">500 🪙</p></div>
+      <div className="relative grid h-[min(78vw,390px)] w-[min(78vw,390px)] place-items-center">
+        <div className="absolute -top-3 z-20 h-0 w-0 border-x-[15px] border-t-[28px] border-x-transparent border-t-amber-300 drop-shadow-lg"/>
+        <motion.div className="relative h-full w-full rounded-full border-[10px] border-amber-200/70 shadow-[0_0_55px_rgba(251,191,36,.25)]" style={{ background: 'conic-gradient(#f59e0b 0deg 51.43deg,#2563eb 51.43deg 102.86deg,#0e7490 102.86deg 154.29deg,#7c3aed 154.29deg 205.72deg,#db2777 205.72deg 257.15deg,#059669 257.15deg 308.58deg,#b45309 308.58deg 360deg)' }} animate={{ rotate: wheelRotation }} transition={{ duration: 5, ease: [0.12,0.75,0.12,1] }} onAnimationComplete={finishWheelSpin}>
+          {wheelPrizes.map((prize,index)=><div key={prize.label} className="absolute left-1/2 top-1/2 flex h-[44%] w-20 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-start pt-2 text-center text-[10px] font-black text-white drop-shadow-md" style={{ transform: `translate(-50%,-50%) rotate(${index*360/7+25.7}deg) translateY(-72px) rotate(-${index*360/7+25.7}deg)` }}><span className="text-2xl">{prize.icon}</span><span>{prize.label}</span></div>)}
+        </motion.div><div className="absolute z-10 grid h-20 w-20 place-items-center rounded-full border-4 border-amber-100 bg-slate-950 text-3xl shadow-xl">🎡</div>
+      </div>
+      <button type="button" disabled={wheelSpinning} onClick={spinWheel} className="rounded-2xl border border-amber-100/40 bg-gradient-to-l from-amber-300 via-yellow-400 to-orange-500 px-12 py-4 text-lg font-black text-slate-950 shadow-[0_12px_35px_rgba(245,158,11,.28)] transition hover:scale-105 disabled:opacity-60">{wheelSpinning?'العجلة بتلف...':'🎯 لف العجلة · 500 عملة'}</button>
+      {wheelPrize && !wheelSpinning && <div className="rounded-2xl border border-emerald-200/25 bg-emerald-400/10 px-5 py-3 text-center text-sm font-black text-emerald-100">الجائزة: {wheelPrize.label} 🎉</div>}
+      <p className="text-center text-[11px] text-slate-400">الجائزة تُضاف إلى رصيدك أو مخزونك بعد توقف العجلة.</p>
+    </div> : isShop ? <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-cyan-200/15 bg-gradient-to-r from-cyan-400/[0.08] via-blue-500/[0.06] to-violet-500/[0.08] px-4 py-3">
         <div className="flex items-center gap-2 text-xs font-bold text-cyan-100"><Sparkles className="h-4 w-4 text-cyan-200"/> تجهيزات المغامرة</div>
         <p className="text-[10px] font-semibold text-slate-400">كل أداة تُضاف مباشرة إلى مخزونك</p>
@@ -213,10 +290,13 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
               <h4 className={`relative text-[11px] font-black leading-5 ${a.unlocked ? tierStyle.text : 'text-slate-300'}`}>{a.title}</h4>
               <p className="relative mt-1 text-[10px] leading-4 text-slate-400">{a.detail}</p>
               <span className={`relative mt-auto inline-flex items-center justify-center gap-1 self-center rounded-full px-2.5 py-1.5 text-[9px] font-black ${a.unlocked?'bg-emerald-300/10 text-emerald-200':'bg-black/30 text-slate-500'}`}>{a.unlocked?<><Check className="h-3 w-3"/> مكتمل</>:<><Lock className="h-3 w-3"/> مقفول</>}</span>
+              {a.unlocked && !save.claimedAchievementRewards.includes(a.id) && <button type="button" onClick={() => setActiveAchievement(a)} className="relative mt-2 rounded-lg border border-amber-200/30 bg-gradient-to-l from-amber-300 to-orange-400 px-3 py-2 text-[10px] font-black text-slate-950 shadow-lg">استلام المكافأة 🎁</button>}
+              {a.unlocked && save.claimedAchievementRewards.includes(a.id) && <span className="relative mt-2 text-[9px] font-bold text-emerald-300">تم استلام المكافأة ✓</span>}
             </motion.article>)}
           </div>
         </section>;
       })}
     </div>}
+    {activeAchievement && (() => { const reward = rewardForAchievement(activeAchievement); return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="achievement-reward-title"><motion.div initial={{ opacity: 0, scale: .75, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-amber-200/40 bg-gradient-to-br from-[#24314b] via-[#111b30] to-[#170f2d] p-6 text-center shadow-[0_30px_100px_rgba(0,0,0,.7)]"><div className="pointer-events-none absolute -left-12 -top-16 h-48 w-48 rounded-full bg-amber-300/15 blur-3xl"/><div className="relative mx-auto mb-3 grid h-24 w-24 place-items-center rounded-full border border-amber-200/40 bg-amber-300/10 text-5xl shadow-[0_0_45px_rgba(251,191,36,.2)]">🏆</div><p className="text-[10px] font-black tracking-[.25em] text-amber-200">ACHIEVEMENT UNLOCKED</p><h3 id="achievement-reward-title" className="mt-2 text-2xl font-black text-white">إنجاز جديد!</h3><p className="mt-2 text-lg font-black text-amber-100">{activeAchievement.title}</p><p className="mt-1 text-xs text-slate-300">{activeAchievement.detail}</p><div className="my-5 rounded-2xl border border-emerald-200/25 bg-emerald-300/10 px-4 py-4"><p className="text-[10px] font-bold text-emerald-200">مكافأتك الجاهزة للاستلام</p><p className="mt-1 text-2xl font-black text-white">{reward.label} {reward.kind === 'coins' ? '🪙' : '⭐'}</p></div><button type="button" onClick={claimAchievement} className="w-full rounded-xl border border-amber-100/40 bg-gradient-to-l from-amber-300 to-orange-400 px-5 py-3.5 text-sm font-black text-slate-950 shadow-lg transition hover:scale-[1.02]">استلام المكافأة ومواصلة اللعب</button></motion.div></div>; })()}
   </section>;
 }

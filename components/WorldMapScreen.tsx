@@ -110,7 +110,7 @@ export default function WorldMapScreen({
   const currentLevelRef = useRef<HTMLDivElement | null>(null);
   const worldSave = useWorldSave();
   const [gateNotice, setGateNotice] = useState<{ chapter: ChapterNumber; text: string } | null>(null);
-  const [rewardsPage, setRewardsPage] = useState<'map' | 'shop' | 'awards'>('map');
+  const [rewardsPage, setRewardsPage] = useState<'map' | 'shop' | 'awards' | 'wheel'>('map');
   const chapterSettings: Record<ChapterNumber, { price: number; requiredLevel: number; flag: ChapterFlag; region: string }> = {
     2: { price: 40_000, requiredLevel: 15, flag: 'coastalRegionUnlocked', region: 'مدينة الظلال' },
     3: { price: 65_000, requiredLevel: 20, flag: 'thirdChapterUnlocked', region: 'غابة الكائنات الغريبة' },
@@ -249,6 +249,9 @@ export default function WorldMapScreen({
         </button>
         <button type="button" onClick={() => setRewardsPage('awards')} className="inline-flex items-center gap-2 rounded-xl border border-amber-200/20 bg-gradient-to-l from-amber-950/70 to-orange-950/60 px-5 py-2.5 text-sm font-black text-amber-100 shadow-md transition hover:-translate-y-0.5 hover:border-amber-200/40">
           <Trophy className="h-5 w-5"/> الإنجازات والتحديات
+        </button>
+        <button type="button" onClick={() => setRewardsPage('wheel')} className="inline-flex items-center gap-2 rounded-xl border border-fuchsia-200/20 bg-gradient-to-l from-fuchsia-950/80 to-violet-950/70 px-5 py-2.5 text-sm font-black text-fuchsia-100 shadow-md transition hover:-translate-y-0.5 hover:border-fuchsia-200/40">
+          <span className="text-lg">🎡</span> عجلة الحظ
         </button>
       </div>
 

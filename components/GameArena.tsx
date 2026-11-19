@@ -329,17 +329,25 @@ export default function GameArena({
   const reviveCountRef = useRef(worldSave.reviveCountsByLevel[levelConfig.level] ?? 0);
   const [typedGuideText, setTypedGuideText] = useState('');
 
+  // Use an in-page immersive layout instead of the browser Fullscreen API.
+  // Android Chrome displays an unavoidable system hint when a website requests
+  // native fullscreen; keeping this mode CSS-based avoids triggering that hint.
   useEffect(() => {
-    const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
-    document.addEventListener('fullscreenchange', syncFullscreen);
-    return () => document.removeEventListener('fullscreenchange', syncFullscreen);
-  }, []);
+    if (!isFullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsFullscreen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFullscreen]);
 
-  const toggleFullscreen = useCallback(async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await (stageRef.current?.closest('main') as HTMLElement | null)?.requestFullscreen?.();
-    } catch { /* Fullscreen is optional; keep normal gameplay available. */ }
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen((current) => !current);
   }, []);
 
   useEffect(() => {
@@ -1987,7 +1995,9 @@ export default function GameArena({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="relative left-1/2 w-screen max-w-none -translate-x-1/2 px-0 py-0 flex flex-col gap-1.5 h-[100dvh] max-h-none min-h-[520px]"
+      className={isFullscreen
+        ? "fixed inset-0 z-[9999] m-0 h-[100dvh] min-h-0 w-screen max-h-none max-w-none translate-x-0 overflow-hidden bg-[#071426] px-0 py-0 flex flex-col gap-1.5"
+        : "relative left-1/2 w-screen max-w-none -translate-x-1/2 px-0 py-0 flex flex-col gap-1.5 h-[100dvh] max-h-none min-h-[520px]"}
     >
       {/* Premium two-row HUD is visible only during active gameplay. */}
       {!isPaused && !isGameOver && <header className="absolute left-2 right-2 top-2 z-30 flex flex-col gap-2 rounded-[1.35rem] border border-white/15 bg-[#071426]/95 px-2.5 py-2.5 text-white shadow-[0_14px_40px_rgba(0,0,0,.48)] backdrop-blur-2xl sm:left-4 sm:right-4 sm:rounded-[1.6rem] sm:px-4 sm:py-3">
