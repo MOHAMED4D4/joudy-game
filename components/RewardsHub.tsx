@@ -9,6 +9,12 @@ import { soundEngine } from '@/lib/soundEffects';
 import type { JoudyGameProgress } from '@/lib/storage';
 
 type Achievement = { id: string; title: string; detail: string; icon: string; unlocked: boolean; tier: string; progress: number };
+type WheelPrize = {
+  label: string;
+  kind: 'coins' | 'score' | 'key' | 'magnet' | 'heart' | 'shield';
+  amount: number;
+  icon: string;
+};
 
 const MEDAL_ART: Record<string, string> = {
   'البدايات': '/images/achievements/start.svg',
@@ -34,7 +40,8 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
   const [wheelRotation, setWheelRotation] = useState(0);
   const [wheelSpinning, setWheelSpinning] = useState(false);
   const [wheelRewardPending, setWheelRewardPending] = useState(false);
-  const [wheelPrize, setWheelPrize] = useState<{ label: string; kind: 'coins' | 'score' | 'key' | 'magnet' | 'heart' | 'shield'; amount: number } | null>(null);
+  const [wheelPrize, setWheelPrize] = useState<WheelPrize | null>(null);
+  const [failedShopImages, setFailedShopImages] = useState<Record<string, boolean>>({});
   const achievements = useMemo<Achievement[]>(() => {
     const completed = Object.keys(progress.completedLevels).length;
     const chocolates = save.totalChocolates ?? 0;
@@ -158,7 +165,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     setActiveAchievement(null);
   };
 
-  const wheelPrizes = [
+  const wheelPrizes: WheelPrize[] = [
     { label: '10,000 عملة', kind: 'coins' as const, amount: 10000, icon: '🪙' },
     { label: '5,000 Score', kind: 'score' as const, amount: 5000, icon: '⭐' },
     { label: '10 مفاتيح', kind: 'key' as const, amount: 10, icon: '🔑' },
@@ -263,7 +270,17 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
               <div className="pointer-events-none absolute -bottom-14 -left-8 h-40 w-40 rounded-full border border-white/10" />
               <div className="absolute inset-x-8 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               <div className="relative h-32 w-44 transition duration-300 group-hover:scale-105">
-                <Image src={product.image} alt={product.name} fill sizes="176px" className="object-contain drop-shadow-[0_12px_16px_rgba(0,0,0,.35)]" />
+                {failedShopImages[product.id] ? (
+                  <span className="grid h-full w-full place-items-center text-6xl drop-shadow-[0_8px_12px_rgba(0,0,0,.4)]" role="img" aria-label={product.name}>{product.artwork}</span>
+                ) : (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    draggable={false}
+                    onError={() => setFailedShopImages((current) => ({ ...current, [product.id]: true }))}
+                    className="h-full w-full object-contain drop-shadow-[0_12px_16px_rgba(0,0,0,.35)]"
+                  />
+                )}
                 <span className="absolute bottom-0 right-1 grid h-8 w-8 place-items-center rounded-xl border border-white/20 bg-[#111d32] text-lg shadow-lg"><Icon className="h-4 w-4 text-white" strokeWidth={1.8}/></span>
                 <span className="sr-only">{product.artwork}</span>
               </div>

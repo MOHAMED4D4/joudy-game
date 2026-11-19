@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'motion/react';
 import {
@@ -926,11 +927,8 @@ export default function GameArena({
       comboTimerRef.current = 0;
       countsRef.current.obstaclesHit += 1;
       let consumedBonusHeart = false;
-      if (heartsRef.current > 0) {
-        // The three original red hearts are always consumed first.
-        heartsRef.current = Math.max(0, heartsRef.current - 1);
-      } else if (bonusHeartsRef.current > 0) {
-        // Purchased blue hearts sit beside the base hearts and pop one by one.
+      if (bonusHeartsRef.current > 0) {
+        // Spend the bonus blue hearts first and preserve the three base red hearts.
         saveWorld((current) => ({
           ...current,
           extraHearts: Math.max(0, current.extraHearts - 1),
@@ -938,6 +936,9 @@ export default function GameArena({
         bonusHeartsRef.current = Math.max(0, bonusHeartsRef.current - 1);
         setBonusHearts(bonusHeartsRef.current);
         consumedBonusHeart = true;
+      } else if (heartsRef.current > 0) {
+        // Base red hearts are used only after all bonus blue hearts are gone.
+        heartsRef.current = Math.max(0, heartsRef.current - 1);
       }
       player.invulnTimer = 1.25 + characterShieldBonus;
       player.hurtShake = 1;
@@ -1939,7 +1940,7 @@ export default function GameArena({
       window.cancelAnimationFrame(rafId);
       ro.disconnect();
     };
-  }, [levelConfig, characterFilter, characterSpeedBonus, characterShieldBonus]);
+  }, [levelConfig, characterFilter, characterSpeedBonus, characterShieldBonus, isFullscreen]);
 
   const updateTouchTarget = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -1989,7 +1990,7 @@ export default function GameArena({
   const displayedHighScore = Math.max(highScore, score);
   const comboMultiplier = getComboMultiplier(combo);
 
-  return (
+  const arena = (
     <motion.section
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -2329,4 +2330,10 @@ export default function GameArena({
 
     </motion.section>
   );
+
+  // Render outside animated/transformed parents while immersive mode is active.
+  // This keeps fixed positioning tied to the actual viewport on mobile browsers.
+  return isFullscreen && typeof document !== 'undefined'
+    ? createPortal(arena, document.body)
+    : arena;
 }
