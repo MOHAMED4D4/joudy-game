@@ -36,6 +36,7 @@ const MAX_EXTRA_HEARTS = 5;
 export default function RewardsHub({ progress, page, onBack }: { progress: JoudyGameProgress; page: RewardsPage; onBack: () => void }) {
   const save = useWorldSave();
   const [notice, setNotice] = useState('');
+  const [purchasePulse, setPurchasePulse] = useState(false);
   const [activeAchievement, setActiveAchievement] = useState<Achievement | null>(null);
   const [wheelRotation, setWheelRotation] = useState(0);
   const [wheelSpinning, setWheelSpinning] = useState(false);
@@ -106,6 +107,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
   const buyScore = (coinAmount: number) => {
     const latest = loadWorldSave();
     if (latest.coins < coinAmount) {
+      soundEngine.playLocked();
       setNotice(`مش معاك عملات كفاية — ناقصك ${(coinAmount - latest.coins).toLocaleString('ar-EG')} عملة.`);
       return;
     }
@@ -115,14 +117,16 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
       purchased = true;
       return { ...current, coins: current.coins - coinAmount, totalScore: current.totalScore + coinAmount * 2 };
     });
+    if (purchased) { soundEngine.playPurchase(); setPurchasePulse(true); window.setTimeout(() => setPurchasePulse(false), 900); } else soundEngine.playLocked();
     setNotice(purchased ? `تم تحويل ${coinAmount.toLocaleString('ar-EG')} عملة إلى ${(coinAmount * 2).toLocaleString('ar-EG')} نقطة Score!` : 'تعذر إتمام التحويل؛ راجع رصيدك.');
   };
 
   const buy = (kind: 'key' | 'heart' | 'shield' | 'magnet' | 'slow') => {
-    if (kind === 'shield' && progress.highestUnlockedLevel < 5) { setNotice('الدرع الدائري يفتح عند الوصول إلى المستوى الخامس.'); return; }
+    if (kind === 'shield' && progress.highestUnlockedLevel < 5) { soundEngine.playLocked(); setNotice('الدرع الدائري يفتح عند الوصول إلى المستوى الخامس.'); return; }
     const price = 500;
     const latest = loadWorldSave();
     if (latest.coins < price) {
+      soundEngine.playLocked();
       setNotice(`مش معاك عملات كفاية — ناقصك ${(price - latest.coins).toLocaleString('ar-EG')} عملة.`);
       return;
     }
@@ -132,6 +136,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
       purchased = true;
       return { ...current, coins: current.coins - price, blueKeys: kind === 'key' ? current.blueKeys + 1 : current.blueKeys, extraHearts: kind === 'heart' ? current.extraHearts + 1 : current.extraHearts, shieldCharges: kind === 'shield' ? current.shieldCharges + 1 : current.shieldCharges, magnetCharges: kind === 'magnet' ? current.magnetCharges + 1 : current.magnetCharges, slowMonsterCharges: kind === 'slow' ? current.slowMonsterCharges + 1 : current.slowMonsterCharges };
     });
+    if (purchased) { soundEngine.playPurchase(); setPurchasePulse(true); window.setTimeout(() => setPurchasePulse(false), 900); } else soundEngine.playLocked();
     setNotice(purchased ? (kind === 'key' ? 'تم شراء المفتاح الأزرق وإضافته للمخزون!' : kind === 'heart' ? 'تم شراء قلب إضافي! سيظهر أسفل القلوب الأساسية باللون الأزرق.' : kind === 'shield' ? 'تم شراء شحنة درع دائري لمدة دقيقتين!' : kind === 'slow' ? 'تم شراء شحنة إبطاء الوحوش لمدة دقيقة!' : 'تم شراء شحنة مغناطيس وإضافتها إلى أدوات اللعب!') : 'تعذر إتمام الشراء؛ راجع رصيدك.');
   };
 
@@ -161,6 +166,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
         totalScore: reward.kind === 'score' ? current.totalScore + reward.amount : current.totalScore,
         claimedAchievementRewards: [...current.claimedAchievementRewards, activeAchievement.id] };
     });
+    soundEngine.playPurchase();
     setNotice(`تم استلام ${reward.label} بنجاح!`);
     setActiveAchievement(null);
   };
@@ -177,7 +183,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
   const spinWheel = () => {
     if (wheelSpinning || wheelRewardPending) return;
     const latest = loadWorldSave();
-    if (latest.coins < 500) { setNotice('تحتاج إلى 500 عملة على الأقل لتدوير العجلة.'); return; }
+    if (latest.coins < 500) { soundEngine.playLocked(); setNotice('تحتاج إلى 500 عملة على الأقل لتدوير العجلة.'); return; }
     saveWorld((current) => current.coins < 500 ? current : { ...current, coins: current.coins - 500 });
     setNotice('');
     setWheelPrize(null);
@@ -242,7 +248,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
       </div>
     </div>
     <button type="button" onClick={onBack} className={`inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-slate-200 transition hover:bg-white/10 ${isWheel ? 'mb-2 self-start text-xs' : 'mb-5 px-4 py-2.5'}`}><ArrowRight className="h-4 w-4"/> رجوع للخريطة</button>
-    {notice && <p role="status" className={`rounded-xl border border-emerald-200/20 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-100 ${isWheel ? 'mb-1 shrink-0 text-center text-[10px]' : 'mb-4'}`}>{notice}</p>}
+    {notice && <motion.p initial={{opacity:0,y:-8,scale:.98}} animate={{opacity:1,y:0,scale:purchasePulse?1.025:1}} transition={{type:'spring',stiffness:260,damping:18}} role="status" className={`rounded-xl border px-3 py-2 text-xs font-bold ${notice.includes('مش معاك') || notice.includes('تحتاج') || notice.includes('تعذر') || notice.includes('يفتح عند') ? 'border-rose-300/25 bg-rose-500/10 text-rose-200' : 'border-emerald-200/20 bg-emerald-400/10 text-emerald-100'} ${isWheel ? 'mb-1 shrink-0 text-center text-[10px]' : 'mb-4'}`}>{notice}</motion.p>}
     {isWheel ? <div className="mx-auto flex min-h-0 w-full flex-1 flex-col items-center justify-evenly gap-2 overflow-hidden py-1">
       <div className="shrink-0 rounded-xl border border-amber-200/25 bg-gradient-to-br from-amber-300/15 to-orange-500/5 px-5 py-1.5 text-center shadow-lg"><p className="text-xs font-bold text-amber-100">تكلفة اللفة الواحدة</p><p className="mt-1 text-2xl font-black text-white">500 🪙</p></div>
       <div className="relative aspect-square w-[min(58vh,78vw)] max-w-[370px] shrink-0">
@@ -277,7 +283,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {shopProducts.map((product) => {
           const Icon = product.icon;
-          return <article key={product.id} className="group relative flex min-w-0 flex-col overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#0a1425]/90 shadow-[0_16px_38px_rgba(0,0,0,.28)] transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 hover:shadow-[0_22px_48px_rgba(0,0,0,.38)]">
+          return <article key={product.id} className={`group relative flex min-w-0 flex-col overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#0a1425]/90 shadow-[0_16px_38px_rgba(0,0,0,.28)] transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 hover:shadow-[0_22px_48px_rgba(0,0,0,.38)] ${purchasePulse ? 'animate-pulse border-emerald-200/40' : ''}`}>
             <div className={`relative mx-3 mt-3 flex h-36 items-center justify-center overflow-hidden rounded-[1.25rem] border border-white/10 bg-gradient-to-br ${product.tint}`}>
               <div className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full border border-white/10" />
               <div className="pointer-events-none absolute -bottom-14 -left-8 h-40 w-40 rounded-full border border-white/10" />
@@ -304,7 +310,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
               <div className="flex items-start justify-between gap-2"><h3 className="text-base font-black text-white">{product.name}</h3><span className="shrink-0 rounded-lg border border-amber-200/20 bg-amber-300/10 px-2 py-1 text-[10px] font-black text-amber-100">500 🪙</span></div>
               <p className="mt-2 min-h-[4.5rem] text-[11px] leading-6 text-slate-400">{product.description}</p>
               <div className="mt-auto pt-3">
-                <button type="button" disabled={product.locked} onClick={() => buy(product.id)} className="w-full rounded-xl border border-white/10 bg-gradient-to-l from-cyan-500 to-blue-700 px-3 py-3 text-xs font-black text-white shadow-[0_8px_20px_rgba(14,165,233,.18)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-800 disabled:text-slate-400 disabled:shadow-none">{product.action}</button>
+                <button type="button" onClick={() => { if (product.locked) { soundEngine.playLocked(); setNotice(`${product.name} يفتح عند الوصول إلى المستوى الخامس.`); } else buy(product.id); }} className="w-full rounded-xl border border-white/10 bg-gradient-to-l from-cyan-500 to-blue-700 px-3 py-3 text-xs font-black text-white shadow-[0_8px_20px_rgba(14,165,233,.18)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-800 disabled:text-slate-400 disabled:shadow-none">{product.action}</button>
                 <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3 text-[10px]"><span className="text-slate-500">المخزون الحالي</span><span className="font-black tabular-nums text-cyan-100">{product.stock.toLocaleString('ar-EG')} · {product.stockLabel}</span></div>
               </div>
             </div>

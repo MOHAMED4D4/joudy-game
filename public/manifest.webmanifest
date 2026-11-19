@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "جودي - مغامرة التجميع السريعة",
+  "short_name": "جودي",
+  "description": "مغامرة أركيد عربية من 30 مرحلة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#080f1b",
+  "theme_color": "#080f1b",
+  "icons": [
+    { "src": "/icons/joudy-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/joudy-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

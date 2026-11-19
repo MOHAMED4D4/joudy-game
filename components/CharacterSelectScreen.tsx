@@ -1,8 +1,10 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { Heart, Play, Star, Trophy, Zap, Gamepad2, Magnet, Sparkles, Lock, ShieldAlert } from 'lucide-react';
+import { ArrowRight, Download, Play, Star, Trophy, Sparkles, Lock, ShieldAlert, Swords, Smartphone, X } from 'lucide-react';
+import { soundEngine } from '@/lib/soundEffects';
 import { getCartoonSvgDataUri, type CartoonSpriteKind } from '@/lib/cartoonSvgSprites';
 
 interface CharacterSelectScreenProps {
@@ -21,14 +23,48 @@ const scoring = [
   { icon: '❤️', sprite: 'heart' as CartoonSpriteKind, name: 'حافظ على القلوب', points: '3 قلوب حياة', detail: 'لديك عدد محدود من القلوب؛ الاصطدام يقللها' },
 ];
 
-const reveal = {
-  // Keep the guide readable even if a browser delays IntersectionObserver.
-  hidden: { opacity: 1, y: 18, scale: 0.98, filter: 'blur(0px)' },
-  visible: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' },
-};
 
 export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLevel, onStartAdventure }: CharacterSelectScreenProps) {
   const reduceMotion = useReducedMotion();
+  const [guidePage, setGuidePage] = useState<'home' | 'scoring' | 'enemies'>('home');
+  const [lockedNotice, setLockedNotice] = useState('');
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [installHelp, setInstallHelp] = useState(false);
+  useEffect(() => {
+    const onInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event); };
+    window.addEventListener('beforeinstallprompt', onInstall);
+    return () => window.removeEventListener('beforeinstallprompt', onInstall);
+  }, []);
+  const requestInstall = async () => {
+    if (installPrompt && 'prompt' in installPrompt) {
+      await (installPrompt as Event & { prompt: () => Promise<void> }).prompt();
+      setInstallPrompt(null);
+    } else setInstallHelp(true);
+  };
+  const openGuide = (page: 'scoring' | 'enemies') => { setGuidePage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const backHome = () => { setGuidePage('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const enemies: { kind: CartoonSpriteKind; name: string; unlock: number; desc: string }[] = [
+    {kind:'obstacle',name:'الغيوم المشاكسة',unlock:1,desc:'عائق بيئي يتطلب الانتباه وتغيير المسار.'},
+    {kind:'monster',name:'وحش الرماية',unlock:2,desc:'يطلق مقذوفات باتجاه جودي؛ راقب مسارها.'},
+    {kind:'runner',name:'الوحش المطارد',unlock:2,desc:'عدّاء سريع يحاول اللحاق بجودي.'},
+    {kind:'fierceMonster',name:'الوحش الشرس',unlock:5,desc:'خصم قوي يتطلب مراوغة دقيقة.'},
+    {kind:'exploder',name:'الوحش المتفجر',unlock:5,desc:'يستعد للانفجار؛ ابتعد عند ظهور إشارته.'},
+    {kind:'boss',name:'الزعيم الأول',unlock:15,desc:'مواجهة رئيسية في ختام الفصل الأول.'},
+    {kind:'projectile',name:'مقذوفات الوحوش',unlock:15,desc:'مقذوفات متحركة يجب تفادي مسارها.'},
+    {kind:'shadowHunter',name:'صيّاد الظلال',unlock:16,desc:'صياد متخفٍ في مدينة الظلال.'},
+    {kind:'shadowRunner',name:'عدّاء الظلال',unlock:16,desc:'مطارد سريع من عالم الظلال.'},
+    {kind:'shadowBrute',name:'وحش الظلال الشرس',unlock:16,desc:'خصم ضخم يتطلب الحفاظ على مسافة.'},
+    {kind:'shadowBoss',name:'حارس الظلال',unlock:16,desc:'حارس الفصل الثاني.'},
+    {kind:'crystalHunter',name:'صيّاد البلورات',unlock:21,desc:'يطلق مقذوفات في الغابة البلورية.'},
+    {kind:'crystalRunner',name:'عدّاء البلورات',unlock:21,desc:'مخلوق سريع يطارد جودي.'},
+    {kind:'crystalBrute',name:'الوحش البلوري الضخم',unlock:21,desc:'خصم قوي في عالم البلورات.'},
+    {kind:'crystalBoss',name:'حارس الغابة البلوري',unlock:21,desc:'حارس الفصل الثالث.'},
+    {kind:'emberHunter',name:'صيّاد اللهب',unlock:26,desc:'يطلق مقذوفات نارية.'},
+    {kind:'emberRunner',name:'عدّاء اللهب',unlock:26,desc:'مطارد سريع من القلعة النارية.'},
+    {kind:'emberBrute',name:'وحش اللهب الضخم',unlock:26,desc:'خصم ناري بالغ القوة.'},
+    {kind:'emberBoss',name:'حارس القلعة النارية',unlock:26,desc:'حارس الفصل الرابع والقلعة النارية.'},
+  ];
+  const unlockLabel = (level: number) => level === 16 ? 'يفتح في الفصل الثاني' : level === 21 ? 'يفتح في الفصل الثالث' : level === 26 ? 'يفتح في الفصل الرابع' : `يفتح في المستوى ${level}`;
 
   return (
     <div dir="rtl" className="arcade-hub relative w-full overflow-hidden text-white">
@@ -69,8 +105,10 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
         @keyframes guide-sprite-glow { 0%,100% { opacity:.28; transform:scale(.82); } 50% { opacity:.75; transform:scale(1.12); } }
         .guide-sprite-float { animation: guide-sprite-float 3.1s ease-in-out infinite; }
         .guide-sprite-glow { animation: guide-sprite-glow 2.6s ease-in-out infinite; }
+        @keyframes joudy-title-shine { 0%,100% { text-shadow: 0 0 12px rgba(103,232,249,.25), 0 0 28px rgba(103,232,249,.12); transform: translateY(0); } 50% { text-shadow: 0 0 22px rgba(103,232,249,.75), 0 0 48px rgba(167,139,250,.35); transform: translateY(-2px); } }
+        .joudy-title { animation: joudy-title-shine 3.2s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .joudy-portrait-glow, .joudy-portrait-sweep, .joudy-portrait-twinkle, .joudy-portrait-ring, .home-orbit, .info-glint, .guide-sprite-float, .guide-sprite-glow { animation: none !important; }
+          .joudy-portrait-glow, .joudy-portrait-sweep, .joudy-portrait-twinkle, .joudy-portrait-ring, .home-orbit, .info-glint, .guide-sprite-float, .guide-sprite-glow, .joudy-title { animation: none !important; }
         }
       `}</style>
 
@@ -82,6 +120,7 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
       </div>
 
       {/* First screen: only the title, promise and Joudy's portrait. */}
+      {guidePage === 'home' && (
       <section className="relative mx-auto flex min-h-[calc(100svh-5.25rem)] w-full max-w-6xl flex-col px-4 pb-8 pt-7 sm:px-7 sm:pt-10">
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 22 }}
@@ -92,9 +131,8 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
           <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-200/20 bg-cyan-200/[.07] px-4 py-1.5 text-[10px] font-black tracking-[.22em] text-cyan-200 sm:text-xs">
             <Sparkles className="h-3.5 w-3.5" /> ARCADE WORLD <span className="h-1 w-1 rounded-full bg-cyan-200" /> 30 STAGES
           </p>
-          <h1 className="text-3xl font-black leading-tight tracking-tight text-white drop-shadow-[0_4px_24px_rgba(34,211,238,.16)] sm:text-5xl lg:text-6xl">
-            مغامرة التجميع السريعة
-          </h1>
+          <h1 className="joudy-title mb-2 text-4xl font-black leading-tight tracking-tight text-white sm:text-6xl lg:text-7xl">جودي</h1>
+          <p className="text-lg font-black text-cyan-100 sm:text-2xl">مغامرة التجميع السريعة</p>
           <p className="mx-auto mt-3 max-w-2xl text-xs font-medium leading-7 text-slate-300 sm:mt-4 sm:text-base sm:leading-8">
             اجمع العناصر، تفادَ العوائق، وحقق أعلى نتيجة. افتح المراحل التالية واصنع سجلك الخاص.
           </p>
@@ -148,124 +186,46 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
           <span className="h-1 w-1 rounded-full bg-cyan-300" /> مرّر لأسفل لاكتشاف نظام اللعب <span className="animate-bounce text-cyan-200">↓</span>
         </div>
       </section>
+      )}
 
-      {/* Scroll reveal: information assembles into view only when the player reaches it. */}
-      <motion.section
-        initial="hidden"
-        whileInView="visible" 
-        viewport={{ once: true, amount: 0.18 }}
-        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12, delayChildren: 0.08 } } }}
-        className="relative mx-auto w-full max-w-6xl scroll-mt-6 px-4 pb-32 pt-8 sm:px-7 sm:pt-14"
-      >
-        <motion.div variants={reveal} transition={{ duration: .72, ease: [0.2, 0.75, 0.25, 1] }} className="relative mb-5 overflow-hidden rounded-[2rem] border border-cyan-100/15 bg-gradient-to-br from-[#142b42]/95 via-[#101d31]/95 to-[#18152f]/95 p-5 shadow-[0_24px_80px_rgba(0,0,0,.42)] sm:p-8">
-          <div className="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-cyan-300/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 left-1/4 h-52 w-52 rounded-full bg-fuchsia-400/10 blur-3xl" />
-          <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="mb-2 inline-flex items-center gap-2 text-xs font-black tracking-wider text-cyan-200"><Gamepad2 className="h-4 w-4" /> نمط اللعب</p>
-              <h2 className="text-2xl font-black text-white sm:text-4xl">تحدي الأركيد</h2>
-              <p className="mt-2 max-w-xl text-xs leading-6 text-slate-300 sm:text-sm">اجمع العناصر، ووازن بين السرعة والمراوغة، واصنع أعلى نتيجة في رحلة جودي.</p>
-            </div>
-            <div className="rounded-2xl border border-cyan-200/20 bg-cyan-200/10 p-3 text-cyan-100 shadow-[0_0_30px_rgba(34,211,238,.12)]"><Zap className="h-7 w-7" /></div>
-          </div>
-          <div className="relative z-10 mt-6 grid grid-cols-3 gap-2 sm:gap-3">
-            {[
-              { title: 'المراحل', value: '30', tone: 'text-white' },
-              { title: 'نظام اللعب', value: 'تحدي', tone: 'text-cyan-100' },
-              { title: 'التقدم', value: 'تدريجي', tone: 'text-emerald-300' },
-            ].map((item, index) => (
-              <motion.div key={item.title} variants={reveal} transition={{ duration: .55, delay: index * .04 }} className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#071321]/55 p-3 text-center shadow-inner sm:p-4">
-                <div className="info-glint pointer-events-none absolute inset-y-0 left-[-30%] w-1/3 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                <p className="text-[10px] font-semibold text-slate-400 sm:text-xs">{item.title}</p>
-                <p className={`mt-1 text-lg font-black sm:text-2xl ${item.tone}`}>{item.value}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+      {guidePage === 'home' ? (
+        <motion.section key="home-guides" initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-12}} transition={{duration:.42}} className="relative mx-auto grid w-full max-w-5xl grid-cols-1 gap-4 px-4 pb-32 pt-5 sm:px-7 sm:pt-8">
+          <button type="button" onClick={() => openGuide('scoring')} className="group relative overflow-hidden rounded-[1.8rem] border border-amber-200/20 bg-gradient-to-br from-[#392b18] via-[#201b20] to-[#111827] p-5 text-right shadow-[0_18px_55px_rgba(0,0,0,.35)] transition hover:-translate-y-1 hover:border-amber-200/50 sm:p-7">
+            <span className="absolute -left-8 -top-10 h-40 w-40 rounded-full bg-amber-300/15 blur-3xl"/><span className="relative flex items-center justify-between"><span className="grid h-14 w-14 place-items-center rounded-2xl border border-amber-200/25 bg-amber-200/10 text-amber-100"><Trophy className="h-7 w-7"/></span><ArrowRight className="h-5 w-5 rotate-180 text-amber-100/60"/></span>
+            <span className="relative mt-5 block text-[10px] font-black tracking-[.2em] text-amber-200/70">ARCADE SCORING SYSTEM</span><span className="relative mt-1 block text-xl font-black text-white sm:text-2xl">دليل نظام النقاط والتحدي</span><span className="relative mt-2 block text-xs leading-6 text-amber-50/65">مرجع احترافي لقواعد احتساب النقاط، وآليات التحدي، والأدوات المؤثرة في كل مرحلة.</span>
+          </button>
+          <button type="button" onClick={() => openGuide('enemies')} className="group relative overflow-hidden rounded-[1.8rem] border border-fuchsia-200/20 bg-gradient-to-br from-[#291d43] via-[#191a32] to-[#101827] p-5 text-right shadow-[0_18px_55px_rgba(0,0,0,.35)] transition hover:-translate-y-1 hover:border-fuchsia-200/50 sm:p-7">
+            <span className="absolute -left-8 -top-10 h-40 w-40 rounded-full bg-fuchsia-400/15 blur-3xl"/><span className="relative flex items-center justify-between"><span className="grid h-14 w-14 place-items-center rounded-2xl border border-fuchsia-200/25 bg-fuchsia-200/10 text-fuchsia-100"><Swords className="h-7 w-7"/></span><ArrowRight className="h-5 w-5 rotate-180 text-fuchsia-100/60"/></span>
+            <span className="relative mt-5 block text-[10px] font-black tracking-[.2em] text-fuchsia-200/70">ENEMIES & BOSSES DATABASE</span><span className="relative mt-1 block text-xl font-black text-white sm:text-2xl">دليل الوحوش</span><span className="relative mt-2 block text-xs leading-6 text-fuchsia-50/65">اكتشف الخصوم والزعماء، ومستويات ظهورهم، ومتطلبات فتحهم عبر فصول المغامرة.</span>
+          </button>
+          <div className="sm:col-span-2"><button type="button" onClick={requestInstall} className="flex w-full items-center justify-between gap-3 rounded-2xl border border-cyan-200/20 bg-gradient-to-l from-cyan-300/15 to-blue-500/10 p-4 text-right shadow-lg transition hover:border-cyan-200/45"><span className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-xl border border-cyan-100/20 bg-cyan-200/10 text-cyan-100"><Download className="h-6 w-6"/></span><span><span className="block text-sm font-black text-white">ثبّت جودي على جهازك</span><span className="mt-1 block text-[10px] text-slate-300">أضف اللعبة إلى الشاشة الرئيسية كتطبيق ويب</span></span></span><Smartphone className="h-5 w-5 text-cyan-100"/></button>
+          {installHelp && <div className="mt-2 rounded-xl border border-cyan-100/15 bg-slate-950/70 p-3 text-xs leading-6 text-cyan-50"><button onClick={()=>setInstallHelp(false)} className="float-left p-1 text-white/60" aria-label="إغلاق"><X className="h-4 w-4"/></button><b>للتثبيت:</b> على Android افتح قائمة المتصفح واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». على iPhone افتح المشاركة ثم «إضافة إلى الشاشة الرئيسية».</div>}</div>
+        </motion.section>
+      ) : (
+        <motion.section key={guidePage} initial={{opacity:0,y:24,scale:.985}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-14}} transition={{duration:.48}} className="relative mx-auto min-h-[75svh] w-full max-w-6xl px-4 pb-32 pt-7 sm:px-7 sm:pt-10">
+          <button type="button" onClick={backHome} className="mb-6 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[.06] px-4 py-2.5 text-xs font-black text-white"><ArrowRight className="h-4 w-4"/> العودة للصفحة الرئيسية</button>
+          {guidePage === 'scoring' ? <div className="rounded-[2rem] border border-amber-200/20 bg-gradient-to-br from-[#241d18] via-[#171b27] to-[#111827] p-5 shadow-2xl sm:p-8">
+            <div className="mb-7 flex items-center gap-4"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-amber-300/10 text-amber-200"><Trophy className="h-7 w-7"/></span><div><p className="text-[10px] font-black tracking-[.22em] text-amber-200/70">THE SCORING CODE</p><h2 className="text-2xl font-black text-white sm:text-4xl">دليل نظام النقاط والتحدي</h2><p className="mt-2 text-xs leading-6 text-amber-50/65">مرجعك لفهم قواعد التجميع والمراوغة واحتساب النتائج داخل كل مرحلة.</p></div></div>
+            <div className="mb-5 grid grid-cols-3 gap-2">{[{title:'عدد المراحل',value:'30'},{title:'نمط اللعب',value:'تحدي الأركيد'},{title:'التقدم',value:'تدريجي'}].map(item=><div key={item.title} className="rounded-xl border border-amber-100/10 bg-black/20 p-3 text-center"><p className="text-[10px] text-amber-50/55">{item.title}</p><p className="mt-1 text-sm font-black text-amber-100">{item.value}</p></div>)}</div>
+            <p className="mb-4 rounded-xl border border-amber-200/10 bg-amber-200/[.05] p-3 text-xs leading-6 text-amber-50/75">تُحتسب النقاط أثناء المرحلة من خلال جمع العناصر وتفادي المخاطر. القيم التالية هي القيم المعتمدة في منطق اللعبة الحالي.</p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{scoring.map((item,index)=><motion.div key={item.name} initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{delay:index*.055}} className="rounded-2xl border border-amber-100/10 bg-white/[.045] p-4"><img src={getCartoonSvgDataUri(item.sprite)} alt="" className="guide-sprite-float mb-3 h-14 w-14 object-contain"/><h3 className="text-sm font-black text-white">{item.name}</h3><p className="mt-2 text-sm font-black text-amber-200">{item.points}</p><p className="mt-1 text-[10px] leading-5 text-slate-300">{item.detail}</p></motion.div>)}</div>
+            <div className="mt-5 rounded-2xl border border-rose-200/15 bg-rose-400/[.06] p-4 text-xs leading-7 text-rose-50/85"><b>إدارة المخاطر:</b> تبدأ المرحلة بثلاثة قلوب. الاصطدام بالعوائق والوحوش يقلل القلوب المتاحة؛ حافظ عليها حتى نهاية التحدي. المغناطيس يجذب العناصر القريبة، ومضاعف النقاط يضاعف حصيلة التجميع لمدة محدودة.</div>
+          </div> : <div className="rounded-[2rem] border border-fuchsia-200/20 bg-gradient-to-br from-[#211a39] via-[#171a30] to-[#101827] p-5 shadow-2xl sm:p-8">
+            <div className="mb-7 flex items-center gap-4"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-fuchsia-300/10 text-fuchsia-200"><Swords className="h-7 w-7"/></span><div><p className="text-[10px] font-black tracking-[.22em] text-fuchsia-200/70">ENEMY INTELLIGENCE</p><h2 className="text-2xl font-black text-white sm:text-4xl">دليل الوحوش والزعماء</h2><p className="mt-2 text-xs leading-6 text-fuchsia-50/65">قاعدة بيانات الخصوم: أول ظهور، الفصل، وحالة الاكتشاف وفق تقدمك الحالي.</p></div></div>
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-fuchsia-100/10 bg-black/20 p-3"><span className="text-xs font-bold text-fuchsia-50/75">مستوى تقدمك الحالي</span><span className="rounded-lg bg-fuchsia-200/10 px-3 py-1.5 text-xs font-black text-fuchsia-100">المستوى {highestUnlockedLevel} من 30</span></div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{enemies.map((enemy,index)=>{const unlocked=highestUnlockedLevel>=enemy.unlock;return <motion.button type="button" key={enemy.kind} initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{delay:index*.035}} onClick={()=>{if(!unlocked){soundEngine.playLocked();setLockedNotice(unlockLabel(enemy.unlock));window.setTimeout(()=>setLockedNotice(''),2400);}else{setLockedNotice(`${enemy.name} · تم اكتشافه`);window.setTimeout(()=>setLockedNotice(''),1800);}}} className={`relative overflow-hidden rounded-2xl border p-3 text-center transition hover:-translate-y-1 ${unlocked?'border-emerald-200/15 bg-emerald-300/[.045]':'border-rose-200/15 bg-slate-950/35'}`}><div className="relative mx-auto mb-2 grid h-24 w-24 place-items-center rounded-2xl border border-white/10 bg-white/[.045]"><img src={getCartoonSvgDataUri(enemy.kind)} alt={enemy.name} className={`guide-sprite-float h-20 w-20 object-contain ${unlocked?'':'grayscale opacity-50'}`} style={{animationDelay:`${index*.12}s`}}/>{!unlocked&&<span className="absolute inset-0 grid place-items-center rounded-2xl bg-black/35"><Lock className="h-8 w-8 animate-pulse text-rose-200 drop-shadow-lg"/></span>}</div><h3 className="text-xs font-black text-white">{enemy.name}</h3><p className="mt-1 text-[10px] leading-5 text-slate-300">{enemy.desc}</p><p className="mt-2 text-[10px] font-black text-fuchsia-200">أول ظهور: المستوى {enemy.unlock}</p><span className={`mt-2 inline-flex rounded-lg px-2.5 py-1.5 text-[10px] font-black ${unlocked?'bg-emerald-300/10 text-emerald-200':'bg-rose-300/10 text-rose-200'}`}>{unlocked?'تم الاكتشاف':unlockLabel(enemy.unlock)}</span></motion.button>})}</div>
+            {lockedNotice && <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} className={`mt-5 rounded-xl border p-3 text-center text-sm font-black ${lockedNotice.startsWith('يفتح') ? 'border-rose-300/25 bg-rose-500/10 text-rose-200' : 'border-emerald-300/25 bg-emerald-500/10 text-emerald-200'}`} role="status">{lockedNotice}</motion.div>}
+            <p className="mt-5 flex items-center justify-center gap-2 text-[10px] text-fuchsia-100/55"><ShieldAlert className="h-4 w-4"/> يتم فتح الدليل تلقائيًا وفق أعلى مستوى مفتوح في ملف تقدمك.</p>
+          </div>}
+        </motion.section>
+      )}
 
-        <motion.div variants={reveal} transition={{ duration: .72 }} className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0d192a]/95 p-5 shadow-[0_24px_80px_rgba(0,0,0,.38)] sm:p-8">
-          <div className="pointer-events-none absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 90% 0%,rgba(34,211,238,.18),transparent 28%),radial-gradient(circle at 0% 100%,rgba(217,70,239,.16),transparent 30%)' }} />
-          <div className="relative z-10 mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-black tracking-[.2em] text-cyan-300">COLLECT · DODGE · WIN</p>
-              <h3 className="mt-1 text-xl font-black text-white sm:text-2xl">نظام النقاط والتحدي</h3>
-            </div>
-            <span className="rounded-full border border-white/10 bg-white/[.05] px-3 py-1.5 text-[10px] font-bold text-slate-300">داخل كل مرحلة</span>
-          </div>
-          <div className="relative z-10 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
-            {scoring.map((item, index) => (
-              <motion.div
-                key={item.name}
-                variants={reveal}
-                transition={{ duration: .58, delay: index * .055 }}
-                whileHover={reduceMotion ? undefined : { y: -5, scale: 1.025 }}
-                className="group relative min-h-[132px] overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[.075] to-white/[.025] p-3.5 shadow-[0_10px_30px_rgba(0,0,0,.18)] transition-colors hover:border-cyan-200/30 sm:min-h-[145px] sm:p-4"
-              >
-                <div className="pointer-events-none absolute -right-7 -top-8 h-20 w-20 rounded-full bg-cyan-300/0 blur-2xl transition-colors group-hover:bg-cyan-300/15" />
-                <div className="relative flex items-center gap-2"><span className="relative grid h-12 w-12 shrink-0 place-items-center"><span className="guide-sprite-glow absolute inset-0 rounded-full bg-cyan-300/30 blur-md" /><img src={getCartoonSvgDataUri(item.sprite)} alt="" className="guide-sprite-float relative z-[1] h-11 w-11 object-contain drop-shadow-[0_5px_10px_rgba(0,0,0,.35)]" style={{ animationDelay: `${index * .17}s` }} /></span><span className="text-xs font-black leading-5 text-slate-100 sm:text-sm">{item.name}</span></div>
-                <p className="relative mt-3 text-xs font-black text-cyan-200 sm:text-sm">{item.points}</p>
-                <p className="relative mt-1 text-[10px] leading-5 text-slate-400 sm:text-xs">{item.detail}</p>
-              </motion.div>
-            ))}
-          </div>
-          <motion.div variants={reveal} transition={{ duration: .65 }} className="relative z-10 mt-5 flex flex-col gap-3 rounded-2xl border border-rose-300/15 bg-rose-400/[.055] p-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="flex items-start gap-2 text-xs leading-6 text-slate-300 sm:text-sm"><Heart className="mt-1 h-4 w-4 shrink-0 fill-rose-400/20 text-rose-400" /> لديك عدد محدود من القلوب؛ الاصطدام بالعوائق يقلل فرصتك في إكمال المرحلة.</p>
-            <span className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-cyan-200/15 bg-cyan-200/[.06] px-3 py-2 text-[11px] font-black text-cyan-100"><Magnet className="h-4 w-4" /> التقط الأدوات واستفد من قدراتها</span>
-          </motion.div>
-          <div className="relative z-10 mt-7 border-t border-white/10 pt-6">
-            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-              <div><p className="text-[10px] font-black tracking-[.2em] text-rose-300">ENEMY FIELD GUIDE</p><h3 className="mt-1 text-xl font-black text-white sm:text-2xl">دليل الوحوش والمخلوقات 👾</h3><p className="mt-1 text-xs leading-6 text-slate-400">اكتشفي كل مخلوق، واعرفي أول مرحلة ممكن يظهر فيها. الوحوش المقفولة هتتفتح مع تقدمك.</p></div>
-              <span className="rounded-full border border-rose-200/15 bg-rose-300/10 px-3 py-1.5 text-[10px] font-black text-rose-100">المراحل 1–30</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {([
-                {kind:'obstacle' as CartoonSpriteKind,name:'الغيوم المشاكسة',unlock:1,desc:'عائق البداية؛ تجنّبيه حتى لا تخسري نقاطًا أو قلوبًا.',where:'من أول مرحلة'},
-                {kind:'monster' as CartoonSpriteKind,name:'وحش الرماية',unlock:2,desc:'يطلق مقذوفات ناحية جودي؛ تحركي بعيدًا عن خط النار.',where:'من المرحلة 2'},
-                {kind:'runner' as CartoonSpriteKind,name:'الوحش المطارد',unlock:2,desc:'عدّاء سريع يحاول اللحاق بجودي؛ غيري اتجاهك باستمرار.',where:'من المرحلة 2'},
-                {kind:'fierceMonster' as CartoonSpriteKind,name:'الوحش الشرس',unlock:5,desc:'أقوى من الوحوش العادية واصطدامه مؤذٍ.',where:'من المرحلة 5'},
-                {kind:'exploder' as CartoonSpriteKind,name:'الوحش المتفجر',unlock:5,desc:'يجهز انفجارًا بعد ظهوره؛ ابتعدي عند رؤية الوميض.',where:'من المرحلة 5'},
-                {kind:'boss' as CartoonSpriteKind,name:'الزعيم',unlock:15,desc:'خصم ضخم وخطير؛ راقبي هجماته واتركي مساحة للمراوغة.',where:'زعيم الفصل الأول · المرحلة 15'},
-                {kind:'projectile' as CartoonSpriteKind,name:'مقذوفات الوحوش',unlock:15,desc:'مقذوفات سريعة تتجه ناحية جودي؛ تابعي مسارها وابتعدي عنها.',where:'تبدأ من مواجهات الزعماء'},
-                {kind:'shadowHunter' as CartoonSpriteKind,name:'صيّاد الظلال',unlock:16,desc:'صياد متخفٍ يطلق مقذوفات في مدينة الظلال.',where:'الفصل الثاني · من المرحلة 16'},
-                {kind:'shadowRunner' as CartoonSpriteKind,name:'عدّاء الظلال',unlock:16,desc:'سريع ويحاول محاصرة جودي؛ لا تثبتي في مكانك.',where:'الفصل الثاني · من المرحلة 16'},
-                {kind:'shadowBrute' as CartoonSpriteKind,name:'وحش الظلال الشرس',unlock:16,desc:'وحش ضخم؛ حافظي على مسافة آمنة.',where:'الفصل الثاني · من المرحلة 16'},
-                {kind:'shadowBoss' as CartoonSpriteKind,name:'حارس الظلال',unlock:16,desc:'حارس مدينة الظلال؛ يظهر ضمن أعداء الفصل الثاني.',where:'الفصل الثاني · أول ظهور من المستوى 16'},
-                {kind:'crystalHunter' as CartoonSpriteKind,name:'صيّاد البلورات',unlock:21,desc:'يطلق مقذوفات وسط الغابة البلورية.',where:'الفصل الثالث · من المرحلة 21'},
-                {kind:'crystalRunner' as CartoonSpriteKind,name:'عدّاء البلورات',unlock:21,desc:'مخلوق سريع يطارد جودي.',where:'الفصل الثالث · من المرحلة 21'},
-                {kind:'crystalBrute' as CartoonSpriteKind,name:'الوحش البلوري الضخم',unlock:21,desc:'قوي وخطير عند الاصطدام.',where:'الفصل الثالث · من المرحلة 21'},
-                {kind:'crystalBoss' as CartoonSpriteKind,name:'حارس الغابة البلوري',unlock:21,desc:'حارس الغابة البلورية؛ يظهر ضمن أعداء الفصل الثالث.',where:'الفصل الثالث · أول ظهور من المستوى 21'},
-                {kind:'emberHunter' as CartoonSpriteKind,name:'صيّاد اللهب',unlock:26,desc:'يطلق مقذوفات خطيرة من القلعة النارية.',where:'الفصل الرابع · من المرحلة 26'},
-                {kind:'emberRunner' as CartoonSpriteKind,name:'عدّاء اللهب',unlock:26,desc:'عدّاء سريع يلاحق جودي.',where:'الفصل الرابع · من المرحلة 26'},
-                {kind:'emberBrute' as CartoonSpriteKind,name:'وحش اللهب الضخم',unlock:26,desc:'وحش ناري قوي؛ حافظي على مسافة كبيرة.',where:'الفصل الرابع · من المرحلة 26'},
-                {kind:'emberBoss' as CartoonSpriteKind,name:'حارس القلعة النارية',unlock:26,desc:'حارس القلعة النارية؛ يظهر ضمن أعداء الفصل الرابع.',where:'الفصل الرابع · أول ظهور من المستوى 26'},
-              ]).map((enemy,index)=> (
-                <motion.div key={enemy.kind} variants={reveal} transition={{duration:.5,delay:index*.025}} whileHover={reduceMotion?undefined:{y:-4,scale:1.02}} className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/90 to-slate-950/90 p-3 shadow-lg">
-                  <div className="absolute -right-7 -top-8 h-24 w-24 rounded-full bg-cyan-300/10 blur-2xl" />
-                  <div className="relative mx-auto mb-2 grid h-24 w-24 place-items-center rounded-2xl border border-white/10 bg-white/[.045]">
-                    <img src={getCartoonSvgDataUri(enemy.kind)} alt={enemy.name} className={`guide-sprite-float h-[82px] w-[82px] object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,.45)] ${highestUnlockedLevel < enemy.unlock ? 'grayscale opacity-35' : ''}`} style={{animationDelay:`${index*.13}s`}} />
-                    {highestUnlockedLevel < enemy.unlock && <div className="absolute inset-0 grid place-items-center rounded-2xl bg-slate-950/35 backdrop-blur-[1px]"><span className="grid h-10 w-10 place-items-center rounded-full border border-amber-200/40 bg-slate-950/80 text-amber-200 shadow-[0_0_24px_rgba(251,191,36,.28)]"><Lock className="h-5 w-5" /></span></div>}
-                    <div className="pointer-events-none absolute inset-0 rounded-2xl border border-cyan-200/10" />
-                  </div>
-                  <h4 className="relative text-center text-xs font-black text-white">{enemy.name}</h4>
-                  <p className="relative mt-1 text-center text-[10px] font-bold text-cyan-200">{enemy.where}</p>
-                  <p className="relative mt-2 min-h-[54px] text-center text-[10px] leading-5 text-slate-400">{enemy.desc}</p>
-                  <div className={`relative mt-2 flex items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-[10px] font-black ${highestUnlockedLevel >= enemy.unlock ? 'border-emerald-200/20 bg-emerald-300/[.07] text-emerald-100' : 'border-amber-200/15 bg-amber-300/[.07] text-amber-100'}`}>{highestUnlockedLevel >= enemy.unlock ? '✓ تم الفتح' : <><Lock className="h-3 w-3 animate-pulse" /> {enemy.unlock === 16 ? 'يفتح في الفصل 2' : enemy.unlock === 21 ? 'يفتح في الفصل 3' : enemy.unlock === 26 ? 'يفتح في الفصل 4' : `يفتح في المستوى ${enemy.unlock}`}</>}</div>
-                </motion.div>
-              ))}
-            </div>
-            <p className="mt-3 flex items-center justify-center gap-2 text-[10px] text-slate-500"><ShieldAlert className="h-3.5 w-3.5" /> الوحوش بتتفتح تلقائيًا حسب أعلى مرحلة وصلتِ لها.</p>
-          </div>
-        </motion.div>
-
-        <motion.div variants={reveal} transition={{ duration: .65 }} className="mt-5 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500"><Trophy className="h-4 w-4 text-amber-300" /><Star className="h-3.5 w-3.5 text-amber-200" /> اجمع النقاط وارفع رقمك القياسي</motion.div>
-      </motion.section>
-
-      <div className="pointer-events-none fixed inset-x-0 bottom-3 z-50 flex justify-center px-3 pb-[env(safe-area-inset-bottom)]">
+      {guidePage === 'home' && <div className="pointer-events-none fixed inset-x-0 bottom-3 z-50 flex justify-center px-3 pb-[env(safe-area-inset-bottom)]">
         <motion.button type="button" whileHover={{ scale: 1.015, y: -2 }} whileTap={{ scale: .98 }} onClick={onStartAdventure} className="pointer-events-auto flex w-full max-w-2xl items-center justify-between rounded-2xl border border-cyan-100/35 bg-gradient-to-l from-cyan-300 via-cyan-400 to-blue-500 px-5 py-4 text-right text-base font-black text-[#071321] shadow-[0_12px_40px_rgba(0,0,0,.5),0_0_28px_rgba(34,211,238,.16)] backdrop-blur transition">
           <span className="flex items-center gap-3"><Play className="h-5 w-5 fill-current" /> ابدأ اللعب</span>
           <span className="text-xl" aria-hidden="true">←</span>
         </motion.button>
-      </div>
+      </div>}
     </div>
   );
 }

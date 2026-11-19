@@ -18,6 +18,7 @@ import type { JoudyGameProgress } from '@/lib/storage';
 import WorldAtmosphereOverlay from './WorldAtmosphereOverlay';
 import RewardsHub from './RewardsHub';
 import { saveWorld, useWorldSave } from '@/lib/joudyWorld';
+import { soundEngine } from '@/lib/soundEffects';
 
 
 type ChapterNumber = 2 | 3 | 4;
@@ -134,10 +135,12 @@ export default function WorldMapScreen({
     const { requiredLevel, price, flag } = config;
     if (worldSave[flag]) return;
     if (!progress.completedLevels[requiredLevel]) {
+      soundEngine.playLocked();
       setGateNotice({ chapter, text: `يجب إكمال المستوى ${requiredLevel} أولاً لفتح هذه البوابة.` });
       return;
     }
     if (worldSave.totalScore < price) {
+      soundEngine.playLocked();
       setGateNotice({ chapter, text: `تحتاجين إلى ${(price - worldSave.totalScore).toLocaleString('ar-EG')} نقطة إضافية لفتح ${config.region}.` });
       return;
     }
@@ -148,6 +151,7 @@ export default function WorldMapScreen({
       return { ...current, totalScore: current.totalScore - price, [flag]: true };
     });
     if (updatedSave[flag]) {
+      if (purchased) soundEngine.playPurchase();
       setGateNotice({ chapter, text: purchased ? `تم فتح ${config.region} بنجاح! أصبحت المستويات ${chapter === 2 ? '16–20' : chapter === 3 ? '21–25' : '26–30'} متاحة.` : 'البوابة مفتوحة بالفعل.' });
     } else {
       setGateNotice({ chapter, text: `تحتاجين إلى ${(price - updatedSave.totalScore).toLocaleString('ar-EG')} نقطة إضافية.` });

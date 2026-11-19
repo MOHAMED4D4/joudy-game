@@ -32,6 +32,8 @@ export default function JoudyAdventureGame() {
   const characterShieldBonus = 0;
   const characterCoinBonus = 1;
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [restOverlay, setRestOverlay] = useState(false);
+  const [updateReady, setUpdateReady] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [runId, setRunId] = useState(1);
   const [isNewHighScore, setIsNewHighScore] = useState(false);
@@ -55,6 +57,65 @@ export default function JoudyAdventureGame() {
   const realImageSrc = REAL_IMAGE_SRC;
   const animeImageSrc = ANIME_IMAGE_SRC;
 
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    let registration: ServiceWorkerRegistration | undefined;
+    let reloaded = false;
+    const register = async () => {
+      try {
+        registration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+        if (registration.waiting && navigator.serviceWorker.controller) setUpdateReady(true);
+        registration.addEventListener('updatefound', () => {
+          const installing = registration?.installing;
+          installing?.addEventListener('statechange', () => {
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) setUpdateReady(true);
+          });
+        });
+        void registration.update();
+      } catch (error) { console.warn('Joudy PWA service worker registration failed', error); }
+    };
+    void register();
+    const onControllerChange = () => { if (!reloaded) { reloaded = true; window.location.reload(); } };
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+    return () => navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+  }, []);
+
+  useEffect(() => {
+    let wasHidden = false;
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        wasHidden = true;
+        soundEngine.suspendForBackground();
+        lossAudioRefs.current.forEach((audio) => audio.pause());
+        window.dispatchEvent(new Event('joudy:background'));
+      } else if (wasHidden) {
+        wasHidden = false;
+        setRestOverlay(true);
+      }
+    };
+    const onPageHide = () => {
+      soundEngine.suspendForBackground();
+      lossAudioRefs.current.forEach((audio) => audio.pause());
+      window.dispatchEvent(new Event('joudy:background'));
+    };
+    const onPageShow = (event: PageTransitionEvent) => { if (event.persisted) setRestOverlay(true); };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', onPageHide);
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener('pageshow', onPageShow);
+    };
+  }, []);
+
+  const applyAppUpdate = () => {
+    soundEngine.playButtonClick();
+    navigator.serviceWorker?.getRegistration().then((registration) => registration?.waiting?.postMessage({ type: 'SKIP_WAITING' }));
+    setUpdateReady(false);
+  };
+
   const handleToggleSound = useCallback(() => {
     setSoundEnabled((prev) => {
       const next = !prev;
@@ -73,6 +134,7 @@ export default function JoudyAdventureGame() {
         (levelNumber >= 21 && levelNumber <= 25 && !save.thirdChapterUnlocked) ||
         (levelNumber >= 26 && levelNumber <= 30 && !save.fourthChapterUnlocked);
       if (levelNumber > progress.highestUnlockedLevel || chapterLocked) {
+        soundEngine.playLocked();
         setSelectedLevel(null);
         setGameState('WORLD_MAP');
         return;
@@ -267,6 +329,9 @@ export default function JoudyAdventureGame() {
 
         </AnimatePresence>
       </div>
+      {updateReady && <div className="fixed inset-x-3 bottom-4 z-[180] mx-auto max-w-lg rounded-2xl border border-cyan-200/25 bg-[#10263b]/95 p-4 text-white shadow-2xl backdrop-blur-xl" role="status"><p className="text-sm font-black">تحديث جديد لجودي جاهز</p><p className="mt-1 text-xs text-slate-300">يمكن تثبيت النسخة الجديدة وإعادة تشغيل اللعبة بأمان.</p><button type="button" onClick={applyAppUpdate} className="mt-3 w-full rounded-xl bg-gradient-to-l from-cyan-300 to-blue-500 px-4 py-2.5 text-sm font-black text-slate-950">تحديث الآن</button></div>}
+      {restOverlay && <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#070d19]/90 p-5 backdrop-blur-xl"><div className="w-full max-w-md rounded-[2rem] border border-cyan-100/20 bg-gradient-to-br from-[#18314a] via-[#172039] to-[#211934] p-7 text-center text-white shadow-2xl"><div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl border border-cyan-100/20 bg-cyan-200/10 text-cyan-100"><span className="text-3xl">🌙</span></div><p className="text-[10px] font-black tracking-[.22em] text-cyan-200">JOUDY REST MODE</p><h2 className="mt-2 text-2xl font-black">جودي أخذت استراحة</h2><p className="mt-3 text-sm leading-7 text-slate-300">تم إيقاف الصوت مؤقتًا وإيقاف اللعب لحين عودتك. تقدمك لم يُحذف.</p><button type="button" onClick={() => { soundEngine.resumeAfterUserGesture(); setRestOverlay(false); }} className="mt-6 w-full rounded-xl bg-gradient-to-l from-cyan-300 to-blue-500 px-5 py-3 font-black text-slate-950">العودة إلى المغامرة</button></div></div>}
+
       {gameState === 'WORLD_MAP' && achievementNotices.length > 0 && (
         <div className="fixed inset-x-3 top-4 z-[120] mx-auto max-w-md animate-in slide-in-from-top-6 duration-500" role="status">
           <div className="relative overflow-hidden rounded-2xl border border-amber-200/50 bg-gradient-to-br from-[#38275c] via-[#182746] to-[#0b1729] p-4 text-white shadow-[0_18px_60px_rgba(0,0,0,.65)]">

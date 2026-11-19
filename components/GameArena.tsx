@@ -310,6 +310,7 @@ export default function GameArena({
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const exitWasPausedRef = useRef(true);
 
+
   const isPausedRef = useRef(true);
   const isGameOverRef = useRef(false);
   const victoryFiredRef = useRef(false);
@@ -332,6 +333,16 @@ export default function GameArena({
   const resetSignalRef = useRef(0);
   const reviveRequestRef = useRef(false);
   const reviveCountRef = useRef(worldSave.reviveCountsByLevel[levelConfig.level] ?? 0);
+
+  useEffect(() => {
+    const pauseForBackground = () => {
+      if (isGameOverRef.current) return;
+      isPausedRef.current = true;
+      setIsPaused(true);
+    };
+    window.addEventListener('joudy:background', pauseForBackground);
+    return () => window.removeEventListener('joudy:background', pauseForBackground);
+  }, []);
   const [typedGuideText, setTypedGuideText] = useState('');
 
   // Prefer the native Fullscreen API, with a CSS immersive fallback on browsers

@@ -24,6 +24,7 @@ class MagicalSoundEngine {
   private musicEnabled = true;
   private musicTimer: number | null = null;
   private musicStep = 0;
+  private backgroundSuspended = false;
   private wheelSources: AudioBufferSourceNode[] = [];
   private wheelGains: GainNode[] = [];
 
@@ -44,10 +45,33 @@ class MagicalSoundEngine {
     if (!this.ctx) {
       this.ctx = new AudioCtx();
     }
-    if (this.ctx.state === 'suspended') {
+    if (this.ctx.state === 'suspended' && !this.backgroundSuspended) {
       void this.ctx.resume();
     }
     return this.ctx;
+  }
+
+  public suspendForBackground() {
+    this.backgroundSuspended = true;
+    this.stopBackgroundMusic();
+    if (this.ctx && this.ctx.state === 'running') void this.ctx.suspend().catch(() => undefined);
+  }
+
+  public resumeAfterUserGesture() {
+    this.backgroundSuspended = false;
+    if (this.ctx && this.ctx.state === 'suspended') void this.ctx.resume().catch(() => undefined);
+  }
+
+  public playLocked() {
+    if (!this.sfxEnabled) return;
+    this.playTone(240, 0.13, { type: 'triangle', volume: 0.10, slideToFreq: 175 });
+    this.playTone(185, 0.16, { type: 'sine', volume: 0.075, delay: 0.07, slideToFreq: 130 });
+  }
+
+  public playPurchase() {
+    if (!this.sfxEnabled) return;
+    [659.25, 830.61, 987.77, 1318.51].forEach((frequency, index) => this.playTone(frequency, 0.19, { type: 'triangle', volume: 0.13, delay: index * 0.065 }));
+    this.playTone(1567.98, 0.32, { type: 'sine', volume: 0.09, delay: 0.28 });
   }
 
   public setSfxEnabled(enabled: boolean) {
