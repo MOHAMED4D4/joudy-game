@@ -8,6 +8,21 @@ import { loadWorldSave, saveWorld, useWorldSave } from '@/lib/joudyWorld';
 import type { JoudyGameProgress } from '@/lib/storage';
 
 type Achievement = { id: string; title: string; detail: string; icon: string; unlocked: boolean; tier: string };
+
+const MEDAL_ART: Record<string, string> = {
+  'البدايات': '/images/achievements/start.svg',
+  'التقدم': '/images/achievements/progress.svg',
+  'المهارة': '/images/achievements/skill.svg',
+  'الخبراء': '/images/achievements/expert.svg',
+  'أسطوري': '/images/achievements/legendary.svg',
+};
+const TIER_STYLES: Record<string, { border: string; glow: string; chip: string; text: string }> = {
+  'البدايات': { border: 'border-rose-200/25', glow: 'from-rose-400/15 to-orange-300/5', chip: 'bg-rose-300/10 text-rose-100', text: 'text-rose-100' },
+  'التقدم': { border: 'border-cyan-200/25', glow: 'from-cyan-300/15 to-blue-400/5', chip: 'bg-cyan-300/10 text-cyan-100', text: 'text-cyan-100' },
+  'المهارة': { border: 'border-amber-200/25', glow: 'from-amber-300/15 to-orange-400/5', chip: 'bg-amber-300/10 text-amber-100', text: 'text-amber-100' },
+  'الخبراء': { border: 'border-blue-200/25', glow: 'from-blue-300/15 to-indigo-400/5', chip: 'bg-blue-300/10 text-blue-100', text: 'text-blue-100' },
+  'أسطوري': { border: 'border-violet-200/30', glow: 'from-violet-300/20 to-fuchsia-400/8', chip: 'bg-violet-300/10 text-violet-100', text: 'text-violet-100' },
+};
 type RewardsPage = 'shop' | 'awards';
 const MAX_EXTRA_HEARTS = 5;
 
@@ -143,7 +158,32 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
       <p className="rounded-xl border border-white/10 bg-black/15 px-3 py-2 text-[10px] leading-5 text-slate-500">ملاحظة: الدرع الدائري متاح من المستوى الخامس، وتحصلين على 20 شحنة مجانية عند فتحه لأول مرة. المغناطيس المشترى يُستخدم يدويًا لمدة 6.5 ثانية.</p>
     </div> : <div className="space-y-6">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4"><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">إجمالي الإنجازات</p><p className="mt-1 text-xl font-black text-white">{achievements.length}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">المكتملة</p><p className="mt-1 text-xl font-black text-emerald-300">{unlockedCount}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">المتبقية</p><p className="mt-1 text-xl font-black text-amber-200">{achievements.length-unlockedCount}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-slate-400">نسبة الإنجاز</p><p className="mt-1 text-xl font-black text-cyan-200">{Math.round(unlockedCount/achievements.length*100)}%</p></div></div>
-      {grouped.map((tier,index)=><div key={tier}><div className="mb-3 flex items-center gap-2"><span className="grid h-7 w-7 place-items-center rounded-lg bg-amber-300/10 text-xs font-black text-amber-200">{index+1}</span><h3 className="text-sm font-black text-white">{tier}</h3><span className="h-px flex-1 bg-white/10"/></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">{achievements.filter(a=>a.tier===tier).map((a,i)=><motion.div key={a.id} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{duration:.2,delay:Math.min(i*.025,.15)}} className={`relative flex min-h-36 flex-col items-center justify-center overflow-hidden rounded-xl border p-3 text-center ${a.unlocked?'border-amber-200/30 bg-gradient-to-br from-amber-300/15 to-orange-500/5':'border-white/10 bg-slate-950/55'}`}><div className={`mb-2 grid h-11 w-11 place-items-center rounded-xl text-2xl ${a.unlocked?'border border-amber-200/20 bg-amber-300/10':'border border-white/5 bg-black/50 grayscale'}`}>{a.unlocked?a.icon:'🔒'}</div><h4 className={`text-[11px] font-black leading-5 ${a.unlocked?'text-amber-100':'text-slate-300'}`}>{a.title}</h4><p className="mt-1 text-[10px] leading-4 text-slate-400">{a.detail}</p><span className={`mt-2 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-black ${a.unlocked?'bg-emerald-400/10 text-emerald-200':'bg-black/30 text-slate-500'}`}>{a.unlocked?<><Check className="h-3 w-3"/> مكتمل</>:<><Lock className="h-3 w-3"/> مقفول</>}</span></motion.div>)}</div></div>)}
+      {grouped.map((tier,index)=>{
+        const tierStyle = TIER_STYLES[tier];
+        const tierAchievements = achievements.filter((a)=>a.tier===tier);
+        const tierUnlocked = tierAchievements.filter((a)=>a.unlocked).length;
+        return <section key={tier} className="relative overflow-hidden rounded-[1.7rem] border border-white/10 bg-[#081323]/55 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,.04)] sm:p-4">
+          <div className="mb-4 flex items-center gap-3">
+            <span className={`grid h-9 w-9 place-items-center rounded-xl border ${tierStyle.border} bg-gradient-to-br ${tierStyle.glow} text-sm font-black ${tierStyle.text}`}>{String(index+1).padStart(2,'0')}</span>
+            <div className="min-w-0"><h3 className="text-sm font-black text-white">{tier}</h3><p className="mt-0.5 text-[10px] text-slate-500">أوسمة هذا المستوى من التحدي</p></div>
+            <span className="mr-auto rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black tabular-nums text-slate-300">{tierUnlocked} / {tierAchievements.length}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {tierAchievements.map((a,i)=><motion.article key={a.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.22,delay:Math.min(i*.025,.15)}}
+              className={`group relative flex min-h-[190px] flex-col overflow-hidden rounded-[1.35rem] border bg-gradient-to-br ${a.unlocked ? `${tierStyle.border} ${tierStyle.glow}` : 'border-white/8 from-slate-900/95 to-slate-950/95'} p-3 text-center shadow-[0_12px_28px_rgba(0,0,0,.22)] transition duration-300 hover:-translate-y-1 hover:border-white/25`}>
+              <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/[.035] blur-2xl" />
+              <div className="relative mx-auto mb-2 h-[76px] w-[68px] transition duration-300 group-hover:scale-105">
+                <Image src={MEDAL_ART[a.tier] || MEDAL_ART['أسطوري']} alt="وسام الإنجاز" fill sizes="68px" className={`object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,.4)] ${a.unlocked ? '' : 'grayscale opacity-45'}`} />
+                <span className={`absolute inset-0 flex items-center justify-center pt-1 text-[23px] drop-shadow-[0_2px_3px_rgba(0,0,0,.7)] ${a.unlocked ? '' : 'grayscale'}`}>{a.unlocked ? a.icon : '🔒'}</span>
+              </div>
+              <span className={`relative mx-auto mb-1 rounded-full px-2 py-0.5 text-[8px] font-black ${a.unlocked ? tierStyle.chip : 'bg-white/5 text-slate-500'}`}>{a.unlocked ? 'وسام مكتسب' : 'تحدٍ قادم'}</span>
+              <h4 className={`relative text-[11px] font-black leading-5 ${a.unlocked ? tierStyle.text : 'text-slate-300'}`}>{a.title}</h4>
+              <p className="relative mt-1 text-[10px] leading-4 text-slate-400">{a.detail}</p>
+              <span className={`relative mt-auto inline-flex items-center justify-center gap-1 self-center rounded-full px-2.5 py-1.5 text-[9px] font-black ${a.unlocked?'bg-emerald-300/10 text-emerald-200':'bg-black/30 text-slate-500'}`}>{a.unlocked?<><Check className="h-3 w-3"/> مكتمل</>:<><Lock className="h-3 w-3"/> مقفول</>}</span>
+            </motion.article>)}
+          </div>
+        </section>;
+      })}
     </div>}
   </section>;
 }

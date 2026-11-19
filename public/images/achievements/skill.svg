@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140">
+<defs>
+ <linearGradient id="ribbon" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FDE68A"/><stop offset="1" stop-color="#D97706"/></linearGradient>
+ <radialGradient id="plate" cx="34%" cy="24%" r="78%"><stop stop-color="#FFFBEB"/><stop offset=".42" stop-color="#FDE68A"/><stop offset="1" stop-color="#D97706"/></radialGradient>
+ <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
+</defs>
+<path d="M35 80 L27 132 L50 119 L70 135 L82 80Z" fill="url(#ribbon)" stroke="#78350F" stroke-width="3" stroke-linejoin="round"/>
+<path d="M43 84 L39 116 L50 109 L60 117 L66 84Z" fill="#FFFBEB" opacity=".48"/>
+<circle cx="60" cy="55" r="46" fill="#D97706" opacity=".23" filter="url(#shadow)"/>
+<circle cx="60" cy="52" r="43" fill="url(#plate)" stroke="#FFFBEB" stroke-width="4"/>
+<circle cx="60" cy="52" r="34" fill="none" stroke="#78350F" stroke-width="2.5" opacity=".8"/>
+<circle cx="60" cy="52" r="27" fill="none" stroke="#FFFBEB" stroke-width="2" opacity=".78"/>
+<path d="M50 24 L57 42 L76 43 L61 55 L66 74 L50 63 L34 74 L39 55 L24 43 L43 42Z" fill="#FFFBEB" stroke="#78350F" stroke-width="2.6" stroke-linejoin="round"/>
+<path d="M29 39 Q36 18 58 15" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".65"/>
+<circle cx="23" cy="57" r="3" fill="#FFFBEB"/><circle cx="97" cy="57" r="3" fill="#FFFBEB"/>
+</svg>

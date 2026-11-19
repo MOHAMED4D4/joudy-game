@@ -1,6 +1,27 @@
 'use client';
 
-export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'monster' | 'runner' | 'fierceMonster' | 'exploder' | 'boss' | 'projectile' | 'blueKey' | 'coin' | 'heart' | 'doubleScore';
+export type CartoonSpriteKind = 'cat' | 'rose' | 'chocolate' | 'magnet' | 'obstacle' | 'monster' | 'runner' | 'fierceMonster' | 'exploder' | 'boss' | 'projectile' | 'blueKey' | 'coin' | 'heart' | 'doubleScore' | 'shadowHunter' | 'shadowRunner' | 'shadowBrute' | 'shadowBoss' | 'crystalHunter' | 'crystalRunner' | 'crystalBrute' | 'crystalBoss' | 'emberHunter' | 'emberRunner' | 'emberBrute' | 'emberBoss';
+
+
+
+function themedCreatureSvg(primary: string, secondary: string, accent: string, form: 'hunter' | 'runner' | 'brute' | 'boss', biome: 'shadow' | 'crystal' | 'ember'): string {
+  const body = form === 'runner'
+    ? `<path d="M27 42 Q13 34 7 19 Q25 18 38 34 L62 33 Q77 17 94 20 Q86 39 72 46 L66 71 L51 84 L35 70Z" fill="url(#hide)" stroke="#0B1220" stroke-width="4"/><path d="M32 51 L13 69 L35 65 M67 51 L88 69 L65 64" fill="none" stroke="${accent}" stroke-width="8" stroke-linecap="round"/><path d="M36 70 L28 91 L44 89 L50 74 L57 90 L73 93 L64 69" fill="${secondary}" stroke="#0B1220" stroke-width="4" stroke-linejoin="round"/>`
+    : form === 'brute'
+      ? `<path d="M24 38 L12 23 L35 29 L43 18 L57 18 L66 29 L88 22 L76 43 L81 71 L67 87 L33 87 L19 70Z" fill="url(#hide)" stroke="#0B1220" stroke-width="5" stroke-linejoin="round"/><path d="M24 48 L9 62 L18 78 L34 66 M76 48 L91 62 L82 78 L66 66" fill="${secondary}" stroke="#0B1220" stroke-width="4"/><path d="M30 80 L24 96 L43 91 L50 78 L58 91 L78 96 L70 79" fill="${secondary}" stroke="#0B1220" stroke-width="3"/>`
+      : form === 'boss'
+        ? `<path d="M18 44 L5 12 L32 26 L42 5 L53 25 L77 5 L72 31 L95 22 L82 52 L77 80 L61 94 L39 94 L22 80Z" fill="url(#hide)" stroke="#0B1220" stroke-width="5" stroke-linejoin="round"/><path d="M19 57 L4 76 L24 84 M81 57 L96 76 L76 84" fill="none" stroke="${accent}" stroke-width="9" stroke-linecap="round"/><path d="M37 74 L50 66 L63 74 L58 88 L42 88Z" fill="${accent}" stroke="#0B1220" stroke-width="3"/>`
+        : `<path d="M31 43 L17 19 L40 29 L50 9 L60 29 L83 18 L69 44 L73 75 L50 91 L27 75Z" fill="url(#hide)" stroke="#0B1220" stroke-width="4" stroke-linejoin="round"/><path d="M29 53 L12 64 L21 76 L38 67 M71 53 L88 64 L79 76 L62 67" fill="${secondary}" stroke="#0B1220" stroke-width="3"/>`;
+  const biomeOrnament = biome === 'shadow'
+    ? `<path d="M23 43 Q2 28 13 10 Q17 32 35 31 M77 43 Q98 28 87 10 Q83 32 65 31" fill="none" stroke="${accent}" stroke-width="5" stroke-linecap="round" opacity=".9"/><circle cx="18" cy="25" r="3" fill="${accent}"/><circle cx="82" cy="25" r="3" fill="${accent}"/>`
+    : biome === 'crystal'
+      ? `<path d="M24 48 L11 26 L26 32 L31 12 L45 31 L50 8 L58 31 L75 13 L73 35 L90 27 L77 53" fill="${accent}" stroke="${secondary}" stroke-width="3" stroke-linejoin="round" opacity=".92"/><path d="M19 68 L8 78 L22 82 M81 68 L92 78 L78 82" fill="none" stroke="${primary}" stroke-width="5" stroke-linecap="round"/>`
+      : `<path d="M20 49 Q4 35 17 13 Q20 29 34 31 Q27 14 43 4 Q43 26 52 30 Q54 13 73 7 Q68 27 82 31 Q98 43 79 53" fill="${accent}" stroke="${secondary}" stroke-width="3" stroke-linejoin="round" opacity=".9"/><path d="M18 69 L7 83 L27 78 M82 69 L93 83 L73 78" fill="none" stroke="${accent}" stroke-width="5" stroke-linecap="round"/>`;
+  const eyes = form === 'boss'
+    ? `<ellipse cx="37" cy="48" rx="6" ry="8" fill="${accent}"/><ellipse cx="63" cy="48" rx="6" ry="8" fill="${accent}"/><circle cx="50" cy="59" r="4" fill="#FFF7D6"/>`
+    : `<path d="M32 47 L45 50 M68 47 L55 50" stroke="#07111F" stroke-width="5" stroke-linecap="round"/><ellipse cx="40" cy="54" rx="5" ry="6" fill="${accent}"/><ellipse cx="60" cy="54" rx="5" ry="6" fill="${accent}"/><circle cx="41" cy="53" r="2" fill="#07111F"/><circle cx="59" cy="53" r="2" fill="#07111F"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="hide" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${primary}"/><stop offset=".55" stop-color="${secondary}"/><stop offset="1" stop-color="#111827"/></linearGradient><radialGradient id="aura"><stop stop-color="${accent}" stop-opacity=".65"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient></defs><circle cx="50" cy="53" r="46" fill="url(#aura)"/>${biomeOrnament}<ellipse cx="50" cy="94" rx="29" ry="4" fill="#020617" opacity=".32"/>${body}<path d="M34 37 Q32 16 50 13 Q68 16 66 37 L62 57 Q50 65 38 57Z" fill="url(#hide)" stroke="#0B1220" stroke-width="4"/>${eyes}<path d="M43 68 Q50 73 57 68" fill="none" stroke="#F8FAFC" stroke-width="2.5" stroke-linecap="round"/><path d="M50 75 L44 84 L56 84Z" fill="${accent}" stroke="#0B1220" stroke-width="2"/></svg>`;
+}
 
 const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
   cat: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -265,6 +286,18 @@ const CARTOON_SVGS: Record<CartoonSpriteKind, string> = {
     <path d="M20 8 L24 19 L35 23 L24 27 L20 38 L16 27 L5 23 L16 19 Z" fill="#fff" stroke="#bae6fd" stroke-width="1.5"/>
     <circle cx="76" cy="22" r="3" fill="#fef3c7"/><circle cx="87" cy="37" r="2" fill="#fff"/>
   </svg>`,
+  shadowHunter: themedCreatureSvg('#C4B5FD', '#4C1D95', '#F5D0FE', 'hunter', 'shadow'),
+  shadowRunner: themedCreatureSvg('#A78BFA', '#312E81', '#E9D5FF', 'runner', 'shadow'),
+  shadowBrute: themedCreatureSvg('#8B5CF6', '#2E1065', '#F0ABFC', 'brute', 'shadow'),
+  shadowBoss: themedCreatureSvg('#DDD6FE', '#4C1D95', '#FDE68A', 'boss', 'shadow'),
+  crystalHunter: themedCreatureSvg('#A5F3FC', '#0E7490', '#D9F99D', 'hunter', 'crystal'),
+  crystalRunner: themedCreatureSvg('#67E8F9', '#155E75', '#F0FDFA', 'runner', 'crystal'),
+  crystalBrute: themedCreatureSvg('#34D399', '#065F46', '#A7F3D0', 'brute', 'crystal'),
+  crystalBoss: themedCreatureSvg('#CFFAFE', '#0E7490', '#FDE68A', 'boss', 'crystal'),
+  emberHunter: themedCreatureSvg('#FDA4AF', '#9F1239', '#FDE68A', 'hunter', 'ember'),
+  emberRunner: themedCreatureSvg('#FB923C', '#7C2D12', '#FDE68A', 'runner', 'ember'),
+  emberBrute: themedCreatureSvg('#F87171', '#7F1D1D', '#FDBA74', 'brute', 'ember'),
+  emberBoss: themedCreatureSvg('#FECDD3', '#881337', '#FDE68A', 'boss', 'ember'),
 
 };
 

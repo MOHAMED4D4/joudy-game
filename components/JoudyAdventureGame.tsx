@@ -62,9 +62,13 @@ export default function JoudyAdventureGame() {
 
   const handleStartLevel = useCallback(
     (levelNumber: number) => {
-      // Never allow a direct start into season two before the first city is
-      // completed and its 40,000-point gate has been purchased.
-      if (levelNumber > progress.highestUnlockedLevel || (levelNumber >= 16 && !loadWorldSave().coastalRegionUnlocked)) {
+      // Each five-level chapter has its own completion requirement and score gate.
+      const save = loadWorldSave();
+      const chapterLocked =
+        (levelNumber >= 16 && levelNumber <= 20 && !save.coastalRegionUnlocked) ||
+        (levelNumber >= 21 && levelNumber <= 25 && !save.thirdChapterUnlocked) ||
+        (levelNumber >= 26 && levelNumber <= 30 && !save.fourthChapterUnlocked);
+      if (levelNumber > progress.highestUnlockedLevel || chapterLocked) {
         setSelectedLevel(null);
         setGameState('WORLD_MAP');
         return;
@@ -132,8 +136,14 @@ export default function JoudyAdventureGame() {
   }, [characterCoinBonus]);
 
   const handleNextLevel = useCallback(() => {
-    // Finishing level 15 returns to the map so the player must buy the new city.
-    if (activeLevel === 15 && !loadWorldSave().coastalRegionUnlocked) {
+    // Chapter transitions return to the map until the next gate is purchased.
+    const save = loadWorldSave();
+    const nextLevel = activeLevel + 1;
+    const needsChapterUnlock =
+      (nextLevel === 16 && !save.coastalRegionUnlocked) ||
+      (nextLevel === 21 && !save.thirdChapterUnlocked) ||
+      (nextLevel === 26 && !save.fourthChapterUnlocked);
+    if (needsChapterUnlock) {
       setGameState('WORLD_MAP');
       return;
     }
@@ -148,7 +158,7 @@ export default function JoudyAdventureGame() {
   const activeLevelConfig = getLevelConfig(activeLevel);
 
   return (
-    <main onClickCapture={(event) => { if ((event.target as HTMLElement).closest('button')) soundEngine.playButtonClick(); }} className="relative min-h-dvh w-full overflow-x-clip bg-[#080f1b] flex flex-col">
+    <main onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} onSelect={(event) => event.preventDefault()} onClickCapture={(event) => { if ((event.target as HTMLElement).closest('button')) soundEngine.playButtonClick(); }} className="relative min-h-dvh w-full overflow-x-clip bg-[#080f1b] flex flex-col">
       {/* Minimal audio control */}
       {gameState !== 'PLAYING' && (
         <div className="absolute left-4 top-4 z-30">

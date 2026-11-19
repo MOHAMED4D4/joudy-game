@@ -17,6 +17,8 @@ export interface WorldSave {
   petsOwned: string[];
   equippedPet: string;
   coastalRegionUnlocked: boolean;
+  thirdChapterUnlocked: boolean;
+  fourthChapterUnlocked: boolean;
   finalBossRewardClaimed: boolean;
   totalChocolates: number;
   totalScore: number;
@@ -44,6 +46,8 @@ const DEFAULT_SAVE: WorldSave = {
   petsOwned: ['moon-cat'],
   equippedPet: 'moon-cat',
   coastalRegionUnlocked: false,
+  thirdChapterUnlocked: false,
+  fourthChapterUnlocked: false,
   finalBossRewardClaimed: false,
   totalChocolates: 0,
   totalScore: 0,
@@ -133,6 +137,8 @@ function parse(raw: string | null): WorldSave {
       petsOwned: Array.isArray(value.petsOwned) ? value.petsOwned : DEFAULT_SAVE.petsOwned,
       equippedPet: typeof value.equippedPet === 'string' ? value.equippedPet : DEFAULT_SAVE.equippedPet,
       coastalRegionUnlocked: value.coastalRegionUnlocked === true,
+      thirdChapterUnlocked: value.thirdChapterUnlocked === true,
+      fourthChapterUnlocked: value.fourthChapterUnlocked === true,
       finalBossRewardClaimed: value.finalBossRewardClaimed === true,
       totalChocolates: Math.max(0, Number(value.totalChocolates ?? 0) || 0),
       totalScore: Math.max(0, Number(value.totalScore ?? 0) || 0),

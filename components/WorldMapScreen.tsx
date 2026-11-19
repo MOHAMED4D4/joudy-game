@@ -19,6 +19,75 @@ import WorldAtmosphereOverlay from './WorldAtmosphereOverlay';
 import RewardsHub from './RewardsHub';
 import { saveWorld, useWorldSave } from '@/lib/joudyWorld';
 
+
+type ChapterNumber = 2 | 3 | 4;
+type ChapterFlag = 'coastalRegionUnlocked' | 'thirdChapterUnlocked' | 'fourthChapterUnlocked';
+
+function ChapterGateCard({
+  chapter, previousChapter, levelsLabel, regionName, description, price, totalScore,
+  unlocked, prerequisiteComplete, prerequisiteLabel, notice, onUnlock, onEnter,
+}: {
+  chapter: ChapterNumber; previousChapter: string; levelsLabel: string; regionName: string;
+  description: string; price: number; totalScore: number; unlocked: boolean;
+  prerequisiteComplete: boolean; prerequisiteLabel: string; notice: string;
+  onUnlock: () => void; onEnter: () => void;
+}) {
+  const palette = chapter === 2
+    ? { edge: 'border-amber-200/25', glow: 'bg-amber-300/10', label: 'text-amber-200/80', icon: 'border-amber-200/35 bg-amber-300/10 text-amber-100', line: 'via-amber-200/50', button: 'from-amber-200 via-yellow-400 to-orange-500', pill: 'border-amber-100/20 text-amber-100' }
+    : chapter === 3
+      ? { edge: 'border-cyan-200/25', glow: 'bg-cyan-300/10', label: 'text-cyan-200/80', icon: 'border-cyan-200/35 bg-cyan-300/10 text-cyan-100', line: 'via-cyan-200/50', button: 'from-cyan-200 via-sky-400 to-blue-600', pill: 'border-cyan-100/20 text-cyan-100' }
+      : { edge: 'border-fuchsia-200/25', glow: 'bg-fuchsia-300/10', label: 'text-fuchsia-200/80', icon: 'border-fuchsia-200/35 bg-fuchsia-300/10 text-fuchsia-100', line: 'via-fuchsia-200/50', button: 'from-rose-300 via-fuchsia-500 to-violet-700', pill: 'border-fuchsia-100/20 text-fuchsia-100' };
+  const remaining = Math.max(0, price - totalScore);
+  return (
+    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32 }}
+      className={`relative my-5 overflow-hidden rounded-[2rem] border ${palette.edge} bg-gradient-to-br from-[#171b31] via-[#10182a] to-[#080e19] p-4 shadow-[0_20px_60px_rgba(0,0,0,.42)] sm:my-7 sm:p-6`}
+      aria-label={`بوابة الفصل ${chapter}`}>
+      <div className={`pointer-events-none absolute -left-12 -top-14 h-44 w-44 rounded-full ${palette.glow} blur-3xl`} />
+      <div className={`pointer-events-none absolute -right-12 -bottom-16 h-48 w-48 rounded-full ${palette.glow} blur-3xl`} />
+      <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-right">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl border shadow-inner ${palette.icon}`}>
+            {unlocked ? <Sparkles className="h-7 w-7" /> : <Lock className="h-7 w-7" />}
+          </div>
+          <div className="min-w-0">
+            <p className={`text-[10px] font-black tracking-[.22em] ${palette.label}`}>نهاية {previousChapter}</p>
+            <h2 className="mt-1 text-xl font-black text-white sm:text-2xl">{unlocked ? `${regionName} مفتوحة` : `الفصل ${chapter} ينتظركِ`}</h2>
+            <p className="mt-1 max-w-2xl text-xs leading-6 text-slate-300 sm:text-sm">{unlocked ? `تم فتح ${regionName}. ${description}` : `${description} يلزم إنهاء ${prerequisiteLabel} أولاً، ثم فتح البوابة بالنقاط المطلوبة.`}</p>
+          </div>
+        </div>
+        <div className="relative flex w-full shrink-0 flex-col items-center gap-2 sm:w-auto sm:min-w-[250px]">
+          <div className={`inline-flex items-center gap-2 rounded-full border ${palette.pill} bg-black/25 px-3 py-1.5 text-xs font-black`}>
+            <span>⭐</span><span className="tabular-nums">{totalScore.toLocaleString('ar-EG')}</span><span className="opacity-50">/</span><span>{price.toLocaleString('ar-EG')} نقطة</span>
+          </div>
+          {unlocked ? (
+            <button type="button" onClick={onEnter} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-100/35 bg-gradient-to-l from-emerald-300 to-teal-500 px-5 py-3 font-black text-slate-950 shadow-[0_10px_28px_rgba(16,185,129,.2)] transition hover:-translate-y-0.5">
+              <Play className="h-4 w-4 fill-current" /> دخول الفصل {chapter}
+            </button>
+          ) : !prerequisiteComplete ? (
+            <button type="button" onClick={onUnlock} className={`flex w-full items-center justify-center gap-2 rounded-2xl border ${palette.edge} bg-white/5 px-5 py-3 font-black text-white transition hover:bg-white/10`}>
+              <Lock className="h-4 w-4" /> أكملي {prerequisiteLabel}
+            </button>
+          ) : remaining === 0 ? (
+            <button type="button" onClick={onUnlock} className={`flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-l ${palette.button} px-5 py-3 font-black text-slate-950 shadow-[0_10px_30px_rgba(0,0,0,.25)] transition hover:-translate-y-0.5 hover:brightness-110`}>
+              <Lock className="h-4 w-4" /> افتحي الفصل {chapter} · {price.toLocaleString('ar-EG')} نقطة
+            </button>
+          ) : (
+            <button type="button" onClick={onUnlock} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200/30 bg-gradient-to-l from-rose-500/90 to-violet-800/90 px-5 py-3 font-black text-white transition hover:brightness-110">
+              <Lock className="h-4 w-4" /> تحتاجين {remaining.toLocaleString('ar-EG')} نقطة إضافية
+            </button>
+          )}
+          {notice && <p role="status" className={`max-w-xs text-[11px] font-bold leading-5 ${unlocked ? 'text-emerald-200' : 'text-rose-200'}`}>{notice}</p>}
+        </div>
+      </div>
+      <div className="relative mt-5 flex items-center gap-3" aria-hidden="true">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-transparent" style={{ backgroundImage: `linear-gradient(to right, transparent, ${chapter === 2 ? 'rgba(253,230,138,.55)' : chapter === 3 ? 'rgba(103,232,249,.55)' : 'rgba(232,121,249,.55)'}, transparent)` }} />
+        <span className={`rounded-full border ${palette.pill} bg-black/30 px-3 py-1 text-[9px] font-black tracking-[.2em]`}>الفصل {chapter} · {levelsLabel}</span>
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-transparent" style={{ backgroundImage: `linear-gradient(to left, transparent, ${chapter === 2 ? 'rgba(253,230,138,.55)' : chapter === 3 ? 'rgba(103,232,249,.55)' : 'rgba(232,121,249,.55)'}, transparent)` }} />
+      </div>
+    </motion.div>
+  );
+}
+
 interface WorldMapScreenProps {
   progress: JoudyGameProgress;
   onSelectLevel: (level: number) => void;
@@ -32,32 +101,36 @@ export default function WorldMapScreen({
 }: WorldMapScreenProps) {
   const currentLevelRef = useRef<HTMLDivElement | null>(null);
   const worldSave = useWorldSave();
-  const [gateNotice, setGateNotice] = useState('');
+  const [gateNotice, setGateNotice] = useState<{ chapter: ChapterNumber; text: string } | null>(null);
   const [rewardsPage, setRewardsPage] = useState<'map' | 'shop' | 'awards'>('map');
-  const regionPrice = 40_000;
-  const hasCompletedFirstCity = Boolean(progress.completedLevels[15]);
-  const canUnlockCoast = hasCompletedFirstCity && !worldSave.coastalRegionUnlocked && worldSave.totalScore >= regionPrice;
-  const unlockCoast = () => {
-    if (worldSave.coastalRegionUnlocked) return;
-    if (!hasCompletedFirstCity) {
-      setGateNotice('أكملي المستويات من 1 إلى 15 واهزمي زعيم المدينة الأولى أولاً.');
+  const chapterSettings: Record<ChapterNumber, { price: number; requiredLevel: number; flag: ChapterFlag; region: string }> = {
+    2: { price: 40_000, requiredLevel: 15, flag: 'coastalRegionUnlocked', region: 'مدينة الظلال' },
+    3: { price: 65_000, requiredLevel: 20, flag: 'thirdChapterUnlocked', region: 'غابة الكائنات الغريبة' },
+    4: { price: 55_000, requiredLevel: 25, flag: 'fourthChapterUnlocked', region: 'قلعة الزعيم الأخير' },
+  };
+
+  const unlockChapter = (chapter: ChapterNumber) => {
+    const config = chapterSettings[chapter];
+    const { requiredLevel, price, flag } = config;
+    if (worldSave[flag]) return;
+    if (!progress.completedLevels[requiredLevel]) {
+      setGateNotice({ chapter, text: `يجب إكمال المستوى ${requiredLevel} أولاً لفتح هذه البوابة.` });
       return;
     }
-    if (worldSave.totalScore < regionPrice) {
-      setGateNotice(`تحتاجين إلى ${(regionPrice - worldSave.totalScore).toLocaleString('ar-EG')} نقطة إضافية لفتح مدينة الظلال.`);
+    if (worldSave.totalScore < price) {
+      setGateNotice({ chapter, text: `تحتاجين إلى ${(price - worldSave.totalScore).toLocaleString('ar-EG')} نقطة إضافية لفتح ${config.region}.` });
       return;
     }
     let purchased = false;
     const updatedSave = saveWorld((current) => {
-      // Recheck the points balance inside the saved transaction to prevent double-spending.
-      if (current.coastalRegionUnlocked || current.totalScore < regionPrice) return current;
+      if (current[flag] || current.totalScore < price) return current;
       purchased = true;
-      return { ...current, totalScore: current.totalScore - regionPrice, coastalRegionUnlocked: true };
+      return { ...current, totalScore: current.totalScore - price, [flag]: true };
     });
-    if (updatedSave.coastalRegionUnlocked) {
-      setGateNotice(purchased ? 'تم فتح مدينة الظلال! أصبحت المستويات 16–30 متاحة.' : 'البوابة مفتوحة بالفعل.');
+    if (updatedSave[flag]) {
+      setGateNotice({ chapter, text: purchased ? `تم فتح ${config.region} بنجاح! أصبحت المستويات ${chapter === 2 ? '16–20' : chapter === 3 ? '21–25' : '26–30'} متاحة.` : 'البوابة مفتوحة بالفعل.' });
     } else {
-      setGateNotice(`تحتاجين إلى ${(regionPrice - updatedSave.totalScore).toLocaleString('ar-EG')} نقطة إضافية لفتح مدينة الظلال.`);
+      setGateNotice({ chapter, text: `تحتاجين إلى ${(price - updatedSave.totalScore).toLocaleString('ar-EG')} نقطة إضافية.` });
     }
   };
 
@@ -88,7 +161,15 @@ export default function WorldMapScreen({
     0,
   );
   const currentLevel = Math.min(30, progress.highestUnlockedLevel);
-  const quickStartLevel = !worldSave.coastalRegionUnlocked && currentLevel >= 16 ? 15 : currentLevel;
+  const isChapterOpenForLevel = (level: number) =>
+    (level >= 1 && level <= 15) ||
+    (level >= 16 && level <= 20 && worldSave.coastalRegionUnlocked) ||
+    (level >= 21 && level <= 25 && worldSave.thirdChapterUnlocked) ||
+    (level >= 26 && level <= 30 && worldSave.fourthChapterUnlocked);
+  const quickStartLevel =
+    currentLevel >= 16 && !worldSave.coastalRegionUnlocked ? 15 :
+    currentLevel >= 21 && !worldSave.thirdChapterUnlocked ? 20 :
+    currentLevel >= 26 && !worldSave.fourthChapterUnlocked ? 25 : currentLevel;
 
   // Vertical wave offsets for the 5 nodes inside each world to create a playful winding cartoon path
   const waveOffsets = [
@@ -178,7 +259,7 @@ export default function WorldMapScreen({
           const worldLevels = LEVELS.filter((l) => l.worldId === world.id);
           const isEvenRow = worldIdx % 2 === 1;
           const orderedLevels = [...worldLevels].sort((a, b) => a.level - b.level);
-          const worldUnlocked = worldLevels.some((l) => l.level <= currentLevel) && (world.id < 4 || worldSave.coastalRegionUnlocked);
+          const worldUnlocked = worldLevels.some((l) => l.level <= currentLevel) && isChapterOpenForLevel(worldLevels[0]?.level ?? 1);
           const hasNextWorld = worldIdx < WORLD_THEMES.length - 1;
 
           return (
@@ -213,7 +294,7 @@ export default function WorldMapScreen({
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <span className="text-xs font-semibold text-white/85 block">
-                          {world.id < 4 ? `العالم ${world.id} من 6` : `الموسم الثاني · العالم ${world.id - 3} من 3`}
+                          {world.id <= 3 ? `الفصل الأول · العالم ${world.id} من 3` : `الفصل ${world.id - 2} · العالم ${world.id - 3} من 1`}
                         </span>
                         <h2
                           className="text-lg sm:text-2xl font-bold leading-snug"
@@ -258,11 +339,12 @@ export default function WorldMapScreen({
                   <div className="relative z-10 grid grid-cols-3 sm:grid-cols-5 gap-y-8 gap-x-3 sm:gap-4 items-center justify-items-center">
                     {orderedLevels.map((lvl, idx) => {
                       const completed = progress.completedLevels[lvl.level];
-                      const isLocked = lvl.level > currentLevel || (lvl.level >= 16 && !worldSave.coastalRegionUnlocked);
+                      const isLocked = lvl.level > currentLevel || !isChapterOpenForLevel(lvl.level);
                       const isCurrent = lvl.level === quickStartLevel && !isLocked;
                       const isFirstBoss = lvl.level === 15;
                       const isFinalBoss = lvl.level === 30;
-                      const isBossLevel = isFirstBoss || isFinalBoss;
+                      const isChapterBoss = lvl.level === 20 || lvl.level === 25;
+                      const isBossLevel = isFirstBoss || isChapterBoss || isFinalBoss;
                       const waveClass = waveOffsets[idx % waveOffsets.length];
 
                       return (
@@ -283,7 +365,7 @@ export default function WorldMapScreen({
                                 : `بدء المستوى ${lvl.level} — الهدف ${lvl.targetScore} نقطة`
                             }
                             className={`relative flex flex-col items-center justify-center border transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300 ${
-                              isFirstBoss ? 'h-[104px] w-[104px] rounded-[1.8rem] sm:h-[116px] sm:w-[116px]' : isFinalBoss ? 'h-[110px] w-[110px] rounded-[1.9rem] sm:h-[122px] sm:w-[122px]' : 'h-16 w-16 rounded-2xl sm:h-[74px] sm:w-[74px]'
+                              isFirstBoss ? 'h-[104px] w-[104px] rounded-[1.8rem] sm:h-[116px] sm:w-[116px]' : isFinalBoss ? 'h-[110px] w-[110px] rounded-[1.9rem] sm:h-[122px] sm:w-[122px]' : isChapterBoss ? 'h-[92px] w-[92px] rounded-[1.65rem] sm:h-[100px] sm:w-[100px]' : 'h-16 w-16 rounded-2xl sm:h-[74px] sm:w-[74px]'
                             } ${
                               isLocked
                                 ? 'border-white/10 bg-slate-950/85 text-slate-600 shadow-inner opacity-75 cursor-not-allowed'
@@ -291,14 +373,16 @@ export default function WorldMapScreen({
                                   ? 'border-amber-100 bg-gradient-to-br from-[#FFF1A8] via-[#F43F5E] to-[#7F1D1D] text-white shadow-[0_0_52px_rgba(244,63,94,.58)] ring-[3px] ring-amber-200/75 hover:brightness-110 animate-glow-breath cursor-pointer scale-[1.04]'
                                   : isFinalBoss
                                     ? 'border-fuchsia-100 bg-gradient-to-br from-[#FDE68A] via-[#7C3AED] to-[#1E1038] text-white shadow-[0_0_58px_rgba(192,38,211,.52)] ring-[3px] ring-fuchsia-200/65 cursor-pointer scale-[1.05]'
-                                    : isCurrent
+                                    : isChapterBoss
+                                  ? 'border-cyan-100/70 bg-gradient-to-br from-cyan-300 via-teal-500 to-emerald-700 text-white shadow-[0_0_34px_rgba(34,211,238,.28)] ring-2 ring-cyan-200/40 cursor-pointer hover:brightness-110'
+                                : isCurrent
                                       ? 'border-cyan-200 bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 text-slate-950 shadow-[0_0_28px_rgba(34,211,238,0.38)] cursor-pointer animate-glow-breath ring-2 ring-cyan-300/40'
                                       : completed
                                         ? 'border-emerald-400/70 bg-slate-800 text-white shadow-md hover:border-cyan-300 cursor-pointer'
                                         : 'border-white/10 bg-slate-900 text-slate-500 cursor-not-allowed opacity-80'
                             }`}
                           >
-                            {isFirstBoss && !isLocked && <Swords className="mb-0.5 h-4 w-4 text-amber-100" />}
+                            {(isFirstBoss || isChapterBoss) && !isLocked && <Swords className={`mb-0.5 h-4 w-4 ${isFirstBoss ? 'text-amber-100' : 'text-white'}`} />}
                             {isFinalBoss && !isLocked && <Crown className="mb-0.5 h-4 w-4 fill-amber-300 text-amber-200" />}
 
                             {isLocked ? (
@@ -311,7 +395,7 @@ export default function WorldMapScreen({
                                 <span className={`${isBossLevel ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'} font-extrabold leading-none tabular-nums`}>
                                   {lvl.level}
                                 </span>
-                                {isBossLevel && <span className="mt-0.5 text-[8px] font-black tracking-widest opacity-90">{isFirstBoss ? 'GRAND BOSS' : 'FINAL BOSS'}</span>}
+                                {isBossLevel && <span className="mt-0.5 text-[8px] font-black tracking-widest opacity-90">{isFirstBoss ? 'GRAND BOSS' : isFinalBoss ? 'FINAL BOSS' : 'CHAPTER BOSS'}</span>}
                                 <span className="mt-0.5 text-[9px] font-bold tabular-nums opacity-90 sm:text-[10px]">
                                   {lvl.targetScore.toLocaleString('ar-EG')} ن
                                 </span>
@@ -339,7 +423,7 @@ export default function WorldMapScreen({
                             </span>
                           ) : (
                             <span className={`whitespace-nowrap text-[11px] font-semibold tabular-nums ${isBossLevel ? 'text-amber-200' : 'text-slate-500'}`}>
-                              {isFirstBoss ? '⚔ المعركة الكبرى' : isFinalBoss ? '👑 الزعيم الأخير' : `هدف ${lvl.targetScore.toLocaleString('ar-EG')}`}
+                              {isFirstBoss ? '⚔ المعركة الكبرى' : isFinalBoss ? '👑 الزعيم الأخير' : isChapterBoss ? '⚔ حارس الفصل' : `هدف ${lvl.targetScore.toLocaleString('ar-EG')}`}
                             </span>
                           )}
                         </div>
@@ -350,59 +434,34 @@ export default function WorldMapScreen({
               </div>
 
               {world.id === 3 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.32 }}
-                  className="relative my-5 overflow-hidden rounded-[2rem] border border-amber-200/25 bg-gradient-to-br from-[#25172A] via-[#171C31] to-[#090F1C] p-4 shadow-[0_20px_60px_rgba(0,0,0,.42)] sm:my-7 sm:p-6"
-                  aria-label="فاصل بين الفصل الأول والثاني"
-                >
-                  <div className="pointer-events-none absolute -left-12 -top-14 h-44 w-44 rounded-full bg-rose-500/10 blur-3xl" />
-                  <div className="pointer-events-none absolute -right-12 -bottom-16 h-48 w-48 rounded-full bg-amber-300/10 blur-3xl" />
-                  <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-right">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl border shadow-inner ${worldSave.coastalRegionUnlocked ? 'border-emerald-200/40 bg-emerald-300/15 text-emerald-200' : 'border-amber-200/35 bg-amber-300/10 text-amber-100'}`}>
-                        {worldSave.coastalRegionUnlocked ? <Sparkles className="h-7 w-7" /> : <Lock className="h-7 w-7" />}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-black tracking-[.22em] text-amber-200/80">نهاية الفصل الأول · المستويات 1–15</p>
-                        <h2 className="mt-1 text-xl font-black text-white sm:text-2xl">{worldSave.coastalRegionUnlocked ? 'بوابة مدينة الظلال مفتوحة' : 'الفصل الثاني ينتظركِ بعد الزعيم'}</h2>
-                        <p className="mt-1 max-w-2xl text-xs leading-6 text-slate-300 sm:text-sm">{worldSave.coastalRegionUnlocked ? 'تم فتح العالم الجديد. استعدي للمستويات 16–30 والوحوش الأكثر شراسة.' : 'اهزمي زعيم المستوى 15 أولاً، ثم افتحي مدينة الظلال مقابل 40,000 نقطة للانتقال إلى المستويات 16–30.'}</p>
-                      </div>
-                    </div>
-                    <div className="relative flex w-full shrink-0 flex-col items-center gap-2 sm:w-auto sm:min-w-[250px]">
-                      <div className="inline-flex items-center gap-2 rounded-full border border-amber-200/20 bg-black/25 px-3 py-1.5 text-xs font-black text-amber-100">
-                        <span>⭐</span>
-                        <span className="tabular-nums">{worldSave.totalScore.toLocaleString('ar-EG')}</span>
-                        <span className="text-amber-200/50">/</span>
-                        <span>40,000 نقطة</span>
-                      </div>
-                      {worldSave.coastalRegionUnlocked ? (
-                        <button type="button" onClick={() => onSelectLevel(16)} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-100/35 bg-gradient-to-l from-emerald-300 to-teal-500 px-5 py-3 font-black text-slate-950 shadow-[0_10px_28px_rgba(16,185,129,.2)] transition hover:-translate-y-0.5">
-                          <Play className="h-4 w-4 fill-current" /> ابدئي الفصل الثاني
-                        </button>
-                      ) : !hasCompletedFirstCity ? (
-                        <button type="button" onClick={unlockCoast} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200/40 bg-gradient-to-l from-rose-500 to-red-800 px-5 py-3 font-black text-white shadow-[0_10px_28px_rgba(220,38,38,.24)] transition hover:brightness-110">
-                          <Lock className="h-4 w-4" /> أكملي المستويات حتى 15
-                        </button>
-                      ) : canUnlockCoast ? (
-                        <button type="button" onClick={unlockCoast} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-100/45 bg-gradient-to-l from-amber-200 via-yellow-400 to-orange-500 px-5 py-3 font-black text-slate-950 shadow-[0_10px_30px_rgba(245,158,11,.25)] transition hover:-translate-y-0.5 hover:brightness-110">
-                          <Lock className="h-4 w-4" /> افتحي مدينة الظلال · 40,000 نقطة
-                        </button>
-                      ) : (
-                        <button type="button" onClick={unlockCoast} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200/40 bg-gradient-to-l from-rose-500 to-red-800 px-5 py-3 font-black text-white shadow-[0_10px_28px_rgba(220,38,38,.24)] transition hover:brightness-110">
-                          <Lock className="h-4 w-4" /> تحتاجين {(regionPrice - worldSave.totalScore).toLocaleString('ar-EG')} نقطة إضافية
-                        </button>
-                      )}
-                      {gateNotice && <p role="status" className={`max-w-xs text-[11px] font-bold leading-5 ${gateNotice.startsWith('تم فتح') || gateNotice.includes('مفتوحة بالفعل') ? 'text-emerald-200' : 'text-rose-200'}`}>{gateNotice}</p>}
-                    </div>
-                  </div>
-                  <div className="relative mt-5 flex items-center gap-3" aria-hidden="true">
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-rose-200/50 to-amber-200/50" />
-                    <span className="rounded-full border border-amber-100/20 bg-black/30 px-3 py-1 text-[9px] font-black tracking-[.2em] text-amber-100">الفصل الثاني · المستويات 16–30</span>
-                    <div className="h-px flex-1 bg-gradient-to-l from-transparent via-rose-200/50 to-amber-200/50" />
-                  </div>
-                </motion.div>
+                <ChapterGateCard
+                  chapter={2} previousChapter="الفصل الأول · المستويات 1–15" levelsLabel="المستويات 16–20"
+                  regionName="مدينة الظلال" description="استكشفي المدينة من المستوى 16 حتى 20، مع أجواء وخصوم جدد."
+                  price={chapterSettings[2].price} totalScore={worldSave.totalScore}
+                  unlocked={worldSave.coastalRegionUnlocked} prerequisiteComplete={Boolean(progress.completedLevels[15])}
+                  prerequisiteLabel="المستوى 15 والزعيم الأول" notice={gateNotice?.chapter === 2 ? gateNotice.text : ''}
+                  onUnlock={() => unlockChapter(2)} onEnter={() => onSelectLevel(16)}
+                />
+              )}
+              {world.id === 4 && (
+                <ChapterGateCard
+                  chapter={3} previousChapter="الفصل الثاني · المستويات 16–20" levelsLabel="المستويات 21–25"
+                  regionName="غابة الكائنات الغريبة" description="ادخلي الغابة الغامضة واكتشفي وحوشاً جديدة بتصميمات مختلفة."
+                  price={chapterSettings[3].price} totalScore={worldSave.totalScore}
+                  unlocked={worldSave.thirdChapterUnlocked} prerequisiteComplete={Boolean(progress.completedLevels[20])}
+                  prerequisiteLabel="المستوى 20" notice={gateNotice?.chapter === 3 ? gateNotice.text : ''}
+                  onUnlock={() => unlockChapter(3)} onEnter={() => onSelectLevel(21)}
+                />
+              )}
+              {world.id === 5 && (
+                <ChapterGateCard
+                  chapter={4} previousChapter="الفصل الثالث · المستويات 21–25" levelsLabel="المستويات 26–30"
+                  regionName="قلعة الزعيم الأخير" description="استعدي لخمسة مستويات داخل القلعة، وصولاً إلى المواجهة النهائية."
+                  price={chapterSettings[4].price} totalScore={worldSave.totalScore}
+                  unlocked={worldSave.fourthChapterUnlocked} prerequisiteComplete={Boolean(progress.completedLevels[25])}
+                  prerequisiteLabel="المستوى 25" notice={gateNotice?.chapter === 4 ? gateNotice.text : ''}
+                  onUnlock={() => unlockChapter(4)} onEnter={() => onSelectLevel(26)}
+                />
               )}
 
               {/* Winding Dotted Connector Bridge between World Chapters */}
@@ -437,8 +496,13 @@ export default function WorldMapScreen({
           <Image src="/images/anime-night.jpg" alt="معاينة معتمة للموسم القادم" fill sizes="(max-width: 1024px) 100vw, 1024px" className="object-cover object-center opacity-20 grayscale" />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-950/90 via-indigo-950/85 to-black/95" />
           <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 25%, #94a3b8 0 1px, transparent 2px), radial-gradient(circle at 75% 65%, #64748b 0 1px, transparent 2px)', backgroundSize: '42px 42px, 58px 58px' }} />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+            {Array.from({ length: 18 }, (_, index) => (
+              <span key={index} className="season-particle" style={{ left: `${7 + ((index * 37) % 88)}%`, top: `${18 + ((index * 23) % 72)}%`, ['--particle-delay' as string]: `${-((index * 0.37) % 5)}s`, ['--particle-duration' as string]: `${3.4 + (index % 5) * 0.55}s` } as React.CSSProperties} />
+            ))}
+          </div>
           <div className="relative flex min-h-[180px] flex-col items-center justify-center gap-2 px-5 py-7 text-center sm:min-h-[210px]">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl border border-slate-500/30 bg-slate-800/70 text-slate-400 shadow-inner"><Lock className="h-6 w-6" /></span>
+            <motion.span animate={{ y: [0, -3, 0], rotate: [-5, 5, -5], scale: [1, 1.04, 1] }} transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }} className="grid h-12 w-12 place-items-center rounded-2xl border border-slate-500/30 bg-slate-800/70 text-slate-300 shadow-[0_0_24px_rgba(148,163,184,.15)]"><Lock className="h-6 w-6" /></motion.span>
             <p className="text-[10px] font-black tracking-[.25em] text-slate-500">المستويات 31 – 60</p>
             <h2 className="text-xl font-black text-slate-300 sm:text-2xl">السيزون القادم قريباً</h2>
             <p className="max-w-lg text-xs leading-6 text-slate-500">منطقة جديدة مقفولة حالياً… مغامرات وأعداء وعوالم إضافية قيد التحضير</p>
@@ -449,7 +513,7 @@ export default function WorldMapScreen({
     </motion.section>
 
     {/* يبقى الزر ملازمًا للشاشة حتى أثناء تمرير قائمة المراحل الطويلة */}
-    {worldSave.coastalRegionUnlocked || currentLevel <= 15 ? (
+    {quickStartLevel >= 1 ? (
       <div className="pointer-events-none fixed inset-x-0 bottom-3 z-50 flex justify-center px-3">
         <motion.button
           type="button"

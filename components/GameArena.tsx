@@ -74,6 +74,7 @@ interface FallingEntity {
   rotation: number;
   vr: number;
   points: number;
+  spriteKind?: CartoonSpriteKind;
   fuseTimer?: number;
   armed?: boolean;
 }
@@ -147,12 +148,12 @@ const LEVEL_INTROS: Record<number, { title: string; text: string }> = {
   17: { title: 'الحركة الذكية', text: 'توقعي مسار العناصر قبل ما توصلي لها. أحيانًا تفادي الخطر أهم من جمع مكافأة صغيرة.' },
   18: { title: 'اجمعي الكنوز', text: 'العملات والمفاتيح والعناصر الخاصة بتساعدك. اجمعيها واستفيدي منها في المتجر أو عند الحاجة.' },
   19: { title: 'وحوش أسرع', text: 'المطاردون أسرع في المرحلة دي. غيري اتجاهك باستمرار ومتخليش الوحوش تحاصرك.' },
-  20: { title: 'اختبار مدينة الظلال', text: 'وصلتي للمستوى العشرين! حافظي على تركيزك ووازني بين المكافآت وتفادي الأعداء.' },
+  20: { title: 'حارس الظلال 🌙', text: 'دي مواجهة حارس الفصل الثاني. هتظهر وحوش ضخمة وسط الموجات؛ استخدمي الدرع قبل اقتراب الحارس، واحتفظي بمساحة كافية للمراوغة.' },
   21: { title: 'غابة الكائنات الغريبة 👾', text: 'دخلتي منطقة مليانة مخلوقات مختلفة. أول ظهور لأي نوع جديد هيوقف اللعب مؤقتًا علشان أشرحلك خطورته.' },
   22: { title: 'تفادي المطاردين', text: 'خليكي بعيدة عن مسارات الوحوش، وسيبي لنفسك طريق مفتوح للحركة.' },
   23: { title: 'اختاري توقيتك', text: 'مش لازم تجمعي كل عنصر. اختاري الفرصة الآمنة، خصوصًا لما يكون فيه أكتر من عدو.' },
   24: { title: 'تحدي البقاء', text: 'حافظي على القلوب واستخدمي المغناطيس ومضاعفة النقاط في الوقت المناسب.' },
-  25: { title: 'قبل القلعة', text: 'وصلتي للمستوى 25! فاضل خمس مراحل على المواجهة النهائية. جهزي نفسك.' },
+  25: { title: 'حارس الغابة 💎', text: 'دي مواجهة حارس الفصل الثالث. راقبي تحركاته بين المخلوقات البلورية، واختاري توقيت الدرع والمغناطيس بعناية.' },
   26: { title: 'قلعة الزعيم الأخير 🏰', text: 'دخلتي القلعة. الأعداء أقوى، فخلي كل حركة محسوبة واستفيدي من الدرع الدائري.' },
   27: { title: 'أعداء القلعة', text: 'راقبي الأعداء قبل ما يقربوا من جودي، وابتعدي عن الهجمات والمقذوفات.' },
   28: { title: 'اختبار المحترفين', text: 'المرحلة دي محتاجة تركيز وسرعة. اجمعي العناصر من غير ما تعرضي جودي للخطر.' },
@@ -647,6 +648,13 @@ export default function GameArena({
           else if (enemyRoll < 0.32) kind = 'runner';
           else if (enemyRoll < 0.65) kind = 'fierceMonster';
           else kind = 'exploder';
+        } else if (stageNumber === 20 || stageNumber === 25) {
+          const chapterBossChance = stageNumber === 20 ? 0.27 : 0.32;
+          if (enemyRoll < chapterBossChance) kind = 'boss';
+          else if (enemyRoll < 0.55) kind = 'fierceMonster';
+          else if (enemyRoll < 0.78) kind = 'exploder';
+          else if (enemyRoll < 0.91) kind = 'runner';
+          else kind = 'projectile';
         } else if (stageNumber === 15) {
           if (enemyRoll < 0.43) kind = 'boss';
           else if (enemyRoll < 0.72) kind = 'fierceMonster';
@@ -679,7 +687,7 @@ export default function GameArena({
 
       const cfg = ITEM_CONFIG[kind];
       const radius = (
-        kind === 'boss' ? (stageNumber === 30 ? 64 : stageNumber === 15 ? 56 : 44)
+        kind === 'boss' ? (stageNumber === 30 ? 64 : stageNumber === 15 ? 56 : stageNumber === 20 || stageNumber === 25 ? 50 : 44)
           : kind === 'fierceMonster' ? 36
             : kind === 'exploder' ? 33
               : kind === 'monster' ? (stageNumber < 15 ? 24 : 35)
@@ -751,9 +759,19 @@ export default function GameArena({
       }
       const hasZigzag = kind !== 'runner' && Math.random() < (kind === 'boss' || kind === 'projectile' ? 0.68 : 0.42);
 
+      const biomePrefix = stageNumber <= 15 ? '' : stageNumber <= 20 ? 'shadow' : stageNumber <= 25 ? 'crystal' : 'ember';
+      const biomeSuffix = kind === 'boss' ? 'Boss'
+        : kind === 'runner' ? 'Runner'
+          : kind === 'fierceMonster' || kind === 'exploder' ? 'Brute'
+            : kind === 'monster' ? 'Hunter' : '';
+      const themedSprite = biomePrefix && biomeSuffix
+        ? `${biomePrefix}${biomeSuffix}` as CartoonSpriteKind
+        : undefined;
+
       entities.push({
         id: nextEntityId++,
         kind,
+        spriteKind: themedSprite,
         baseX: x,
         x,
         y,
@@ -1549,7 +1567,7 @@ export default function GameArena({
       // 3. Crisp Cartoon SVG Falling Collectibles & Storm Clouds
       for (const item of entities) {
         const cfg = ITEM_CONFIG[item.kind];
-        const svgImg = cartoonSpritesRef.current[item.kind];
+        const svgImg = cartoonSpritesRef.current[item.spriteKind ?? item.kind];
 
         ctx.save();
         ctx.translate(item.x, item.y);
@@ -1951,7 +1969,7 @@ export default function GameArena({
               <div className="min-w-0">
                 <div className="mb-0.5 flex min-w-0 items-center gap-2">
                   <span className="truncate text-[10px] font-bold text-slate-400 sm:text-xs">{levelConfig.worldName}</span>
-                  <span className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[9px] font-black sm:text-[10px] ${levelConfig.level === 15 ? 'border-amber-200/50 bg-rose-500/20 text-amber-100' : levelConfig.level === 30 ? 'border-fuchsia-200/50 bg-violet-500/20 text-fuchsia-100' : 'border-cyan-300/20 bg-cyan-300/10 text-cyan-200'}`}>{levelConfig.level === 15 ? 'المعركة الكبرى · 15' : levelConfig.level === 30 ? 'الزعيم الأخير · 30' : `مستوى ${levelConfig.level}`}</span>
+                  <span className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[9px] font-black sm:text-[10px] ${levelConfig.level === 15 ? 'border-amber-200/50 bg-rose-500/20 text-amber-100' : levelConfig.level === 30 ? 'border-fuchsia-200/50 bg-violet-500/20 text-fuchsia-100' : 'border-cyan-300/20 bg-cyan-300/10 text-cyan-200'}`}>{levelConfig.level === 15 ? 'المعركة الكبرى · 15' : levelConfig.level === 20 ? 'حارس الظلال · 20' : levelConfig.level === 25 ? 'حارس الغابة · 25' : levelConfig.level === 30 ? 'الزعيم الأخير · 30' : `مستوى ${levelConfig.level}`}</span>
                 </div>
                 <div className="flex min-w-0 items-baseline gap-1.5">
                   <span className="text-base font-black leading-none tabular-nums text-white sm:text-lg">{score.toLocaleString('ar-EG')}</span>
@@ -2067,9 +2085,9 @@ export default function GameArena({
           </>
         )}
 
-        {!isPaused && !isGameOver && (levelConfig.level === 15 || levelConfig.level === 30) && showBossBanner && (
-          <div className={`pointer-events-none absolute left-1/2 top-[9.2rem] z-40 -translate-x-1/2 rounded-full border px-4 py-1.5 text-center text-[10px] font-black shadow-xl backdrop-blur-md sm:top-[8.2rem] sm:text-xs ${levelConfig.level === 15 ? 'border-amber-200/60 bg-gradient-to-r from-rose-950/90 via-red-700/90 to-amber-700/90 text-amber-100 shadow-rose-950/30' : 'border-fuchsia-200/60 bg-gradient-to-r from-slate-950/90 via-violet-800/90 to-rose-900/90 text-fuchsia-100 shadow-violet-950/40'}`}>
-            {levelConfig.level === 15 ? '⚔ المعركة الكبرى · زعيم المدينة الأولى' : '👑 المواجهة النهائية · زعيم المستوى 30'}
+        {!isPaused && !isGameOver && [15, 20, 25, 30].includes(levelConfig.level) && showBossBanner && (
+          <div className={`pointer-events-none absolute left-1/2 top-[9.2rem] z-40 -translate-x-1/2 rounded-full border px-4 py-1.5 text-center text-[10px] font-black shadow-xl backdrop-blur-md sm:top-[8.2rem] sm:text-xs ${levelConfig.level === 30 ? 'border-fuchsia-200/60 bg-gradient-to-r from-slate-950/90 via-violet-800/90 to-rose-900/90 text-fuchsia-100 shadow-violet-950/40' : levelConfig.level === 25 ? 'border-cyan-200/60 bg-gradient-to-r from-emerald-950/90 via-cyan-800/90 to-teal-900/90 text-cyan-100 shadow-cyan-950/40' : levelConfig.level === 20 ? 'border-violet-200/60 bg-gradient-to-r from-violet-950/90 via-indigo-700/90 to-slate-900/90 text-violet-100 shadow-violet-950/30' : 'border-amber-200/60 bg-gradient-to-r from-rose-950/90 via-red-700/90 to-amber-700/90 text-amber-100 shadow-rose-950/30'}`}>
+            {levelConfig.level === 15 ? '⚔ زعيم الفصل الأول · المعركة الكبرى' : levelConfig.level === 20 ? '🌙 زعيم الفصل الثاني · حارس الظلال' : levelConfig.level === 25 ? '💎 زعيم الفصل الثالث · حارس الغابة' : '👑 زعيم الفصل الرابع · المواجهة النهائية'}
           </div>
         )}
 
@@ -2175,33 +2193,59 @@ export default function GameArena({
           </div>
         )}
 
-        {/* Game Over (all available hearts depleted) Overlay */}
+        {/* Premium Game Over screen. The map action here is immediate; only the pause door asks for confirmation. */}
         {isGameOver && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-md">
+          <div className="absolute inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#050815]/88 p-3 backdrop-blur-xl sm:p-5">
             <motion.div
-              initial={{ y: 22, scale: 0.94, opacity: 0 }}
+              initial={{ y: 28, scale: 0.94, opacity: 0 }}
               animate={{ y: 0, scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-              className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-rose-200/20 bg-gradient-to-b from-[#28172B] via-[#172238] to-[#080F1B] p-5 text-center text-white shadow-[0_28px_90px_rgba(0,0,0,.7)] sm:p-7"
+              transition={{ type: 'spring', stiffness: 210, damping: 21 }}
+              className="relative my-auto w-full max-w-md overflow-hidden rounded-[2rem] border border-rose-100/20 bg-gradient-to-br from-[#25152c] via-[#151d35] to-[#08111f] p-4 text-center text-white shadow-[0_30px_100px_rgba(0,0,0,.75)] sm:p-6"
             >
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-rose-500/25 via-fuchsia-500/5 to-transparent" />
-              <div className="relative mx-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[1.4rem] border border-rose-200/30 bg-gradient-to-br from-rose-400/20 to-fuchsia-600/10 text-rose-200 shadow-[0_0_40px_rgba(244,63,94,.25)]">
-                <Heart className="h-9 w-9 fill-rose-500/20" />
+              <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-rose-500/20 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-24 -left-16 h-60 w-60 rounded-full bg-violet-500/15 blur-3xl" />
+              <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-rose-200/70 to-transparent" />
+
+              <div className="relative mb-4 flex items-center justify-between gap-3">
+                <span className="rounded-full border border-rose-200/20 bg-rose-300/10 px-3 py-1.5 text-[9px] font-black tracking-[.2em] text-rose-100">JOUDY · ARCADE RUN</span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold text-slate-300">المستوى {levelConfig.level} / 30</span>
               </div>
-              <h3
-                className="relative mt-3 text-2xl font-black tracking-tight text-white"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                انتهت المحاولة
-              </h3>
-              <p className="relative mx-auto max-w-sm text-sm leading-7 text-slate-300">
-                الوحوش كانت أسرع منكِ في المستوى {levelConfig.level}. جمعتِ{' '}
-                <span className="font-black tabular-nums text-rose-200">{score.toLocaleString('ar-EG')}</span> من{' '}
-                <span className="font-black tabular-nums text-white">{levelConfig.targetScore.toLocaleString('ar-EG')}</span> نقطة.
+
+              <div className="relative mx-auto grid h-24 w-24 place-items-center rounded-[2rem] border border-rose-100/35 bg-gradient-to-br from-rose-300/20 via-fuchsia-500/15 to-violet-700/20 shadow-[0_0_55px_rgba(244,63,94,.2)]">
+                <div className="absolute inset-2 rounded-[1.4rem] border border-white/10" />
+                <Heart className="h-12 w-12 fill-rose-400/25 text-rose-100 drop-shadow-[0_0_14px_rgba(251,113,133,.65)]" />
+                <Sparkles className="absolute -right-2 -top-2 h-7 w-7 text-amber-200 drop-shadow-[0_0_10px_rgba(251,191,36,.8)]" />
+              </div>
+
+              <p className="relative mt-4 text-[10px] font-black tracking-[.28em] text-rose-200/75">END OF ATTEMPT</p>
+              <h3 className="relative mt-1 text-3xl font-black tracking-tight text-white sm:text-4xl" style={{ fontFamily: 'var(--font-display)' }}>انتهت المحاولة</h3>
+              <p className="relative mx-auto mt-2 max-w-sm text-xs leading-6 text-slate-300 sm:text-sm">
+                نفدت القلوب في هذه الجولة. كل محاولة بتقرّبك من إتقان المرحلة — جهّزي أدواتك وارجعي أقوى.
               </p>
-              <div className="relative mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold text-slate-300">
-                <span>المحاولات المتبقية</span><span className="tabular-nums text-rose-200">{hearts} أساسية + {bonusHearts} إضافية</span>
+
+              <div className="relative mt-5 rounded-2xl border border-white/10 bg-[#060d1b]/65 p-4 text-right shadow-inner">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400">نتيجتك في هذه المحاولة</p>
+                    <p className="mt-1 text-3xl font-black tabular-nums text-white">{score.toLocaleString('ar-EG')} <span className="text-xs font-bold text-slate-400">نقطة</span></p>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold text-slate-400">الهدف المطلوب</p>
+                    <p className="mt-1 text-lg font-black tabular-nums text-amber-200">{levelConfig.targetScore.toLocaleString('ar-EG')}</p>
+                  </div>
+                </div>
+                <div className="mt-3 h-2.5 overflow-hidden rounded-full border border-white/10 bg-slate-800">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${progressPct}%` }} transition={{ duration: .65, ease: 'easeOut' }} className="h-full rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-400 to-violet-300 shadow-[0_0_14px_rgba(232,121,249,.5)]" />
+                </div>
+                <div className="mt-2 flex justify-between text-[10px] font-bold text-slate-400"><span>{progressPct}% من الهدف</span><span>باقي {(Math.max(0, levelConfig.targetScore - score)).toLocaleString('ar-EG')} نقطة</span></div>
               </div>
+
+              <div className="relative mt-3 grid grid-cols-3 gap-2">
+                <div className="rounded-xl border border-white/10 bg-white/[.045] px-2 py-3"><p className="text-[9px] font-bold text-slate-400">الاصطدامات</p><p className="mt-1 text-lg font-black tabular-nums text-rose-200">{counts.obstaclesHit}</p></div>
+                <div className="rounded-xl border border-white/10 bg-white/[.045] px-2 py-3"><p className="text-[9px] font-bold text-slate-400">القلوب المتبقية</p><p className="mt-1 text-lg font-black tabular-nums text-sky-200">0</p></div>
+                <div className="rounded-xl border border-white/10 bg-white/[.045] px-2 py-3"><p className="text-[9px] font-bold text-slate-400">المستوى</p><p className="mt-1 text-lg font-black tabular-nums text-amber-200">{levelConfig.level}</p></div>
+              </div>
+
               <div className="relative mt-4 flex flex-col gap-2.5">
                 {worldSave.blueKeys >= 2 ** reviveCountRef.current && (
                   <button type="button" onClick={handleRevive} className="group flex w-full items-center gap-3 rounded-2xl border border-sky-200/30 bg-gradient-to-l from-sky-500/25 via-blue-600/25 to-indigo-600/25 px-4 py-3.5 text-right shadow-[0_12px_30px_rgba(37,99,235,.2)] transition hover:border-sky-200/60 hover:from-sky-400/35 hover:to-indigo-500/35">
@@ -2210,10 +2254,10 @@ export default function GameArena({
                     <span className="rounded-lg border border-sky-100/20 bg-sky-100/10 px-2.5 py-1.5 text-xs font-black text-sky-100">× {2 ** reviveCountRef.current}</span>
                   </button>
                 )}
-                <button type="button" onClick={resetRun} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200/30 bg-gradient-to-l from-rose-500 to-fuchsia-600 px-4 py-3.5 font-black text-white shadow-[0_10px_28px_rgba(225,29,72,.25)] transition hover:brightness-110">
+                <button type="button" onClick={resetRun} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200/30 bg-gradient-to-l from-rose-400 via-fuchsia-500 to-violet-600 px-4 py-3.5 font-black text-white shadow-[0_12px_30px_rgba(225,29,72,.28)] transition hover:-translate-y-0.5 hover:brightness-110">
                   <RotateCcw className="h-4 w-4" /> إعادة المحاولة
                 </button>
-                <button type="button" onClick={requestExitToMap} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/10">
+                <button type="button" onClick={onExitToMap} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-slate-200 transition hover:border-cyan-200/30 hover:bg-cyan-300/10 hover:text-cyan-100">
                   <DoorOpen className="h-4 w-4" /> العودة إلى خريطة المراحل
                 </button>
               </div>
