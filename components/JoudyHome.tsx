@@ -46,13 +46,12 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
   };
 
   return (
-    <motion.main dir="rtl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.16, ease: "linear" }} className="relative min-h-[100dvh] w-full overflow-hidden bg-[#d9c8ae] text-slate-900">
+    <main dir="rtl" className="relative min-h-[100dvh] w-full overflow-hidden bg-[#d9c8ae] text-slate-900">
       <style jsx global>{`
-        @keyframes joudy-enter { 0% { opacity:0; transform:translate3d(0,22px,0) scale(.965); filter:blur(5px) } 70% { opacity:1; filter:blur(0) } 100% { opacity:1; transform:translate3d(0,0,0) scale(1); filter:blur(0) } }
-        @keyframes joudy-idle { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
-        .joudy-hero-enter { animation: joudy-enter .48s cubic-bezier(.2,.75,.25,1) both; will-change:transform,opacity; }
-        .joudy-idle-motion { animation: joudy-idle 4.2s ease-in-out .48s infinite; will-change:transform; }
-        @media (prefers-reduced-motion: reduce) { .joudy-hero-enter,.joudy-idle-motion { animation:none; } }
+        /* Restore the original Joudy character idle animation from the first project build. */
+        @keyframes joudy-idle { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+        .joudy-idle-motion { animation: joudy-idle 4.2s ease-in-out infinite; transform-origin: center bottom; will-change: transform; }
+        @media (prefers-reduced-motion: reduce) { .joudy-idle-motion { animation:none; } }
         @keyframes joudy-eyes-look { 0%,18%,100% { transform: translate(0,0) } 30%,44% { transform: translate(2px,-1px) } 58%,72% { transform: translate(-2px,0) } 84% { transform: translate(1px,1px) } }
         @keyframes joudy-blink { 0%, 46%, 49%, 100% { transform: scaleY(1) } 47.5% { transform: scaleY(.12) } }
         .joudy-eye-pupil { transform-box: fill-box; transform-origin: center; animation: joudy-eyes-look 5.8s ease-in-out infinite; }
@@ -99,7 +98,7 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
             {wardrobeOpen && <div className="absolute right-3 top-3 z-20 flex max-w-[230px] flex-col gap-1 rounded-xl border border-amber-900/15 bg-[#fffaf2]/95 p-2.5 shadow-xl backdrop-blur"><span className="text-[10px] font-bold text-amber-900">{selected.name} · {selected.price} عملة</span><button onClick={purchaseOrEquip} disabled={(!isOwned && save.coins < selected.price) || isEquipped} className="rounded-lg bg-gradient-to-l from-amber-700 to-orange-700 px-4 py-2.5 text-xs font-black text-white disabled:opacity-50">{isEquipped ? 'مُجهّز بالفعل' : isOwned ? 'تجهيز القطعة' : save.coins < selected.price ? 'عملات غير كافية' : 'شراء وتجهيز'}</button></div>}
             <div className="absolute bottom-0 h-[23%] w-full bg-gradient-to-t from-[#63452f]/35 via-[#79583f]/10 to-transparent" />
             <div className="absolute bottom-[4%] left-1/2 h-[4%] w-[25%] -translate-x-1/2 rounded-[50%] bg-[#38271d]/30 blur-xl" />
-            <div className="joudy-hero-enter relative mb-[2%] aspect-[704/963] w-[min(78vw,470px)] sm:w-[min(66vw,510px)]">
+            <div className="relative mb-[2%] aspect-[704/963] w-[min(78vw,470px)] sm:w-[min(66vw,510px)]">
               <div className="joudy-idle-motion relative h-full w-full">
               <Image src="/images/joudy-home-hero.png" alt="جودي" fill priority sizes="(max-width: 1024px) 76vw, 510px" className="object-contain drop-shadow-[0_22px_24px_rgba(25,20,16,.28)]" />
               {previewOutfit?.overlaySrc && <Image src={previewOutfit.overlaySrc} alt="ملابس جودي" fill sizes="(max-width: 1024px) 76vw, 520px" className="pointer-events-none object-contain" unoptimized />}
@@ -157,6 +156,6 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
       </div>
 
       <AnimatePresence>{settingsOpen&&<motion.div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.div initial={{y:12,scale:.98}} animate={{y:0,scale:1}} className="w-full max-w-md rounded-2xl border border-white/30 bg-[#fffaf2] p-5 text-slate-900 shadow-2xl"><div className="mb-4 flex items-center justify-between"><h3 className="text-lg font-black">إعدادات التحكم</h3><button onClick={()=>setSettingsOpen(false)} className="rounded-lg bg-amber-900/10 p-2"><X className="h-4 w-4"/></button></div><button onClick={onToggleSound} className="mt-3 w-full rounded-xl border border-amber-900/10 bg-white p-3 text-sm font-bold">{soundEnabled?'كتم صوت اللعبة':'تشغيل صوت اللعبة'}</button></motion.div></motion.div>}</AnimatePresence>
-    </motion.main>
+    </main>
   );
 }
