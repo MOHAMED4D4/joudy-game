@@ -118,6 +118,58 @@ const CAT_QUOTES = ['قطة تستحق الرعاية 🐱', 'صوت خرخرة 
 const ROSE_QUOTES = ['تحفة! 🌹', 'يا جمالها! ✨', 'أجمل وردة! 🌹'];
 const CHOCO_QUOTES = ['يميي! 🍫', 'طعمها خيال! 🍫', 'شوكولاتة! 💖'];
 
+const FIRST_LEVEL_TUTORIAL = [
+  { title: 'أهلًا بيكي في مغامرتي! 💗', text: 'أنا جودي، وهنلعب سوا خطوة بخطوة. اللعبة هتوقف أثناء الشرح، واضغطي «التالي» بعد ما تفهمي كل خطوة.' },
+  { title: 'أولًا: تحريك جودي', text: 'اسحبي صباعك على مساحة اللعب لتحريك جودي يمين وشمال. جرّبي تغيّري اتجاهك علشان توصلي للعناصر.' },
+  { title: 'اجمعي العناصر', text: 'اجمعي القطط والورود والشوكولاتة علشان تزودي نقاطك. القطط تمنح 20 نقطة، والوردة 15، والشوكولاتة 10 نقاط.' },
+  { title: 'خلي بالك من العوائق', text: 'العوائق والوحوش ممكن تخصم نقاط وتقلل قلوبك. ابعدي عنها، ولو ظهر وحش جديد لأول مرة هوقف اللعب وأشرحلك طريقته.' },
+  { title: 'المتجر والمفاتيح', text: 'من خريطة المراحل افتحي «المتجر». المفتاح الأزرق سعره 100 عملة، وبيُستخدم لإنقاذ جودي ومواصلة المرحلة بعد نفاد القلوب، بتكلفة مفاتيح متزايدة حسب مرات الإنقاذ.' },
+  { title: 'القلوب والدرع', text: 'القلب الإضافي سعره 100 عملة وبيتحفظ في المخزون، ويضيف فرصة حياة للمحاولة. وعند فتح المستوى الخامس هتاخدي 20 درعًا دائريًا مجانًا؛ كل درع يحمي جودي من الوحوش لمدة دقيقتين، وبعدها تقدري تشتري شحنات إضافية بـ100 عملة.' },
+  { title: 'هدفك في المستوى الأول', text: 'اجمعي 500 نقطة علشان تكملي المستوى. تقدري ترجعي للمتجر من الخريطة في أي وقت. يلا نبدأ! 🌸' },
+];
+
+const LEVEL_INTROS: Record<number, { title: string; text: string }> = {
+  2: { title: 'الوحوش المطاردة 🏹', text: 'بدأت تظهر وحوش الرماية والعدّاؤون اللي بيطاردوا جودي. غيّري اتجاهك باستمرار، وابعدي عن مسارهم.' },
+  3: { title: 'خليكي أسرع في الحركة', text: 'العوائق بقت أكتر. تابعي العناصر وهي نازلة، وسيبي لنفسك مساحة آمنة للهروب.' },
+  4: { title: 'اختبار التركيز', text: 'وازني بين جمع العناصر وتفادي الأعداء. مش لازم تخاطري علشان تجمعي كل عنصر.' },
+  5: { title: 'قوة جديدة اتفتحت! 🛡️', text: 'مبروك! وصلتي للمستوى الخامس. اتفتح الدرع الدائري وخدتي 20 شحنة مجانية. كل شحنة بتحمي جودي من الوحوش لمدة دقيقتين. هتلاقي زر الدرع جنب القلوب أثناء اللعب، وتقدري تشتري شحنات إضافية من المتجر بـ100 عملة.' },
+  6: { title: 'غابة الزمرد 🌿', text: 'دخلتي عالم جديد، والسرعة بتزيد تدريجيًا. اجمعي العناصر واستفيدي من المغناطيس لما يظهر.' },
+  7: { title: 'المغناطيس 🧲', text: 'المغناطيس بيجذب العناصر القريبة لمدة 6.5 ثانية. استغلي مدته واجمعي أكبر عدد من المكافآت.' },
+  8: { title: 'حافظي على قلوبك ❤️', text: 'كل اصطدام خطر ممكن يخصم قلبًا. لو ظهر قلب إضافي اجمعيه لاستعادة قلب مفقود.' },
+  9: { title: 'مضاعفة النقاط ✨', text: 'عنصر مضاعفة النقاط بيضاعف نقاط العناصر لمدة 10 ثوانٍ. حاولي تجمعي العناصر خلال المدة دي.' },
+  10: { title: 'تحدي الغابة', text: 'الوحوش الأقوى بدأت تظهر. راقبي حركتها وخليكي مستعدة لتغيير اتجاهك بسرعة.' },
+  11: { title: 'الوادي الذهبي', text: 'دخلتي الوادي. الأعداء أسرع، فخلي عينك على كل اللي بينزل من أعلى الشاشة.' },
+  12: { title: 'المطاردة', text: 'بعض الوحوش بتوجّه هجماتها ناحية جودي. اتحركي باستمرار ومتفضليش في مسار واحد.' },
+  13: { title: 'انتبهي للانفجارات 💥', text: 'الوحش المتفجر بيجهز انفجارًا بعد ظهوره. ابعدي عنه فورًا لما تلاحظي الوميض أو علامة التحذير.' },
+  14: { title: 'استعدي للزعيم', text: 'دي مرحلة الاستعداد للمواجهة الكبيرة. حافظي على القلوب واستفيدي من الأدوات المتاحة.' },
+  15: { title: 'زعيم المدينة الأولى 👑', text: 'دي مواجهة الزعيم الأول. تفادي هجماته والمقذوفات، واجمعي النقاط المطلوبة من غير ما تسيبيه يحاصرك.' },
+  16: { title: 'مدينة الظلال 🌙', text: 'بدأ الفصل الثاني. هتلاحظي أعداء أسرع ومسارات أصعب، فاستخدمي المساحة كلها للحركة.' },
+  17: { title: 'الحركة الذكية', text: 'توقعي مسار العناصر قبل ما توصلي لها. أحيانًا تفادي الخطر أهم من جمع مكافأة صغيرة.' },
+  18: { title: 'اجمعي الكنوز', text: 'العملات والمفاتيح والعناصر الخاصة بتساعدك. اجمعيها واستفيدي منها في المتجر أو عند الحاجة.' },
+  19: { title: 'وحوش أسرع', text: 'المطاردون أسرع في المرحلة دي. غيري اتجاهك باستمرار ومتخليش الوحوش تحاصرك.' },
+  20: { title: 'اختبار مدينة الظلال', text: 'وصلتي للمستوى العشرين! حافظي على تركيزك ووازني بين المكافآت وتفادي الأعداء.' },
+  21: { title: 'غابة الكائنات الغريبة 👾', text: 'دخلتي منطقة مليانة مخلوقات مختلفة. أول ظهور لأي نوع جديد هيوقف اللعب مؤقتًا علشان أشرحلك خطورته.' },
+  22: { title: 'تفادي المطاردين', text: 'خليكي بعيدة عن مسارات الوحوش، وسيبي لنفسك طريق مفتوح للحركة.' },
+  23: { title: 'اختاري توقيتك', text: 'مش لازم تجمعي كل عنصر. اختاري الفرصة الآمنة، خصوصًا لما يكون فيه أكتر من عدو.' },
+  24: { title: 'تحدي البقاء', text: 'حافظي على القلوب واستخدمي المغناطيس ومضاعفة النقاط في الوقت المناسب.' },
+  25: { title: 'قبل القلعة', text: 'وصلتي للمستوى 25! فاضل خمس مراحل على المواجهة النهائية. جهزي نفسك.' },
+  26: { title: 'قلعة الزعيم الأخير 🏰', text: 'دخلتي القلعة. الأعداء أقوى، فخلي كل حركة محسوبة واستفيدي من الدرع الدائري.' },
+  27: { title: 'أعداء القلعة', text: 'راقبي الأعداء قبل ما يقربوا من جودي، وابتعدي عن الهجمات والمقذوفات.' },
+  28: { title: 'اختبار المحترفين', text: 'المرحلة دي محتاجة تركيز وسرعة. اجمعي العناصر من غير ما تعرضي جودي للخطر.' },
+  29: { title: 'قبل المواجهة الأخيرة', text: 'دي آخر مرحلة قبل الزعيم النهائي. حافظي على مواردك وقلوبك.' },
+  30: { title: 'الزعيم الأخير 👑', text: 'وصلتي للمواجهة النهائية! تفادي هجمات الزعيم والمقذوفات، واستخدمي أدواتك بذكاء. اجمعي 15,000 نقطة علشان تكملي المغامرة!' },
+};
+
+const ENEMY_TIPS: Record<string, { title: string; text: string; emoji: string }> = {
+  obstacle: { title: 'عائق جديد ☁️', text: 'العائق ده بيخصم نقاط وبيأثر على قلوب جودي عند الاصطدام. غيري مسارك وابعدي عنه.', emoji: '☁️' },
+  monster: { title: 'وحش الرماية 🏹', text: 'الوحش ده ممكن يطلق مقذوفات ناحية جودي. راقبي اتجاه السهم وتحركي بعيدًا عن مساره.', emoji: '🏹' },
+  runner: { title: 'الوحش المطارد 🏃', text: 'العدّاء سريع وبيحاول يوصلك. غيري اتجاهك ومتفضليش في نفس المكان.', emoji: '🏃' },
+  fierceMonster: { title: 'الوحش الشرس 🔥', text: 'ده أقوى من الوحوش العادية وبيخصم نقاط أكتر عند الاصطدام. حافظي على مسافة آمنة.', emoji: '🔥' },
+  exploder: { title: 'الوحش المتفجر 💥', text: 'الوحش ده بيجهز انفجارًا بعد ظهوره. أول ما تلاحظي الوميض، ابعدي عن مكانه بسرعة.', emoji: '💥' },
+  boss: { title: 'الزعيم 👑', text: 'الزعيم كبير وخطورته أعلى، وممكن يطلق هجمات ومقذوفات. تابعي مكانه وتحركي بعيدًا عن الهجوم.', emoji: '👑' },
+  projectile: { title: 'مقذوف جديد 🎯', text: 'المقذوف بيتجه ناحية جودي بسرعة. تابعي مساره وتحركي يمين أو شمال لتفاديه.', emoji: '🎯' },
+};
+
 const ITEM_CONFIG: Record<
   string,
   { points: number; halo: string; fallbackColor: string }
@@ -224,10 +276,16 @@ export default function GameArena({
   const [combo, setCombo] = useState(0);
   const [magnetSecondsLeft, setMagnetSecondsLeft] = useState(0);
   const [doubleScoreSecondsLeft, setDoubleScoreSecondsLeft] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused, setIsPaused] = useState(true);
+  const [tutorialPage, setTutorialPage] = useState(0);
+  const [tutorialOpen, setTutorialOpen] = useState(true);
+  const tutorialActionRef = useRef<'move' | 'collect' | null>(null);
+  const [enemyTip, setEnemyTip] = useState<{ title: string; text: string; emoji: string } | null>(null);
+  const [enemyTipMarker, setEnemyTipMarker] = useState<number | null>(null);
+  const seenEnemyTipsRef = useRef<Set<string>>(new Set());
   const [isGameOver, setIsGameOver] = useState(false);
 
-  const isPausedRef = useRef(false);
+  const isPausedRef = useRef(true);
   const isGameOverRef = useRef(false);
   const victoryFiredRef = useRef(false);
   const pointerTargetXRef = useRef<number | null>(null);
@@ -248,6 +306,21 @@ export default function GameArena({
   const resetSignalRef = useRef(0);
   const reviveRequestRef = useRef(false);
   const reviveCountRef = useRef(worldSave.reviveCountsByLevel[levelConfig.level] ?? 0);
+  const [typedGuideText, setTypedGuideText] = useState('');
+
+  useEffect(() => {
+    const guide = enemyTip?.text ?? (levelConfig.level === 1
+      ? FIRST_LEVEL_TUTORIAL[tutorialPage]?.text
+      : (LEVEL_INTROS[levelConfig.level] || { text: levelConfig.secretNote }).text) ?? '';
+    setTypedGuideText('');
+    let cursor = 0;
+    const timer = window.setInterval(() => {
+      cursor += 1;
+      setTypedGuideText(guide.slice(0, cursor));
+      if (cursor >= guide.length) window.clearInterval(timer);
+    }, 22);
+    return () => window.clearInterval(timer);
+  }, [levelConfig.level, levelConfig.secretNote, tutorialPage, enemyTip]);
 
   useEffect(() => {
     if (levelConfig.level >= 5 && !loadWorldSave().shieldFreeGranted) {
@@ -392,7 +465,13 @@ export default function GameArena({
     setMagnetSecondsLeft(0);
     setDoubleScoreSecondsLeft(0);
     setIsGameOver(false);
-    setIsPaused(false);
+    setTutorialPage(0);
+    setTutorialOpen(true);
+    tutorialActionRef.current = null;
+    setEnemyTip(null);
+    setEnemyTipMarker(null);
+    isPausedRef.current = true;
+    setIsPaused(true);
   }, []);
 
   // Main 60FPS 2D Canvas Arcade Loop
@@ -609,6 +688,29 @@ export default function GameArena({
                               : 245;
 
       const x = radius + 16 + Math.random() * Math.max(40, worldWidth - (radius + 16) * 2);
+      if (isHazardKind(kind) && !seenEnemyTipsRef.current.has(kind)) {
+        let alreadySeen = false;
+        try {
+          const stored = JSON.parse(window.localStorage.getItem('joudy_enemy_tips_v1') || '[]') as string[];
+          alreadySeen = stored.includes(kind);
+        } catch { /* ignore invalid optional tutorial history */ }
+        if (!alreadySeen) {
+          const tip = ENEMY_TIPS[kind];
+          if (tip) {
+            seenEnemyTipsRef.current.add(kind);
+            try {
+              const stored = JSON.parse(window.localStorage.getItem('joudy_enemy_tips_v1') || '[]') as string[];
+              window.localStorage.setItem('joudy_enemy_tips_v1', JSON.stringify([...new Set([...stored, kind]) ]));
+            } catch { /* tutorial still works for this session */ }
+            isPausedRef.current = true;
+            setIsPaused(true);
+            setEnemyTip(tip);
+            setEnemyTipMarker(Math.max(8, Math.min(92, (x / worldWidth) * 100)));
+          }
+        } else {
+          seenEnemyTipsRef.current.add(kind);
+        }
+      }
       const hasZigzag = kind !== 'runner' && Math.random() < (kind === 'boss' || kind === 'projectile' ? 0.68 : 0.42);
 
       entities.push({
@@ -1019,6 +1121,13 @@ export default function GameArena({
           const hitY = Math.abs(item.y - playerCenterY) < catchRadiusY + item.radius * 0.55;
 
           if (hitX && hitY) {
+            if (levelConfig.level === 1 && tutorialActionRef.current === 'collect' && ['cat', 'rose', 'chocolate'].includes(item.kind)) {
+              tutorialActionRef.current = null;
+              setTutorialPage(3);
+              setTutorialOpen(true);
+              isPausedRef.current = true;
+              setIsPaused(true);
+            }
             spawnBurst(item.x, item.y, item.kind);
 
             if (isHazardKind(item.kind)) {
@@ -1752,6 +1861,13 @@ export default function GameArena({
   const handleCanvasPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (isPaused || isGameOver || dragPointerIdRef.current !== e.pointerId) return;
     updateTouchTarget(e);
+    if (levelConfig.level === 1 && tutorialActionRef.current === 'move') {
+      tutorialActionRef.current = null;
+      setTutorialPage(2);
+      setTutorialOpen(true);
+      isPausedRef.current = true;
+      setIsPaused(true);
+    }
   };
 
   const handleCanvasPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -1926,6 +2042,57 @@ export default function GameArena({
           <WorldAtmosphereOverlay worldId={levelConfig.worldId} variant="arena" />
         )}
 
+
+        {/* Joudy's recurring level guide and first-time enemy introductions */}
+        {tutorialOpen && !enemyTip && (
+          <div className="absolute inset-0 z-[60] flex items-center justify-center bg-slate-950/80 p-3 backdrop-blur-md sm:p-6">
+            <motion.div initial={{ opacity: 0, y: 18, scale: .97 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="w-full max-w-2xl overflow-hidden rounded-[1.7rem] border border-white/20 bg-white p-3 text-slate-900 shadow-[0_28px_90px_rgba(0,0,0,.55)] sm:p-5">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">دليل جودي · المستوى {levelConfig.level}</span>
+                <span className="text-xs font-semibold text-slate-500">{levelConfig.level === 1 ? `${tutorialPage + 1} / ${FIRST_LEVEL_TUTORIAL.length}` : 'إرشادات المرحلة'}</span>
+              </div>
+              <div className="grid grid-cols-[minmax(104px,34%)_1fr] items-stretch gap-3 sm:gap-4">
+                <div className="relative aspect-square overflow-hidden rounded-2xl border border-rose-100 bg-rose-50 shadow-inner">
+                  <Image src={realImageSrc || '/images/joudy-real.png'} alt="جودي" fill sizes="(max-width: 640px) 34vw, 220px" className="object-cover" priority />
+                  <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-black text-rose-700 shadow">جودي 💗</span>
+                </div>
+                <div className="flex min-h-[170px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
+                  <div>
+                    <h3 className="text-base font-extrabold leading-7 text-slate-900 sm:text-xl" style={{ fontFamily: 'var(--font-iphone), -apple-system, BlinkMacSystemFont, sans-serif' }}>{(levelConfig.level === 1 ? FIRST_LEVEL_TUTORIAL[tutorialPage] : LEVEL_INTROS[levelConfig.level] || { title: `المستوى ${levelConfig.level}`, text: levelConfig.secretNote }).title}</h3>
+                    <p className="mt-2 text-xs leading-6 text-slate-700 sm:text-sm sm:leading-7" style={{ fontFamily: 'var(--font-iphone), -apple-system, BlinkMacSystemFont, sans-serif' }}>{typedGuideText}<span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-rose-500 align-middle" /></p>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-semibold text-slate-400">اضغطي التالي للمتابعة</span>
+                    <button type="button" onClick={() => {
+                      if (levelConfig.level === 1 && tutorialPage === 1) {
+                        tutorialActionRef.current = 'move'; setTutorialOpen(false); isPausedRef.current = false; setIsPaused(false);
+                      } else if (levelConfig.level === 1 && tutorialPage === 2) {
+                        tutorialActionRef.current = 'collect'; setTutorialOpen(false); isPausedRef.current = false; setIsPaused(false);
+                      } else if (levelConfig.level === 1 && tutorialPage < FIRST_LEVEL_TUTORIAL.length - 1) setTutorialPage((page) => page + 1);
+                      else { setEnemyTip(null); setEnemyTipMarker(null); setTutorialOpen(false); isPausedRef.current = false; setIsPaused(false); }
+                    }} className="rounded-xl bg-gradient-to-l from-rose-500 to-fuchsia-600 px-5 py-2.5 text-xs font-black text-white shadow-lg transition hover:brightness-110">{levelConfig.level === 1 && tutorialPage === 1 ? 'جربي التحريك' : levelConfig.level === 1 && tutorialPage === 2 ? 'جربي جمع عنصر' : levelConfig.level === 1 && tutorialPage < FIRST_LEVEL_TUTORIAL.length - 1 ? 'التالي ←' : 'ابدأ اللعب'}</button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+        {enemyTip && enemyTipMarker !== null && (
+          <div className="pointer-events-none absolute z-[75] -translate-x-1/2" style={{ left: `${enemyTipMarker}%`, top: '13%' }}>
+            <div className="flex flex-col items-center gap-1 text-amber-300 drop-shadow-[0_2px_8px_rgba(0,0,0,.9)]"><span className="animate-bounce text-4xl">⬇️</span><span className="rounded-full border-2 border-amber-300 bg-amber-400/20 px-2 py-1 text-[10px] font-black text-white">الوحش هنا</span></div>
+          </div>
+        )}
+        {enemyTip && (
+          <div className="absolute inset-0 z-[70] flex items-center justify-center bg-slate-950/85 p-3 backdrop-blur-md sm:p-6">
+            <motion.div initial={{ opacity: 0, scale: .94 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-xl rounded-[1.7rem] border border-amber-200/30 bg-white p-3 text-slate-900 shadow-2xl sm:p-5">
+              <div className="mb-3 flex items-center gap-2"><span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">مخلوق جديد ظهر لأول مرة</span><span className="animate-bounce text-2xl">⬇️</span></div>
+              <div className="grid grid-cols-[minmax(104px,34%)_1fr] gap-3 sm:gap-4">
+                <div className="relative aspect-square overflow-hidden rounded-2xl border border-rose-100 bg-rose-50"><Image src={realImageSrc || '/images/joudy-real.png'} alt="جودي" fill sizes="(max-width: 640px) 34vw, 220px" className="object-cover"/></div>
+                <div className="flex flex-col justify-between rounded-2xl border border-slate-200 p-3 sm:p-4"><div><div className="text-3xl">{enemyTip.emoji}</div><h3 className="mt-2 text-base font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-iphone), -apple-system, BlinkMacSystemFont, sans-serif' }}>{enemyTip.title}</h3><p className="mt-2 text-xs leading-6 text-slate-700 sm:text-sm">{typedGuideText}<span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-amber-500 align-middle" /></p><p className="mt-2 animate-bounce text-xs font-black text-amber-700">⬇️ الوحش ظهر أعلى ساحة اللعب</p></div><button type="button" onClick={() => { setEnemyTip(null); setEnemyTipMarker(null); isPausedRef.current = false; setIsPaused(false); }} className="mt-3 rounded-xl bg-gradient-to-l from-amber-500 to-orange-600 px-5 py-2.5 text-xs font-black text-white">فهمت، كمّلي اللعب</button></div>
+              </div>
+            </motion.div>
+          </div>
+        )}
 
         {/* Pause Overlay */}
         {isPaused && !isGameOver && (

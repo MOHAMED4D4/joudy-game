@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+:root { --font-iphone: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif; }
+
 @theme inline {
   --font-sans: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display), var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
