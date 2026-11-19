@@ -38,7 +38,7 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     const stars = Object.values(progress.completedLevels).reduce((sum, record) => sum + record.stars, 0);
     const threeStarLevels = Object.values(progress.completedLevels).filter((record) => record.stars === 3).length;
     const highScores = Object.values(progress.completedLevels).filter((record) => record.bestScore >= 1000).length;
-    const defs: Omit<Achievement, 'unlocked'>[] = [
+    const defs: Omit<Achievement, 'unlocked' | 'progress'>[] = [
       {id:'levels-1',title:'أول خطوة',detail:'أكمل أول مرحلة',icon:'👟',tier:'البدايات'},
       {id:'choco-25',title:'حلوى البداية',detail:'اجمع 25 قطعة شوكولاتة',icon:'🍫',tier:'البدايات'},
       {id:'score-5k',title:'جامع النقاط',detail:'حقق 5,000 نقطة إجمالية',icon:'⭐',tier:'البدايات'},
