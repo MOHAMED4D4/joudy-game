@@ -166,15 +166,8 @@ const SECRET_NOTES = [
   'أكملتِ المستويات الثلاثين بنجاح. إنجاز مميز يا جودي.',
 ];
 
-// أهداف النقاط: أول 15 مرحلة كما طلبت جودي، ثم تصاعد الموسم الثاني حتى مواجهة 30.
-const TARGET_SCORES = [
-  1_000, 3_000, 4_000, 5_000, 7_000,
-  8_000, 8_500, 9_000, 10_000, 12_000,
-  13_000, 14_000, 15_000, 18_000, 25_000,
-  28_000, 31_000, 34_000, 37_000, 40_000,
-  43_000, 46_000, 49_000, 52_000, 55_000,
-  58_000, 61_000, 64_000, 67_000, 70_000,
-];
+// هدف الفوز موحّد لكل المستويات: رقم المستوى × 500 نقطة.
+const getTargetScore = (level: number): number => level * 500;
 
 export const LEVELS: LevelConfig[] = Array.from({ length: 30 }, (_, idx) => {
   const level = idx + 1;
@@ -227,7 +220,7 @@ export const LEVELS: LevelConfig[] = Array.from({ length: 30 }, (_, idx) => {
     particleMode: level === 15 ? 'stars' : world.particleMode,
     timeOfDayPhase,
     weatherMode: level === 15 ? 'winter-storm' : 'clear',
-    targetScore: TARGET_SCORES[idx],
+    targetScore: getTargetScore(level),
     speedMultiplier: Number(speedMultiplier.toFixed(2)),
     spawnIntervalSec: Number(spawnIntervalSec.toFixed(2)),
     obstacleChance: Number(obstacleChance.toFixed(3)),
