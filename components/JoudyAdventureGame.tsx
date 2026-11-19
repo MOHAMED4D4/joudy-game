@@ -211,6 +211,7 @@ export default function JoudyAdventureGame() {
             <CharacterSelectScreen
               key="joudy-original-title"
               realImageSrc={realImageSrc}
+              highestUnlockedLevel={progress.highestUnlockedLevel}
               onStartAdventure={() => setGameState('WORLD_MAP')}
             />
           )}

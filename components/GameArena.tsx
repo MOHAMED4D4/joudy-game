@@ -23,6 +23,7 @@ import {
   Wind,
 } from 'lucide-react';
 import { soundEngine } from '@/lib/soundEffects';
+import { getCartoonSvgDataUri } from '@/lib/cartoonSvgSprites';
 import { loadTransparentSprite } from '@/lib/spriteUtils';
 import {
   loadCartoonSvgSprites,
@@ -301,7 +302,7 @@ export default function GameArena({
   const [tutorialPage, setTutorialPage] = useState(0);
   const [tutorialOpen, setTutorialOpen] = useState(true);
   const tutorialActionRef = useRef<'move' | 'collect' | null>(null);
-  const [enemyTip, setEnemyTip] = useState<{ title: string; text: string; emoji: string } | null>(null);
+  const [enemyTip, setEnemyTip] = useState<{ title: string; text: string; emoji: string; spriteKind: CartoonSpriteKind } | null>(null);
   const [enemyTipMarker, setEnemyTipMarker] = useState<number | null>(null);
   const [enemyTipTop, setEnemyTipTop] = useState<number>(48);
   const seenEnemyTipsRef = useRef<Set<string>>(new Set());
@@ -832,7 +833,7 @@ export default function GameArena({
             } catch { /* tutorial still works for this session */ }
             isPausedRef.current = true;
             setIsPaused(true);
-            setEnemyTip(tip);
+            setEnemyTip({ ...tip, spriteKind: enemyTipKey as CartoonSpriteKind });
             setEnemyTipMarker(Math.max(8, Math.min(92, (x / worldWidth) * 100)));
             setEnemyTipTop(Math.max(16, Math.min(76, (y / worldHeight) * 100)));
           }
@@ -2245,7 +2246,7 @@ export default function GameArena({
               <div className="rounded-2xl border border-amber-200/80 bg-white/95 p-3 text-slate-900 shadow-[0_12px_40px_rgba(0,0,0,.42)] backdrop-blur-sm sm:p-4">
                 <div className="mb-2 flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,.18)]" /><span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">مخلوق جديد ظهر لأول مرة</span></div>
                 <div className="grid grid-cols-[clamp(76px,19vw,104px)_minmax(0,1fr)] items-center gap-3">
-                  <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-rose-100 bg-rose-50"><Image src={realImageSrc || '/images/joudy-real.png'} alt="جودي" fill sizes="108px" className="object-cover" /></div>
+                  <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-amber-200/70 bg-gradient-to-br from-amber-50 to-orange-100 p-1"><img src={getCartoonSvgDataUri(enemyTip.spriteKind)} alt={enemyTip.title} className="h-full w-full object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,.2)]" /></div>
                   <div className="min-w-0">
                     <h3 className="text-base font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-iphone), sans-serif' }}>{enemyTip.title}</h3>
                     <p className="mt-1 text-xs leading-6 text-slate-700 sm:text-sm" style={{ fontFamily: 'var(--font-iphone), sans-serif' }}>{typedGuideText}<span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-amber-500 align-middle" /></p>

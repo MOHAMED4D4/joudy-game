@@ -2,21 +2,23 @@
 
 import Image from 'next/image';
 import { motion, useReducedMotion } from 'motion/react';
-import { Heart, Play, Star, Trophy, Zap, Gamepad2, Magnet, Sparkles } from 'lucide-react';
+import { Heart, Play, Star, Trophy, Zap, Gamepad2, Magnet, Sparkles, Lock, ShieldAlert } from 'lucide-react';
+import { getCartoonSvgDataUri, type CartoonSpriteKind } from '@/lib/cartoonSvgSprites';
 
 interface CharacterSelectScreenProps {
   realImageSrc: string;
+  highestUnlockedLevel: number;
   onStartAdventure: () => void;
 }
 
 const scoring = [
-  { icon: '🐈', name: 'جمع القطط', points: '20 نقطة', detail: 'اجمع القطط لزيادة نتيجتك' },
-  { icon: '🌹', name: 'جمع الورود', points: '15 نقطة', detail: 'كل وردة تضيف نقاطًا' },
-  { icon: '🍫', name: 'جمع الشوكولاتة', points: '10 نقاط', detail: 'التقط الشوكولاتة في طريقك' },
-  { icon: '🧲', name: 'المغناطيس', points: 'جذب العناصر', detail: 'يساعدك على جمع العناصر القريبة' },
-  { icon: '🌟', name: 'مضاعف النقاط', points: '×2 لمدة 10 ثوانٍ', detail: 'ضاعف نقاط التجميع لفترة مؤقتة' },
-  { icon: '⚡', name: 'تجنب العوائق', points: 'حركة ومراوغة', detail: 'ابتعد عن الوحوش والمقذوفات' },
-  { icon: '❤️', name: 'حافظ على القلوب', points: '3 قلوب حياة', detail: 'لديك عدد محدود من القلوب؛ الاصطدام يقللها' },
+  { icon: '🐈', sprite: 'cat' as CartoonSpriteKind, name: 'جمع القطط', points: '20 نقطة', detail: 'اجمع القطط لزيادة نتيجتك' },
+  { icon: '🌹', sprite: 'rose' as CartoonSpriteKind, name: 'جمع الورود', points: '15 نقطة', detail: 'كل وردة تضيف نقاطًا' },
+  { icon: '🍫', sprite: 'chocolate' as CartoonSpriteKind, name: 'جمع الشوكولاتة', points: '10 نقاط', detail: 'التقط الشوكولاتة في طريقك' },
+  { icon: '🧲', sprite: 'magnet' as CartoonSpriteKind, name: 'المغناطيس', points: 'جذب العناصر', detail: 'يساعدك على جمع العناصر القريبة' },
+  { icon: '🌟', sprite: 'doubleScore' as CartoonSpriteKind, name: 'مضاعف النقاط', points: '×2 لمدة 10 ثوانٍ', detail: 'ضاعف نقاط التجميع لفترة مؤقتة' },
+  { icon: '⚡', sprite: 'obstacle' as CartoonSpriteKind, name: 'تجنب العوائق', points: 'حركة ومراوغة', detail: 'ابتعد عن الوحوش والمقذوفات' },
+  { icon: '❤️', sprite: 'heart' as CartoonSpriteKind, name: 'حافظ على القلوب', points: '3 قلوب حياة', detail: 'لديك عدد محدود من القلوب؛ الاصطدام يقللها' },
 ];
 
 const reveal = {
@@ -24,7 +26,7 @@ const reveal = {
   visible: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' },
 };
 
-export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }: CharacterSelectScreenProps) {
+export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLevel, onStartAdventure }: CharacterSelectScreenProps) {
   const reduceMotion = useReducedMotion();
 
   return (
@@ -62,8 +64,12 @@ export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }
         .joudy-portrait-ring { animation: joudy-portrait-ring 3.8s ease-out infinite; }
         .home-orbit { animation: home-orbit 16s linear infinite; }
         .info-glint { animation: info-glint 5.5s ease-in-out infinite; }
+        @keyframes guide-sprite-float { 0%,100% { transform: translateY(0) rotate(-4deg) scale(1); } 50% { transform: translateY(-9px) rotate(4deg) scale(1.06); } }
+        @keyframes guide-sprite-glow { 0%,100% { opacity:.28; transform:scale(.82); } 50% { opacity:.75; transform:scale(1.12); } }
+        .guide-sprite-float { animation: guide-sprite-float 3.1s ease-in-out infinite; }
+        .guide-sprite-glow { animation: guide-sprite-glow 2.6s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .joudy-portrait-glow, .joudy-portrait-sweep, .joudy-portrait-twinkle, .joudy-portrait-ring, .home-orbit, .info-glint { animation: none !important; }
+          .joudy-portrait-glow, .joudy-portrait-sweep, .joudy-portrait-twinkle, .joudy-portrait-ring, .home-orbit, .info-glint, .guide-sprite-float, .guide-sprite-glow { animation: none !important; }
         }
       `}</style>
 
@@ -195,7 +201,7 @@ export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }
                 className="group relative min-h-[132px] overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[.075] to-white/[.025] p-3.5 shadow-[0_10px_30px_rgba(0,0,0,.18)] transition-colors hover:border-cyan-200/30 sm:min-h-[145px] sm:p-4"
               >
                 <div className="pointer-events-none absolute -right-7 -top-8 h-20 w-20 rounded-full bg-cyan-300/0 blur-2xl transition-colors group-hover:bg-cyan-300/15" />
-                <div className="relative flex items-center gap-2"><span className="text-2xl drop-shadow-[0_0_12px_rgba(255,255,255,.18)] sm:text-3xl">{item.icon}</span><span className="text-xs font-black leading-5 text-slate-100 sm:text-sm">{item.name}</span></div>
+                <div className="relative flex items-center gap-2"><span className="relative grid h-12 w-12 shrink-0 place-items-center"><span className="guide-sprite-glow absolute inset-0 rounded-full bg-cyan-300/30 blur-md" /><img src={getCartoonSvgDataUri(item.sprite)} alt="" className="guide-sprite-float relative z-[1] h-11 w-11 object-contain drop-shadow-[0_5px_10px_rgba(0,0,0,.35)]" style={{ animationDelay: `${index * .17}s` }} /></span><span className="text-xs font-black leading-5 text-slate-100 sm:text-sm">{item.name}</span></div>
                 <p className="relative mt-3 text-xs font-black text-cyan-200 sm:text-sm">{item.points}</p>
                 <p className="relative mt-1 text-[10px] leading-5 text-slate-400 sm:text-xs">{item.detail}</p>
               </motion.div>
@@ -205,6 +211,49 @@ export default function CharacterSelectScreen({ realImageSrc, onStartAdventure }
             <p className="flex items-start gap-2 text-xs leading-6 text-slate-300 sm:text-sm"><Heart className="mt-1 h-4 w-4 shrink-0 fill-rose-400/20 text-rose-400" /> لديك عدد محدود من القلوب؛ الاصطدام بالعوائق يقلل فرصتك في إكمال المرحلة.</p>
             <span className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-cyan-200/15 bg-cyan-200/[.06] px-3 py-2 text-[11px] font-black text-cyan-100"><Magnet className="h-4 w-4" /> التقط الأدوات واستفد من قدراتها</span>
           </motion.div>
+          <div className="relative z-10 mt-7 border-t border-white/10 pt-6">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <div><p className="text-[10px] font-black tracking-[.2em] text-rose-300">ENEMY FIELD GUIDE</p><h3 className="mt-1 text-xl font-black text-white sm:text-2xl">دليل الوحوش والمخلوقات 👾</h3><p className="mt-1 text-xs leading-6 text-slate-400">اكتشفي كل مخلوق، واعرفي أول مرحلة ممكن يظهر فيها. الوحوش المقفولة هتتفتح مع تقدمك.</p></div>
+              <span className="rounded-full border border-rose-200/15 bg-rose-300/10 px-3 py-1.5 text-[10px] font-black text-rose-100">المراحل 1–30</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {([
+                {kind:'obstacle' as CartoonSpriteKind,name:'الغيوم المشاكسة',unlock:1,desc:'عائق البداية؛ تجنّبيه حتى لا تخسري نقاطًا أو قلوبًا.',where:'من أول مرحلة'},
+                {kind:'monster' as CartoonSpriteKind,name:'وحش الرماية',unlock:2,desc:'يطلق مقذوفات ناحية جودي؛ تحركي بعيدًا عن خط النار.',where:'من المرحلة 2'},
+                {kind:'runner' as CartoonSpriteKind,name:'الوحش المطارد',unlock:2,desc:'عدّاء سريع يحاول اللحاق بجودي؛ غيري اتجاهك باستمرار.',where:'من المرحلة 2'},
+                {kind:'fierceMonster' as CartoonSpriteKind,name:'الوحش الشرس',unlock:5,desc:'أقوى من الوحوش العادية واصطدامه مؤذٍ.',where:'من المرحلة 5'},
+                {kind:'exploder' as CartoonSpriteKind,name:'الوحش المتفجر',unlock:5,desc:'يجهز انفجارًا بعد ظهوره؛ ابتعدي عند رؤية الوميض.',where:'من المرحلة 5'},
+                {kind:'boss' as CartoonSpriteKind,name:'الزعيم',unlock:15,desc:'خصم ضخم وخطير؛ راقبي هجماته واتركي مساحة للمراوغة.',where:'زعيم الفصل الأول · المرحلة 15'},
+                {kind:'projectile' as CartoonSpriteKind,name:'مقذوفات الوحوش',unlock:15,desc:'مقذوفات سريعة تتجه ناحية جودي؛ تابعي مسارها وابتعدي عنها.',where:'تبدأ من مواجهات الزعماء'},
+                {kind:'shadowHunter' as CartoonSpriteKind,name:'صيّاد الظلال',unlock:16,desc:'صياد متخفٍ يطلق مقذوفات في مدينة الظلال.',where:'الفصل الثاني · من المرحلة 16'},
+                {kind:'shadowRunner' as CartoonSpriteKind,name:'عدّاء الظلال',unlock:16,desc:'سريع ويحاول محاصرة جودي؛ لا تثبتي في مكانك.',where:'الفصل الثاني · من المرحلة 16'},
+                {kind:'shadowBrute' as CartoonSpriteKind,name:'وحش الظلال الشرس',unlock:16,desc:'وحش ضخم؛ حافظي على مسافة آمنة.',where:'الفصل الثاني · من المرحلة 16'},
+                {kind:'shadowBoss' as CartoonSpriteKind,name:'حارس الظلال',unlock:20,desc:'زعيم الفصل الثاني وهجماته قوية.',where:'زعيم الفصل الثاني · المرحلة 20'},
+                {kind:'crystalHunter' as CartoonSpriteKind,name:'صيّاد البلورات',unlock:21,desc:'يطلق مقذوفات وسط الغابة البلورية.',where:'الفصل الثالث · من المرحلة 21'},
+                {kind:'crystalRunner' as CartoonSpriteKind,name:'عدّاء البلورات',unlock:21,desc:'مخلوق سريع يطارد جودي.',where:'الفصل الثالث · من المرحلة 21'},
+                {kind:'crystalBrute' as CartoonSpriteKind,name:'الوحش البلوري الضخم',unlock:21,desc:'قوي وخطير عند الاصطدام.',where:'الفصل الثالث · من المرحلة 21'},
+                {kind:'crystalBoss' as CartoonSpriteKind,name:'حارس الغابة البلوري',unlock:25,desc:'زعيم الفصل الثالث؛ راقبي تحركاته وهجماته.',where:'زعيم الفصل الثالث · المرحلة 25'},
+                {kind:'emberHunter' as CartoonSpriteKind,name:'صيّاد اللهب',unlock:26,desc:'يطلق مقذوفات خطيرة من القلعة النارية.',where:'الفصل الرابع · من المرحلة 26'},
+                {kind:'emberRunner' as CartoonSpriteKind,name:'عدّاء اللهب',unlock:26,desc:'عدّاء سريع يلاحق جودي.',where:'الفصل الرابع · من المرحلة 26'},
+                {kind:'emberBrute' as CartoonSpriteKind,name:'وحش اللهب الضخم',unlock:26,desc:'وحش ناري قوي؛ حافظي على مسافة كبيرة.',where:'الفصل الرابع · من المرحلة 26'},
+                {kind:'emberBoss' as CartoonSpriteKind,name:'حارس القلعة النارية',unlock:30,desc:'الزعيم الأخير؛ تفادي هجماته واحتفظي بأدوات الحماية.',where:'الزعيم النهائي · المرحلة 30'},
+              ]).map((enemy,index)=> (
+                <motion.div key={enemy.kind} variants={reveal} transition={{duration:.5,delay:index*.025}} whileHover={reduceMotion?undefined:{y:-4,scale:1.02}} className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/90 to-slate-950/90 p-3 shadow-lg">
+                  <div className="absolute -right-7 -top-8 h-24 w-24 rounded-full bg-cyan-300/10 blur-2xl" />
+                  <div className="relative mx-auto mb-2 grid h-24 w-24 place-items-center rounded-2xl border border-white/10 bg-white/[.045]">
+                    <img src={getCartoonSvgDataUri(enemy.kind)} alt={enemy.name} className={`guide-sprite-float h-[82px] w-[82px] object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,.45)] ${highestUnlockedLevel < enemy.unlock ? 'grayscale opacity-35' : ''}`} style={{animationDelay:`${index*.13}s`}} />
+                    {highestUnlockedLevel < enemy.unlock && <div className="absolute inset-0 grid place-items-center rounded-2xl bg-slate-950/35 backdrop-blur-[1px]"><span className="grid h-10 w-10 place-items-center rounded-full border border-amber-200/40 bg-slate-950/80 text-amber-200 shadow-[0_0_24px_rgba(251,191,36,.28)]"><Lock className="h-5 w-5" /></span></div>}
+                    <div className="pointer-events-none absolute inset-0 rounded-2xl border border-cyan-200/10" />
+                  </div>
+                  <h4 className="relative text-center text-xs font-black text-white">{enemy.name}</h4>
+                  <p className="relative mt-1 text-center text-[10px] font-bold text-cyan-200">{enemy.where}</p>
+                  <p className="relative mt-2 min-h-[54px] text-center text-[10px] leading-5 text-slate-400">{enemy.desc}</p>
+                  <div className={`relative mt-2 flex items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-[10px] font-black ${highestUnlockedLevel >= enemy.unlock ? 'border-emerald-200/20 bg-emerald-300/[.07] text-emerald-100' : 'border-amber-200/15 bg-amber-300/[.07] text-amber-100'}`}>{highestUnlockedLevel >= enemy.unlock ? '✓ تم الفتح' : <><Lock className="h-3 w-3" /> يفتح عند المرحلة {enemy.unlock}</>}</div>
+                </motion.div>
+              ))}
+            </div>
+            <p className="mt-3 flex items-center justify-center gap-2 text-[10px] text-slate-500"><ShieldAlert className="h-3.5 w-3.5" /> الوحوش بتتفتح تلقائيًا حسب أعلى مرحلة وصلتِ لها.</p>
+          </div>
         </motion.div>
 
         <motion.div variants={reveal} transition={{ duration: .65 }} className="mt-5 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500"><Trophy className="h-4 w-4 text-amber-300" /><Star className="h-3.5 w-3.5 text-amber-200" /> اجمع النقاط وارفع رقمك القياسي</motion.div>
