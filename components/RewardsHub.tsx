@@ -175,20 +175,30 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
     { label: '5 دروع', kind: 'shield' as const, amount: 5, icon: '🛡️' },
   ];
   const spinWheel = () => {
-    if (wheelSpinning) return;
+    if (wheelSpinning || wheelRewardPending) return;
     const latest = loadWorldSave();
     if (latest.coins < 500) { setNotice('تحتاج إلى 500 عملة على الأقل لتدوير العجلة.'); return; }
-    const prize = wheelPrizes[Math.floor(Math.random() * wheelPrizes.length)];
     saveWorld((current) => current.coins < 500 ? current : { ...current, coins: current.coins - 500 });
-    setNotice(''); setWheelPrize(prize); setWheelSpinning(true);
+    setNotice('');
+    setWheelPrize(null);
+    setWheelRewardPending(false);
+    setWheelSpinning(true);
     soundEngine.startWheelSpin();
-    const index = wheelPrizes.findIndex((item) => item.label === prize.label);
-    const segment = 360 / wheelPrizes.length;
-    const target = 360 * 6 + (360 - (index * segment + segment / 2));
-    setWheelRotation((current) => current + target);
+
+    // Randomize the final angle; the prize is read from the segment under the pointer.
+    const currentRotation = ((wheelRotation % 360) + 360) % 360;
+    const randomStopAngle = Math.random() * 360;
+    const deltaToStop = ((randomStopAngle - currentRotation) % 360 + 360) % 360;
+    const extraTurns = 5 + Math.floor(Math.random() * 3);
+    setWheelRotation(wheelRotation + extraTurns * 360 + deltaToStop);
   };
   const finishWheelSpin = () => {
-    if (!wheelSpinning || !wheelPrize) return;
+    if (!wheelSpinning) return;
+    const segment = 360 / wheelPrizes.length;
+    const pointerAngleOnWheel = ((-wheelRotation % 360) + 360) % 360;
+    const winningIndex = Math.min(wheelPrizes.length - 1, Math.floor(pointerAngleOnWheel / segment));
+    const actualPrize = wheelPrizes[winningIndex];
+    setWheelPrize(actualPrize);
     setWheelSpinning(false);
     soundEngine.stopWheelSpin();
     setWheelRewardPending(true);

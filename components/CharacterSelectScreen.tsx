@@ -22,7 +22,8 @@ const scoring = [
 ];
 
 const reveal = {
-  hidden: { opacity: 0, y: 42, scale: 0.94, filter: 'blur(9px)' },
+  // Keep the guide readable even if a browser delays IntersectionObserver.
+  hidden: { opacity: 1, y: 18, scale: 0.98, filter: 'blur(0px)' },
   visible: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' },
 };
 
@@ -151,7 +152,7 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
       {/* Scroll reveal: information assembles into view only when the player reaches it. */}
       <motion.section
         initial="hidden"
-        whileInView="visible"
+        whileInView="visible" 
         viewport={{ once: true, amount: 0.18 }}
         variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12, delayChildren: 0.08 } } }}
         className="relative mx-auto w-full max-w-6xl scroll-mt-6 px-4 pb-32 pt-8 sm:px-7 sm:pt-14"
@@ -228,15 +229,15 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
                 {kind:'shadowHunter' as CartoonSpriteKind,name:'صيّاد الظلال',unlock:16,desc:'صياد متخفٍ يطلق مقذوفات في مدينة الظلال.',where:'الفصل الثاني · من المرحلة 16'},
                 {kind:'shadowRunner' as CartoonSpriteKind,name:'عدّاء الظلال',unlock:16,desc:'سريع ويحاول محاصرة جودي؛ لا تثبتي في مكانك.',where:'الفصل الثاني · من المرحلة 16'},
                 {kind:'shadowBrute' as CartoonSpriteKind,name:'وحش الظلال الشرس',unlock:16,desc:'وحش ضخم؛ حافظي على مسافة آمنة.',where:'الفصل الثاني · من المرحلة 16'},
-                {kind:'shadowBoss' as CartoonSpriteKind,name:'حارس الظلال',unlock:20,desc:'زعيم الفصل الثاني وهجماته قوية.',where:'زعيم الفصل الثاني · المرحلة 20'},
+                {kind:'shadowBoss' as CartoonSpriteKind,name:'حارس الظلال',unlock:16,desc:'حارس مدينة الظلال؛ يظهر ضمن أعداء الفصل الثاني.',where:'الفصل الثاني · أول ظهور من المستوى 16'},
                 {kind:'crystalHunter' as CartoonSpriteKind,name:'صيّاد البلورات',unlock:21,desc:'يطلق مقذوفات وسط الغابة البلورية.',where:'الفصل الثالث · من المرحلة 21'},
                 {kind:'crystalRunner' as CartoonSpriteKind,name:'عدّاء البلورات',unlock:21,desc:'مخلوق سريع يطارد جودي.',where:'الفصل الثالث · من المرحلة 21'},
                 {kind:'crystalBrute' as CartoonSpriteKind,name:'الوحش البلوري الضخم',unlock:21,desc:'قوي وخطير عند الاصطدام.',where:'الفصل الثالث · من المرحلة 21'},
-                {kind:'crystalBoss' as CartoonSpriteKind,name:'حارس الغابة البلوري',unlock:25,desc:'زعيم الفصل الثالث؛ راقبي تحركاته وهجماته.',where:'زعيم الفصل الثالث · المرحلة 25'},
+                {kind:'crystalBoss' as CartoonSpriteKind,name:'حارس الغابة البلوري',unlock:21,desc:'حارس الغابة البلورية؛ يظهر ضمن أعداء الفصل الثالث.',where:'الفصل الثالث · أول ظهور من المستوى 21'},
                 {kind:'emberHunter' as CartoonSpriteKind,name:'صيّاد اللهب',unlock:26,desc:'يطلق مقذوفات خطيرة من القلعة النارية.',where:'الفصل الرابع · من المرحلة 26'},
                 {kind:'emberRunner' as CartoonSpriteKind,name:'عدّاء اللهب',unlock:26,desc:'عدّاء سريع يلاحق جودي.',where:'الفصل الرابع · من المرحلة 26'},
                 {kind:'emberBrute' as CartoonSpriteKind,name:'وحش اللهب الضخم',unlock:26,desc:'وحش ناري قوي؛ حافظي على مسافة كبيرة.',where:'الفصل الرابع · من المرحلة 26'},
-                {kind:'emberBoss' as CartoonSpriteKind,name:'حارس القلعة النارية',unlock:30,desc:'الزعيم الأخير؛ تفادي هجماته واحتفظي بأدوات الحماية.',where:'الزعيم النهائي · المرحلة 30'},
+                {kind:'emberBoss' as CartoonSpriteKind,name:'حارس القلعة النارية',unlock:26,desc:'حارس القلعة النارية؛ يظهر ضمن أعداء الفصل الرابع.',where:'الفصل الرابع · أول ظهور من المستوى 26'},
               ]).map((enemy,index)=> (
                 <motion.div key={enemy.kind} variants={reveal} transition={{duration:.5,delay:index*.025}} whileHover={reduceMotion?undefined:{y:-4,scale:1.02}} className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/90 to-slate-950/90 p-3 shadow-lg">
                   <div className="absolute -right-7 -top-8 h-24 w-24 rounded-full bg-cyan-300/10 blur-2xl" />
@@ -248,7 +249,7 @@ export default function CharacterSelectScreen({ realImageSrc, highestUnlockedLev
                   <h4 className="relative text-center text-xs font-black text-white">{enemy.name}</h4>
                   <p className="relative mt-1 text-center text-[10px] font-bold text-cyan-200">{enemy.where}</p>
                   <p className="relative mt-2 min-h-[54px] text-center text-[10px] leading-5 text-slate-400">{enemy.desc}</p>
-                  <div className={`relative mt-2 flex items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-[10px] font-black ${highestUnlockedLevel >= enemy.unlock ? 'border-emerald-200/20 bg-emerald-300/[.07] text-emerald-100' : 'border-amber-200/15 bg-amber-300/[.07] text-amber-100'}`}>{highestUnlockedLevel >= enemy.unlock ? '✓ تم الفتح' : <><Lock className="h-3 w-3" /> يفتح عند المرحلة {enemy.unlock}</>}</div>
+                  <div className={`relative mt-2 flex items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-[10px] font-black ${highestUnlockedLevel >= enemy.unlock ? 'border-emerald-200/20 bg-emerald-300/[.07] text-emerald-100' : 'border-amber-200/15 bg-amber-300/[.07] text-amber-100'}`}>{highestUnlockedLevel >= enemy.unlock ? '✓ تم الفتح' : <><Lock className="h-3 w-3 animate-pulse" /> {enemy.unlock === 16 ? 'يفتح في الفصل 2' : enemy.unlock === 21 ? 'يفتح في الفصل 3' : enemy.unlock === 26 ? 'يفتح في الفصل 4' : `يفتح في المستوى ${enemy.unlock}`}</>}</div>
                 </motion.div>
               ))}
             </div>
