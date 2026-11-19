@@ -41,7 +41,68 @@ export default function JoudyAdventureGame() {
   const [lastRewardCoins, setLastRewardCoins] = useState(0);
   const [achievementNotices, setAchievementNotices] = useState<{ title: string; amount: number; type: 'coins' | 'score' }[]>([]);
   const lossAudioRefs = useRef<HTMLAudioElement[]>([]);
-  const stopTransitionAudio = useCallback(() => { lossAudioRefs.current.forEach((audio) => { audio.pause(); audio.currentTime = 0; }); lossAudioRefs.current = []; }, []);
+  // Outcome voices use Web Audio: mobile browsers can reject HTMLAudio.play()
+  // when it is triggered later by the game loop rather than a fresh tap.
+  const outcomeAudioContextRef = useRef<AudioContext | null>(null);
+  const outcomeBuffersRef = useRef<Record<string, AudioBuffer>>({});
+  const outcomeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+  const outcomeLoadPromiseRef = useRef<Promise<void> | null>(null);
+
+  const unlockOutcomeAudio = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const AudioContextClass = window.AudioContext;
+    if (!AudioContextClass) return;
+    const context = outcomeAudioContextRef.current ?? new AudioContextClass();
+    outcomeAudioContextRef.current = context;
+    // Called directly from the player's Start button gesture to unlock mobile audio.
+    if (context.state !== 'running') void context.resume().catch((error) => console.warn('Outcome audio context could not resume', error));
+    if (!outcomeLoadPromiseRef.current) {
+      outcomeLoadPromiseRef.current = Promise.all([
+        ['win', '/audio/joudy-win.mp3'],
+        ['loss', '/audio/joudy-loss.mp3'],
+        ['lossMusic', '/audio/joudy-loss-music.mp3'],
+      ].map(async ([key, url]) => {
+        try {
+          const response = await fetch(url, { cache: 'force-cache' });
+          if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
+          const bytes = await response.arrayBuffer();
+          const buffer = await context.decodeAudioData(bytes);
+          outcomeBuffersRef.current[key] = buffer;
+        } catch (error) {
+          console.warn(`Could not prepare ${url}`, error);
+        }
+      })).then(() => undefined);
+    }
+  }, []);
+
+  const playOutcomeAudio = useCallback((keys: { key: string; volume: number }[]) => {
+    const context = outcomeAudioContextRef.current;
+    if (!context || !soundEnabled) return;
+    if (context.state !== 'running') void context.resume().catch((error) => console.warn('Outcome audio context could not resume', error));
+    for (const { key, volume } of keys) {
+      const buffer = outcomeBuffersRef.current[key];
+      if (!buffer) {
+        console.warn(`Outcome audio ${key} is not ready yet`);
+        continue;
+      }
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+      source.buffer = buffer;
+      gain.gain.value = volume;
+      source.connect(gain);
+      gain.connect(context.destination);
+      source.onended = () => { outcomeSourcesRef.current = outcomeSourcesRef.current.filter((item) => item !== source); };
+      outcomeSourcesRef.current.push(source);
+      source.start(0);
+    }
+  }, [soundEnabled]);
+
+  const stopTransitionAudio = useCallback(() => {
+    lossAudioRefs.current.forEach((audio) => { audio.pause(); audio.currentTime = 0; });
+    lossAudioRefs.current = [];
+    outcomeSourcesRef.current.forEach((source) => { try { source.stop(); } catch { /* already stopped */ } });
+    outcomeSourcesRef.current = [];
+  }, []);
 
   const [lastStats, setLastStats] = useState<GameRunStats>({
     level: 1,
@@ -145,6 +206,7 @@ export default function JoudyAdventureGame() {
         return;
       }
       stopTransitionAudio();
+      unlockOutcomeAudio();
       soundEngine.setSfxEnabled(soundEnabled);
       soundEngine.setMusicEnabled(soundEnabled);
       soundEngine.playStartAdventure();
@@ -153,23 +215,15 @@ export default function JoudyAdventureGame() {
       setIsNewHighScore(false);
       setGameState('PLAYING');
     },
-    [soundEnabled, progress.highestUnlockedLevel, stopTransitionAudio],
+    [soundEnabled, progress.highestUnlockedLevel, stopTransitionAudio, unlockOutcomeAudio],
   );
 
   const handleGameOver = useCallback(() => {
     stopTransitionAudio();
     if (!soundEnabled) return;
-    // The loss ambience and Joudy's voice are separate supplied assets.
-    const lossMusic = new Audio('/audio/joudy-loss-music.mp3');
-    lossMusic.preload = 'auto';
-    lossMusic.volume = 0.24;
-    const lossVoice = new Audio('/audio/joudy-loss.mp3');
-    lossVoice.preload = 'auto';
-    lossVoice.volume = 1;
-    lossAudioRefs.current = [lossMusic, lossVoice];
-    void lossMusic.play().catch((error) => console.warn('Loss music could not play', error));
-    void lossVoice.play().catch((error) => console.warn('Loss voice could not play', error));
-  }, [soundEnabled, stopTransitionAudio]);
+    // Play the preloaded ambience and voice through the audio context unlocked at level start.
+    playOutcomeAudio([{ key: 'lossMusic', volume: 0.24 }, { key: 'loss', volume: 1 }]);
+  }, [soundEnabled, stopTransitionAudio, playOutcomeAudio]);
 
   const handleHighScoreUpdate = useCallback((candidateScore: number) => {
     updateHighScoreOnly(candidateScore);
@@ -177,13 +231,7 @@ export default function JoudyAdventureGame() {
 
   const handleVictory = useCallback((stats: GameRunStats) => {
     stopTransitionAudio();
-    if (soundEnabled) {
-      const winAudio = new Audio('/audio/joudy-win.mp3');
-      winAudio.preload = 'auto';
-      winAudio.volume = 1;
-      lossAudioRefs.current = [winAudio];
-      void winAudio.play().catch((error) => console.warn('Victory sound could not play', error));
-    }
+    if (soundEnabled) playOutcomeAudio([{ key: 'win', volume: 1 }]);
     setLastStats(stats);
     const beforeReward = loadWorldSave();
     const reward = stats.level === 30
@@ -237,7 +285,7 @@ export default function JoudyAdventureGame() {
     }
     setIsNewHighScore(beatRecord);
     setGameState('VICTORY');
-  }, [characterCoinBonus, soundEnabled, stopTransitionAudio]);
+  }, [characterCoinBonus, soundEnabled, stopTransitionAudio, playOutcomeAudio]);
 
   const handleNextLevel = useCallback(() => {
     // Chapter transitions return to the map until the next gate is purchased.
