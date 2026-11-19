@@ -281,7 +281,7 @@ export default function GameArena({
   const [tutorialOpen, setTutorialOpen] = useState(true);
   const tutorialActionRef = useRef<'move' | 'collect' | null>(null);
   const [enemyTip, setEnemyTip] = useState<{ title: string; text: string; emoji: string } | null>(null);
-  const [enemyTipMarker, setEnemyTipMarker] = useState<number | null>(null);
+  const [enemyTipMarker, setEnemyTipMarker] = useState<number | null>(null);\n  const [enemyTipTop, setEnemyTipTop] = useState<number>(48);
   const seenEnemyTipsRef = useRef<Set<string>>(new Set());
   const [isGameOver, setIsGameOver] = useState(false);
 
@@ -469,7 +469,7 @@ export default function GameArena({
     setTutorialOpen(true);
     tutorialActionRef.current = null;
     setEnemyTip(null);
-    setEnemyTipMarker(null);
+    setEnemyTipMarker(null); setEnemyTipTop(48);
     isPausedRef.current = true;
     setIsPaused(true);
   }, []);
@@ -705,7 +705,7 @@ export default function GameArena({
             isPausedRef.current = true;
             setIsPaused(true);
             setEnemyTip(tip);
-            setEnemyTipMarker(Math.max(8, Math.min(92, (x / worldWidth) * 100)));
+            setEnemyTipMarker(Math.max(8, Math.min(92, (x / worldWidth) * 100)));\n            setEnemyTipTop(Math.max(16, Math.min(76, (y / worldHeight) * 100)));
           }
         } else {
           seenEnemyTipsRef.current.add(kind);
@@ -2045,32 +2045,31 @@ export default function GameArena({
 
         {/* Joudy's recurring level guide and first-time enemy introductions */}
         {tutorialOpen && !enemyTip && (
-          <div className="absolute inset-0 z-[60] flex items-center justify-center bg-slate-950/80 p-3 backdrop-blur-md sm:p-6">
-            <motion.div initial={{ opacity: 0, y: 18, scale: .97 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="w-full max-w-2xl overflow-hidden rounded-[1.7rem] border border-white/20 bg-white p-3 text-slate-900 shadow-[0_28px_90px_rgba(0,0,0,.55)] sm:p-5">
-              <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="absolute inset-0 z-[60] pointer-events-none">
+            <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} className="pointer-events-auto absolute bottom-[4%] left-1/2 w-[min(94%,680px)] -translate-x-1/2 overflow-hidden rounded-2xl border border-white/80 bg-white/95 p-3 text-slate-900 shadow-[0_12px_40px_rgba(0,0,0,.38)] backdrop-blur-sm sm:bottom-[5%] sm:p-4">
+              <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">دليل جودي · المستوى {levelConfig.level}</span>
                 <span className="text-xs font-semibold text-slate-500">{levelConfig.level === 1 ? `${tutorialPage + 1} / ${FIRST_LEVEL_TUTORIAL.length}` : 'إرشادات المرحلة'}</span>
               </div>
-              <div className="grid grid-cols-[minmax(104px,34%)_1fr] items-stretch gap-3 sm:gap-4">
-                <div className="relative aspect-square overflow-hidden rounded-2xl border border-rose-100 bg-rose-50 shadow-inner">
-                  <Image src={realImageSrc || '/images/joudy-real.png'} alt="جودي" fill sizes="(max-width: 640px) 34vw, 220px" className="object-cover" priority />
-                  <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-black text-rose-700 shadow">جودي 💗</span>
+              <div className="grid grid-cols-[clamp(76px,22vw,116px)_minmax(0,1fr)] items-center gap-3 sm:gap-4">
+                <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-rose-100 bg-rose-50 shadow-inner">
+                  <Image src={realImageSrc || '/images/joudy-real.png'} alt="جودي" fill sizes="116px" className="object-cover" priority />
                 </div>
-                <div className="flex min-h-[170px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
-                  <div>
-                    <h3 className="text-base font-extrabold leading-7 text-slate-900 sm:text-xl" style={{ fontFamily: 'var(--font-iphone), -apple-system, BlinkMacSystemFont, sans-serif' }}>{(levelConfig.level === 1 ? FIRST_LEVEL_TUTORIAL[tutorialPage] : LEVEL_INTROS[levelConfig.level] || { title: `المستوى ${levelConfig.level}`, text: levelConfig.secretNote }).title}</h3>
-                    <p className="mt-2 text-xs leading-6 text-slate-700 sm:text-sm sm:leading-7" style={{ fontFamily: 'var(--font-iphone), -apple-system, BlinkMacSystemFont, sans-serif' }}>{typedGuideText}<span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-rose-500 align-middle" /></p>
+                <div className="flex min-h-[112px] min-w-0 flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 sm:min-h-[132px] sm:p-4">
+                  <div className="min-w-0">
+                    <h3 className="text-base font-extrabold leading-7 text-slate-900 sm:text-xl" style={{ fontFamily: 'var(--font-iphone), sans-serif' }}>{(levelConfig.level === 1 ? FIRST_LEVEL_TUTORIAL[tutorialPage] : LEVEL_INTROS[levelConfig.level] || { title: `المستوى ${levelConfig.level}`, text: levelConfig.secretNote }).title}</h3>
+                    <p className="mt-1 text-xs leading-6 text-slate-700 sm:text-sm sm:leading-7" style={{ fontFamily: 'var(--font-iphone), sans-serif' }}>{typedGuideText}<span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-rose-500 align-middle" /></p>
                   </div>
-                  <div className="mt-3 flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-semibold text-slate-400">اضغطي التالي للمتابعة</span>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-semibold text-slate-400">اضغطي للمتابعة</span>
                     <button type="button" onClick={() => {
                       if (levelConfig.level === 1 && tutorialPage === 1) {
                         tutorialActionRef.current = 'move'; setTutorialOpen(false); isPausedRef.current = false; setIsPaused(false);
                       } else if (levelConfig.level === 1 && tutorialPage === 2) {
                         tutorialActionRef.current = 'collect'; setTutorialOpen(false); isPausedRef.current = false; setIsPaused(false);
                       } else if (levelConfig.level === 1 && tutorialPage < FIRST_LEVEL_TUTORIAL.length - 1) setTutorialPage((page) => page + 1);
-                      else { setEnemyTip(null); setEnemyTipMarker(null); setTutorialOpen(false); isPausedRef.current = false; setIsPaused(false); }
-                    }} className="rounded-xl bg-gradient-to-l from-rose-500 to-fuchsia-600 px-5 py-2.5 text-xs font-black text-white shadow-lg transition hover:brightness-110">{levelConfig.level === 1 && tutorialPage === 1 ? 'جربي التحريك' : levelConfig.level === 1 && tutorialPage === 2 ? 'جربي جمع عنصر' : levelConfig.level === 1 && tutorialPage < FIRST_LEVEL_TUTORIAL.length - 1 ? 'التالي ←' : 'ابدأ اللعب'}</button>
+                      else { setEnemyTip(null); setEnemyTipMarker(null); setEnemyTipTop(48); setTutorialOpen(false); isPausedRef.current = false; setIsPaused(false); }
+                    }} className="rounded-xl bg-gradient-to-l from-rose-500 to-fuchsia-600 px-5 py-2.5 text-xs font-black text-white shadow-lg transition hover:brightness-110">{levelConfig.level === 1 && tutorialPage === 1 ? 'جربي التحريك' : levelConfig.level === 1 && tutorialPage === 2 ? 'جربي جمع عنصر' : levelConfig.level === 1 && tutorialPage < FIRST_LEVEL_TUTORIAL.length - 1 ? 'التالي' : 'ابدأ اللعب'}</button>
                   </div>
                 </div>
               </div>
@@ -2078,24 +2077,32 @@ export default function GameArena({
           </div>
         )}
         {enemyTip && enemyTipMarker !== null && (
-          <div className="pointer-events-none absolute z-[75] -translate-x-1/2" style={{ left: `${enemyTipMarker}%`, top: '13%' }}>
-            <div className="flex flex-col items-center gap-1 text-amber-300 drop-shadow-[0_2px_8px_rgba(0,0,0,.9)]"><span className="animate-bounce text-4xl">⬇️</span><span className="rounded-full border-2 border-amber-300 bg-amber-400/20 px-2 py-1 text-[10px] font-black text-white">الوحش هنا</span></div>
-          </div>
-        )}
-        {enemyTip && (
-          <div className="absolute inset-0 z-[70] flex items-center justify-center bg-slate-950/85 p-3 backdrop-blur-md sm:p-6">
-            <motion.div initial={{ opacity: 0, scale: .94 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-xl rounded-[1.7rem] border border-amber-200/30 bg-white p-3 text-slate-900 shadow-2xl sm:p-5">
-              <div className="mb-3 flex items-center gap-2"><span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">مخلوق جديد ظهر لأول مرة</span><span className="animate-bounce text-2xl">⬇️</span></div>
-              <div className="grid grid-cols-[minmax(104px,34%)_1fr] gap-3 sm:gap-4">
-                <div className="relative aspect-square overflow-hidden rounded-2xl border border-rose-100 bg-rose-50"><Image src={realImageSrc || '/images/joudy-real.png'} alt="جودي" fill sizes="(max-width: 640px) 34vw, 220px" className="object-cover"/></div>
-                <div className="flex flex-col justify-between rounded-2xl border border-slate-200 p-3 sm:p-4"><div><div className="text-3xl">{enemyTip.emoji}</div><h3 className="mt-2 text-base font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-iphone), -apple-system, BlinkMacSystemFont, sans-serif' }}>{enemyTip.title}</h3><p className="mt-2 text-xs leading-6 text-slate-700 sm:text-sm">{typedGuideText}<span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-amber-500 align-middle" /></p><p className="mt-2 animate-bounce text-xs font-black text-amber-700">⬇️ الوحش ظهر أعلى ساحة اللعب</p></div><button type="button" onClick={() => { setEnemyTip(null); setEnemyTipMarker(null); isPausedRef.current = false; setIsPaused(false); }} className="mt-3 rounded-xl bg-gradient-to-l from-amber-500 to-orange-600 px-5 py-2.5 text-xs font-black text-white">فهمت، كمّلي اللعب</button></div>
+          <>
+            {/* Target ring stays over the live enemy; the rest of the game remains visible. */}
+            <div className="pointer-events-none absolute z-[74] -translate-x-1/2 -translate-y-1/2" style={{ left: `${enemyTipMarker}%`, top: `${enemyTipTop}%` }}>
+              <div className="relative h-20 w-20 sm:h-24 sm:w-24">
+                <div className="absolute inset-0 rounded-full border-[3px] border-amber-300 shadow-[0_0_0_5px_rgba(251,191,36,.18),0_0_28px_rgba(251,191,36,.8)] animate-pulse" />
+                <div className="absolute inset-[9px] rounded-full border border-white/90" />
+                <span className="absolute -top-2 left-1/2 h-3 w-3 -translate-x-1/2 rounded-full border-2 border-amber-200 bg-amber-400" />
+              </div>
+            </div>
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className={`absolute bottom-[4%] z-[75] w-[min(88%,470px)] sm:bottom-[5%] ${enemyTipMarker > 50 ? 'left-[3%]' : 'right-[3%]'}`}>
+              <div className="rounded-2xl border border-amber-200/80 bg-white/95 p-3 text-slate-900 shadow-[0_12px_40px_rgba(0,0,0,.42)] backdrop-blur-sm sm:p-4">
+                <div className="mb-2 flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,.18)]" /><span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">مخلوق جديد ظهر لأول مرة</span></div>
+                <div className="grid grid-cols-[clamp(76px,20vw,108px)_minmax(0,1fr)] items-center gap-3">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-rose-100 bg-rose-50"><Image src={realImageSrc || '/images/joudy-real.png'} alt="جودي" fill sizes="108px" className="object-cover" /></div>
+                  <div className="min-w-0">
+                    <h3 className="text-base font-extrabold text-slate-900" style={{ fontFamily: 'var(--font-iphone), sans-serif' }}>{enemyTip.title}</h3>
+                    <p className="mt-1 text-xs leading-6 text-slate-700 sm:text-sm" style={{ fontFamily: 'var(--font-iphone), sans-serif' }}>{typedGuideText}<span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-amber-500 align-middle" /></p>
+                    <button type="button" onClick={() => { setEnemyTip(null); setEnemyTipMarker(null); setEnemyTipTop(48); isPausedRef.current = false; setIsPaused(false); }} className="mt-2 rounded-xl bg-gradient-to-l from-amber-500 to-orange-600 px-5 py-2.5 text-xs font-black text-white">فهمت، كمّلي اللعب</button>
+                  </div>
+                </div>
               </div>
             </motion.div>
-          </div>
+          </>
         )}
-
         {/* Pause Overlay */}
-        {isPaused && !isGameOver && (
+        {isPaused && !isGameOver && !tutorialOpen && !enemyTip && (
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-md">
             <motion.div initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/15 bg-gradient-to-b from-[#172943] via-[#101d31] to-[#080f1c] p-6 text-center text-white shadow-[0_28px_90px_rgba(0,0,0,.65)]">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-cyan-400/15 to-transparent" />
