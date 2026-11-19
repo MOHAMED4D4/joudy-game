@@ -27,29 +27,29 @@ export interface WorldSave {
   shieldFreeGranted: boolean;
 }
 
-const KEY = 'joudy_world_save_test_v1';
+const KEY = 'joudy_world_save_v1';
 const EVENT = 'joudy-world-save-change';
 const DEFAULT_SAVE: WorldSave = {
-  coins: 999999999999,
-  blueKeys: 999999999999,
-  owned: SHOP_ITEMS.map((item) => item.id),
+  coins: 180,
+  blueKeys: 0,
+  owned: ['look-forest', 'sneakers'],
   equippedOutfit: 'look-forest',
   equippedShoes: 'sneakers',
-  decorOwned: DECOR_ITEMS.map((item) => item.id),
+  decorOwned: ['bedroom-default', 'kitchen-default', 'living-default'],
   decorEquipped: { bedroom: 'bedroom-default', kitchen: 'kitchen-default', living: 'living-default' },
   lastDaily: '',
   highestAchievement: 0,
   reviveCountsByLevel: {},
-  petsOwned: PET_ITEMS.map((item) => item.id),
+  petsOwned: ['moon-cat'],
   equippedPet: 'moon-cat',
-  coastalRegionUnlocked: true,
+  coastalRegionUnlocked: false,
   finalBossRewardClaimed: false,
   totalChocolates: 0,
   totalScore: 0,
   perfectRuns: 0,
   totalBosses: 0,
-  extraHearts: 5,
-  shieldCharges: 999999999999,
+  extraHearts: 0,
+  shieldCharges: 0,
   shieldFreeGranted: false,
 };
 

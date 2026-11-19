@@ -13,12 +13,12 @@ export interface JoudyGameProgress {
   completedLevels: Record<number, LevelProgressRecord>;
 }
 
-const STORAGE_KEY = 'joudy_magical_adventure_test_v1';
+const STORAGE_KEY = 'joudy_magical_adventure_v2';
 const PROGRESS_EVENT = 'joudy-progress-change';
 
 const DEFAULT_PROGRESS: JoudyGameProgress = {
   highScore: 0,
-  highestUnlockedLevel: 30,
+  highestUnlockedLevel: 1,
   completedLevels: {},
 };
 
