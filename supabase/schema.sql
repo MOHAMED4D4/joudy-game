@@ -18,3 +18,6 @@ alter table public.player_events enable row level security;
 -- No public policies: only the Vercel server using the service-role key can access these tables.
 revoke all on public.game_sessions, public.player_events from anon, authenticated;
 grant all on public.game_sessions, public.player_events to service_role;
+-- Dashboard query indexes (safe to run on an existing installation).
+create index if not exists player_events_occurred_at_idx on public.player_events(occurred_at desc);
+create index if not exists player_events_type_time_idx on public.player_events(event_type, occurred_at desc);
