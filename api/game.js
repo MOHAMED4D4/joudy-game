@@ -3,10 +3,22 @@ const net = require('net');
 const allowedEvents = new Set(['session_start','session_end','level_start','game_win','game_loss','score_update','control_click','tab_hidden','tab_visible','idle','js_error']);
 
 function requestIp(req) {
-  // Vercel supplies the forwarding header for the incoming client connection.
-  const forwarded = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || '';
-  const candidate = String(forwarded).split(',')[0].trim().replace(/^\[|\]$/g, '');
-  return net.isIP(candidate) ? candidate : null;
+  // Prefer the original client address supplied by the hosting proxy.
+  const candidates = [
+    req.headers['x-forwarded-for'],
+    req.headers['x-real-ip'],
+    req.headers['x-vercel-forwarded-for'],
+  ];
+  for (const header of candidates) {
+    if (!header) continue;
+    let candidate = String(header).split(',')[0].trim();
+    // Accept bracketed IPv6 and IPv4-with-port forms without trusting arbitrary text.
+    if (candidate.startsWith('[')) candidate = candidate.slice(1, candidate.indexOf(']') > 0 ? candidate.indexOf(']') : undefined);
+    if (net.isIP(candidate)) return candidate;
+    const ipv4WithPort = candidate.match(/^((?:\d{1,3}\.){3}\d{1,3}):\d+$/);
+    if (ipv4WithPort && net.isIP(ipv4WithPort[1]) === 4) return ipv4WithPort[1];
+  }
+  return null;
 }
 
 module.exports = async (req, res) => {
@@ -17,7 +29,7 @@ module.exports = async (req, res) => {
   const body = req.body || {};
   if (!/^[\w-]{8,100}$/.test(body.playerId || '') || !/^[\w-]{8,100}$/.test(body.sessionId || '') || !allowedEvents.has(body.event)) return res.status(400).json({ error: 'Invalid event' });
   const data = body.data && typeof body.data === 'object' ? body.data : {};
-  const safe = Object.fromEntries(Object.entries(data).filter(([k,v]) => ['device','browser','language','timezone','screen','orientation','dpr','loadMs','referrerHost','utmSource','level','score','durationMs','control','count','thresholdMs','message','manufacturer','model','osName','osVersion','browserVersion','deviceType','lastEvent'].includes(k) && ['string','number','boolean'].includes(typeof v)).map(([k,v]) => [k, typeof v === 'string' ? v.slice(0,160) : v]));
+  const safe = Object.fromEntries(Object.entries(data).filter(([k,v]) => ['device','browser','language','timezone','screen','orientation','dpr','loadMs','referrerHost','utmSource','level','score','durationMs','control','count','thresholdMs','message','manufacturer','model','osName','osVersion','browserVersion','deviceType','lastEvent','clientUserAgent'].includes(k) && ['string','number','boolean'].includes(typeof v)).map(([k,v]) => [k, typeof v === 'string' ? v.slice(0, k === 'clientUserAgent' ? 512 : 160) : v]));
   const base = NEXT_PUBLIC_SUPABASE_URL.replace(/\/$/,'');
   const headers = { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type':'application/json', Prefer:'return=minimal' };
   try {
@@ -26,9 +38,12 @@ module.exports = async (req, res) => {
     // on session start. Share this test deployment only with informed testers.
     if (body.event === 'session_start') {
       const ip = requestIp(req);
-      const userAgent = String(req.headers['user-agent'] || '').slice(0, 512);
+      const userAgent = String(req.headers['user-agent'] || safe.clientUserAgent || '').slice(0, 512);
       if (ip) sessionRow.ip_address = ip;
       if (userAgent) sessionRow.user_agent = userAgent;
+      // The browser-supplied fallback is used only when the platform proxy omits UA.
+      if (!ip) console.warn('session_start received without a valid forwarded client IP header');
+      if (!userAgent) console.warn('session_start received without a User-Agent');
     }
     const session = await fetch(`${base}/rest/v1/game_sessions?on_conflict=session_id`, { method:'POST', headers:{...headers, Prefer:'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(sessionRow) });
     if (!session.ok) throw new Error(await session.text());
