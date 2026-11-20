@@ -94,7 +94,41 @@ export const telemetry = {
       : browserName === 'Safari' ? version(/Version\/([\d.]+)/) : '';
     const device = `${manufacturer === 'غير معروف' ? (model || (deviceType === 'Phone' ? 'هاتف Android' : deviceType === 'Tablet' ? 'جهاز لوحي' : 'كمبيوتر')) : manufacturer}${model ? ` ${model}` : ''} · ${osName}${osVersion ? ` ${osVersion}` : ''}`;
     const browser = `${browserName}${browserVersion ? ` ${browserVersion}` : ''}`;
-    void send('session_start', { device, browser, manufacturer, model: model || 'غير معلن من المتصفح', osName, osVersion, browserVersion, deviceType, language: navigator.language, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, screen: `${screen.width}x${screen.height}`, orientation: screen.orientation?.type ?? 'unknown', dpr: window.devicePixelRatio, loadMs: Math.round(nav?.loadEventEnd ?? 0), referrerHost: document.referrer ? (() => { try { return new URL(document.referrer).hostname; } catch { return ''; } })() : 'direct', utmSource: new URLSearchParams(location.search).get('utm_source') });
+    void send('session_start', { device, browser, manufacturer: manufacturer === 'غير معروف' ? 'غير متاح من المتصفح' : manufacturer, model: model || 'غير متاح من المتصفح', osName, osVersion: osVersion || 'غير متاح من المتصفح', browserVersion, deviceType, language: navigator.language, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, screen: `${screen.width}x${screen.height}`, orientation: screen.orientation?.type ?? 'unknown', dpr: window.devicePixelRatio, loadMs: Math.round(nav?.loadEventEnd ?? 0), referrerHost: document.referrer ? (() => { try { return new URL(document.referrer).hostname; } catch { return ''; } })() : 'direct', utmSource: new URLSearchParams(location.search).get('utm_source'), uiSkin: 'غير متاح من المتصفح', modelSource: 'User-Agent' });
+    // Enhanced Client Hints are optional and browser-controlled. They may expose a model
+    // and platform version on some Android Chromium browsers; never guess vendor UI skins.
+    void (async () => {
+      const uaData = (navigator as Navigator & { userAgentData?: { getHighEntropyValues?: (hints: string[]) => Promise<Record<string, unknown>> } }).userAgentData;
+      if (!uaData?.getHighEntropyValues) return;
+      try {
+        const hints = await uaData.getHighEntropyValues(['model', 'platformVersion', 'platform', 'architecture', 'bitness']);
+        const hintedModel = typeof hints.model === 'string' ? hints.model.trim().slice(0, 80) : '';
+        const hintedPlatform = typeof hints.platform === 'string' ? hints.platform : osName;
+        const platformVersion = typeof hints.platformVersion === 'string' ? hints.platformVersion.slice(0, 32) : '';
+        let hintedManufacturer = manufacturer === 'غير معروف' ? 'غير متاح من المتصفح' : manufacturer;
+        if (hintedModel) {
+          if (/^(SM-|Samsung)/i.test(hintedModel)) hintedManufacturer = 'Samsung';
+          else if (/^(Redmi|POCO|Mi\s)/i.test(hintedModel)) hintedManufacturer = 'Xiaomi';
+          else if (/^Pixel/i.test(hintedModel)) hintedManufacturer = 'Google';
+          else if (/^CPH/i.test(hintedModel)) hintedManufacturer = 'OPPO';
+          else if (/^V[0-9]{4}/i.test(hintedModel)) hintedManufacturer = 'vivo';
+        }
+        const enrichedOsVersion = platformVersion || osVersion || 'غير متاح من المتصفح';
+        await send('device_details', {
+          device: `${hintedManufacturer === 'غير متاح من المتصفح' ? 'جهاز' : hintedManufacturer} ${hintedModel || model || 'موديل غير معلن'} · ${hintedPlatform || osName} ${enrichedOsVersion}`,
+          manufacturer: hintedManufacturer,
+          model: hintedModel || model || 'غير متاح من المتصفح',
+          osName: hintedPlatform || osName,
+          osVersion: enrichedOsVersion,
+          platformVersion: platformVersion || 'غير متاح من المتصفح',
+          architecture: typeof hints.architecture === 'string' ? hints.architecture : 'غير متاح من المتصفح',
+          bitness: typeof hints.bitness === 'string' ? hints.bitness : 'غير متاح من المتصفح',
+          modelSource: hintedModel ? 'User-Agent Client Hints' : 'غير متاح من المتصفح',
+          uiSkin: 'غير متاح من المتصفح',
+          deviceType
+        });
+      } catch { /* Client Hints are optional; baseline analytics remain available. */ }
+    })();
     const activity = () => { lastActivity = performance.now(); idleSent = false; };
     ['pointerdown','keydown','scroll','touchstart'].forEach(name => window.addEventListener(name, activity, { passive: true }));
     document.addEventListener('visibilitychange', () => { void send(document.hidden ? 'tab_hidden' : 'tab_visible'); });
