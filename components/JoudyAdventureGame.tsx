@@ -34,6 +34,7 @@ export default function JoudyAdventureGame() {
   const characterShieldBonus = 0;
   const characterCoinBonus = 1;
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showAnalyticsNotice, setShowAnalyticsNotice] = useState(false);
   const [restOverlay, setRestOverlay] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
@@ -122,7 +123,15 @@ export default function JoudyAdventureGame() {
 
 
   useEffect(() => {
-    telemetry.start();
+    const consent = telemetry.consentState();
+    if (consent === 'granted') telemetry.start();
+    else if (consent === null) setShowAnalyticsNotice(true);
+  }, []);
+
+  const chooseAnalyticsConsent = useCallback((accepted: boolean) => {
+    if (accepted) telemetry.acceptConsent();
+    else telemetry.declineConsent();
+    setShowAnalyticsNotice(false);
   }, []);
 
   useEffect(() => {
@@ -394,6 +403,7 @@ export default function JoudyAdventureGame() {
         </AnimatePresence>
       </div>
       {updateReady && <div className="fixed inset-x-3 bottom-4 z-[180] mx-auto max-w-lg rounded-2xl border border-cyan-200/25 bg-[#10263b]/95 p-4 text-white shadow-2xl backdrop-blur-xl" role="status"><p className="text-sm font-black">تحديث جديد لجودي جاهز</p><p className="mt-1 text-xs text-slate-300">يمكن تثبيت النسخة الجديدة وإعادة تشغيل اللعبة بأمان.</p><button type="button" onClick={applyAppUpdate} className="mt-3 w-full rounded-xl bg-gradient-to-l from-cyan-300 to-blue-500 px-4 py-2.5 text-sm font-black text-slate-950">تحديث الآن</button></div>}
+      {showAnalyticsNotice && <div className="fixed inset-x-3 bottom-4 z-[220] mx-auto max-w-xl rounded-2xl border border-cyan-100/20 bg-[#101d30]/[.98] p-4 text-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="analytics-notice-title"><p id="analytics-notice-title" className="text-sm font-black">تحسين اللعبة بإحصاءات اختيارية</p><p className="mt-2 text-xs leading-6 text-slate-300">بموافقتك، نسجل بيانات تشغيلية مثل فئة الجهاز والمتصفح، أوقات الجلسات، المراحل والنتائج، وأسماء أزرار اللعبة المستخدمة. لا نجمع عنوان IP أو موقعك الجغرافي أو إحداثيات اللمس أو بصمة جهازك. يمكنك رفض المشاركة وستعمل اللعبة بشكل طبيعي.</p><div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => chooseAnalyticsConsent(true)} className="rounded-xl bg-gradient-to-l from-cyan-300 to-blue-500 px-4 py-2.5 text-sm font-black text-slate-950">موافق على الإحصاءات</button><button type="button" onClick={() => chooseAnalyticsConsent(false)} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-bold text-white">لا، شكرًا</button></div></div>}
       {restOverlay && gameState === 'PLAYING' && <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#070d19]/90 p-5 backdrop-blur-xl"><div className="w-full max-w-md rounded-[2rem] border border-cyan-100/20 bg-gradient-to-br from-[#18314a] via-[#172039] to-[#211934] p-7 text-center text-white shadow-2xl"><div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl border border-cyan-100/20 bg-cyan-200/10 text-cyan-100"><span className="text-3xl">🌙</span></div><p className="text-[10px] font-black tracking-[.22em] text-cyan-200">JOUDY REST MODE</p><h2 className="mt-2 text-2xl font-black">جودي أخذت استراحة</h2><p className="mt-3 text-sm leading-7 text-slate-300">تم إيقاف الصوت مؤقتًا وإيقاف اللعب لحين عودتك. تقدمك لم يُحذف.</p><button type="button" onClick={() => { soundEngine.resumeAfterUserGesture(); window.dispatchEvent(new Event('joudy:resume')); setRestOverlay(false); }} className="mt-6 w-full rounded-xl bg-gradient-to-l from-cyan-300 to-blue-500 px-5 py-3 font-black text-slate-950">العودة إلى المغامرة</button></div></div>}
 
       {gameState === 'WORLD_MAP' && achievementNotices.length > 0 && (

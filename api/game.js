@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
   const body = req.body || {};
   if (!/^[\w-]{8,100}$/.test(body.playerId || '') || !/^[\w-]{8,100}$/.test(body.sessionId || '') || !allowedEvents.has(body.event)) return res.status(400).json({ error: 'Invalid event' });
   const data = body.data && typeof body.data === 'object' ? body.data : {};
-  const safe = Object.fromEntries(Object.entries(data).filter(([k,v]) => ['device','browser','language','timezone','screen','orientation','dpr','loadMs','referrerHost','utmSource','level','score','durationMs','control','count','thresholdMs','message'].includes(k) && ['string','number','boolean'].includes(typeof v)).map(([k,v]) => [k, typeof v === 'string' ? v.slice(0,160) : v]));
+  const safe = Object.fromEntries(Object.entries(data).filter(([k,v]) => ['device','browser','language','timezone','screen','orientation','dpr','loadMs','referrerHost','utmSource','level','score','durationMs','control','count','thresholdMs','message','manufacturer','model','osName','osVersion','browserVersion','deviceType','lastEvent'].includes(k) && ['string','number','boolean'].includes(typeof v)).map(([k,v]) => [k, typeof v === 'string' ? v.slice(0,160) : v]));
   const base = NEXT_PUBLIC_SUPABASE_URL.replace(/\/$/,'');
   const headers = { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type':'application/json', Prefer:'return=minimal' };
   try {
