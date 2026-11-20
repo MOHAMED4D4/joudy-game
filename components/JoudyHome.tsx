@@ -5,8 +5,6 @@ import Image from 'next/image';
 import { AnimatePresence, motion } from 'motion/react';
 import { Coins, Shirt, Footprints, Settings, X, Check } from 'lucide-react';
 import { SHOP_ITEMS, useWorldSave, saveWorld } from '@/lib/joudyWorld';
-import { useJoudyProgress } from '@/lib/storage';
-import { getCartoonSvgDataUri, type CartoonSpriteKind } from '@/lib/cartoonSvgSprites';
 
 interface Props {
   soundEnabled: boolean;
@@ -18,8 +16,6 @@ interface Props {
 
 export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, initialWardrobeOpen = false, onCloseWardrobe }: Props) {
   const save = useWorldSave();
-  const gameProgress = useJoudyProgress();
-  const unlockedLevel = gameProgress.highestUnlockedLevel;
   const [category, setCategory] = useState<'outfit' | 'shoes'>('outfit');
   const [selectedId, setSelectedId] = useState(save.equippedOutfit);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -48,20 +44,13 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
   return (
     <main dir="rtl" className="relative min-h-[100dvh] w-full overflow-hidden bg-[#d9c8ae] text-slate-900">
       <style jsx global>{`
-        /* Restore the original Joudy character idle animation from the first project build. */
         @keyframes joudy-idle { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
-        .joudy-idle-motion { animation: joudy-idle 4.2s ease-in-out infinite; transform-origin: center bottom; will-change: transform; }
-        @media (prefers-reduced-motion: reduce) { .joudy-idle-motion { animation:none; } }
         @keyframes joudy-eyes-look { 0%,18%,100% { transform: translate(0,0) } 30%,44% { transform: translate(2px,-1px) } 58%,72% { transform: translate(-2px,0) } 84% { transform: translate(1px,1px) } }
         @keyframes joudy-blink { 0%, 46%, 49%, 100% { transform: scaleY(1) } 47.5% { transform: scaleY(.12) } }
         .joudy-eye-pupil { transform-box: fill-box; transform-origin: center; animation: joudy-eyes-look 5.8s ease-in-out infinite; }
         .joudy-eye-left { animation-delay: .08s; }
         .joudy-eye-right { animation-delay: .16s; }
         .joudy-eye-blink { transform-origin: center; animation: joudy-blink 4.6s ease-in-out infinite; }
-        @keyframes collection-float { 0%,100% { transform: translateY(0) rotate(-2deg) } 50% { transform: translateY(-7px) rotate(2deg) } }
-        .collection-float { animation: collection-float 4.2s ease-in-out infinite; }
-        .collection-float:nth-child(2n) { animation-delay: .45s; }
-        .collection-float:nth-child(3n) { animation-delay: .9s; }
       `}</style>
 
       {/* Quiet, natural home interior — intentionally kept uncluttered */}
@@ -93,39 +82,23 @@ export default function JoudyHome({ soundEnabled, onToggleSound, onPlayArcade, i
 
         <section className={`relative mt-3 grid flex-1 gap-3 ${wardrobeOpen ? 'lg:grid-cols-[minmax(0,1fr)_minmax(350px,410px)]' : 'grid-cols-1'}`}>
           {/* Character stands in the same room, alone; pupils move continuously */}
-          <div className="relative flex min-h-[54vh] items-end justify-center overflow-hidden lg:min-h-[690px]">
-            <div className="pointer-events-none absolute inset-x-[8%] bottom-[7%] h-[34%] rounded-full bg-[radial-gradient(ellipse,rgba(255,226,166,.34)_0%,rgba(255,226,166,.12)_42%,transparent_72%)] blur-2xl" />
+          <div className="relative flex min-h-[54vh] items-end justify-center overflow-hidden rounded-[1.6rem] border border-white/45 bg-white/10 lg:min-h-[690px]">
             {wardrobeOpen && <div className="absolute right-3 top-3 z-20 flex max-w-[230px] flex-col gap-1 rounded-xl border border-amber-900/15 bg-[#fffaf2]/95 p-2.5 shadow-xl backdrop-blur"><span className="text-[10px] font-bold text-amber-900">{selected.name} · {selected.price} عملة</span><button onClick={purchaseOrEquip} disabled={(!isOwned && save.coins < selected.price) || isEquipped} className="rounded-lg bg-gradient-to-l from-amber-700 to-orange-700 px-4 py-2.5 text-xs font-black text-white disabled:opacity-50">{isEquipped ? 'مُجهّز بالفعل' : isOwned ? 'تجهيز القطعة' : save.coins < selected.price ? 'عملات غير كافية' : 'شراء وتجهيز'}</button></div>}
             <div className="absolute bottom-0 h-[23%] w-full bg-gradient-to-t from-[#63452f]/35 via-[#79583f]/10 to-transparent" />
             <div className="absolute bottom-[4%] left-1/2 h-[4%] w-[25%] -translate-x-1/2 rounded-[50%] bg-[#38271d]/30 blur-xl" />
-            <div className="relative mb-[2%] aspect-[704/963] w-[min(78vw,470px)] sm:w-[min(66vw,510px)]">
-              <div className="joudy-idle-motion relative h-full w-full">
-              <Image src="/images/joudy-home-hero.png" alt="جودي" fill priority sizes="(max-width: 1024px) 76vw, 510px" className="object-contain drop-shadow-[0_22px_24px_rgba(25,20,16,.28)]" />
+            <div className="relative mb-[2%] aspect-square w-[min(78vw,570px)]" style={{animation:'joudy-idle 4.2s ease-in-out infinite'}}>
+              <Image src="/images/joudy-original-transparent.png" alt="جودي" fill priority sizes="(max-width: 1024px) 76vw, 520px" className="object-contain drop-shadow-[0_18px_18px_rgba(25,20,16,.32)]" />
               {previewOutfit?.overlaySrc && <Image src={previewOutfit.overlaySrc} alt="ملابس جودي" fill sizes="(max-width: 1024px) 76vw, 520px" className="pointer-events-none object-contain" unoptimized />}
               {previewShoes?.overlaySrc && <Image src={previewShoes.overlaySrc} alt="حذاء جودي" fill sizes="(max-width: 1024px) 76vw, 520px" className="pointer-events-none object-contain" unoptimized />}
               {/* Small animated pupils layered over the original eyes to give the character a living idle gaze. */}
-              <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 704 963" aria-hidden="true">
+              <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1024 1024" aria-hidden="true">
                 <g className="joudy-eye-blink">
-                  <g className="joudy-eye-pupil joudy-eye-left"><ellipse cx="249" cy="291" rx="7.2" ry="9" fill="#253b32"/><circle cx="246" cy="287" r="2.4" fill="#fff"/></g>
-                  <g className="joudy-eye-pupil joudy-eye-right"><ellipse cx="429" cy="291" rx="7.2" ry="9" fill="#253b32"/><circle cx="426" cy="287" r="2.4" fill="#fff"/></g>
+                  <g className="joudy-eye-pupil joudy-eye-left"><ellipse cx="414" cy="320" rx="7.2" ry="9" fill="#253b32"/><circle cx="411" cy="316" r="2.4" fill="#fff"/></g>
+                  <g className="joudy-eye-pupil joudy-eye-right"><ellipse cx="594" cy="320" rx="7.2" ry="9" fill="#253b32"/><circle cx="591" cy="316" r="2.4" fill="#fff"/></g>
                 </g>
               </svg>
-              </div>
             </div>
           </div>
-
-          {!initialWardrobeOpen && !wardrobeOpen && <div className="col-span-full space-y-4 rounded-[1.6rem] border border-amber-900/10 bg-[#fffaf2]/90 p-3 shadow-lg backdrop-blur-md sm:p-5">
-            <div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-[10px] font-black tracking-[.18em] text-amber-800">JOUDY FIELD GUIDE</p><h2 className="text-xl font-black text-[#39271d] sm:text-2xl">موسوعة عالم جودي</h2><p className="mt-1 text-xs text-amber-950/65">العناصر التي تجمعيها والوحوش التي ستقابليها خلال المراحل</p></div><span className="rounded-full border border-amber-800/15 bg-amber-100 px-3 py-1.5 text-[10px] font-black text-amber-900">وصلتِ للمستوى {unlockedLevel} من 30</span></div>
-            <div><h3 className="mb-2 text-sm font-black text-amber-950">العناصر القابلة للجمع</h3><div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10">
-              {[{name:'القطة الذهبية',emoji:'🐱',sprite:'cat' as const,desc:'تمنح نقاطًا إضافية',count:'تظهر في المراحل'},{name:'الشوكولاتة',emoji:'🍫',sprite:'chocolate' as const,desc:'10 نقاط لكل قطعة',count:`${save.totalChocolates.toLocaleString('ar-EG')} تم جمعها`},{name:'الوردة',emoji:'🌹',sprite:'rose' as const,desc:'15 نقطة لكل وردة',count:'تظهر في المراحل'},{name:'العملة',emoji:'🪙',sprite:'coin' as const,desc:'رصيد للمتجر والعجلة',count:`${save.coins.toLocaleString('ar-EG')} في رصيدك`},{name:'المفتاح الأزرق',emoji:'🔑',sprite:'blueKey' as const,desc:'إنقاذ ومواصلة المرحلة',count:`${save.blueKeys} في المخزون`},{name:'المغناطيس',emoji:'🧲',sprite:'magnet' as const,desc:'يجذب العناصر لجودي',count:`${save.magnetCharges} شحنة`},{name:'مُبطّئ الوحوش',emoji:'🐌',desc:'يبطّئ الوحوش ومقذوفاتهم لمدة دقيقة',count:`${save.slowMonsterCharges} شحنة`},{name:'القلب الإضافي',emoji:'💗',sprite:'heart' as const,desc:'فرصة حياة إضافية',count:`${save.extraHearts} في المخزون`},{name:'الدرع الدائري',emoji:'🛡️',desc:'حماية من الوحوش',count:`${save.shieldCharges} شحنة`},{name:'مضاعف النقاط',emoji:'✨',sprite:'doubleScore' as const,desc:'يضاعف النقاط لفترة محدودة',count:'عنصر خاص يظهر أثناء اللعب'}].map((item,index)=><div key={item.name} className="rounded-xl border border-amber-900/10 bg-white/85 p-3 text-center"><div className="collection-float mx-auto mb-1 grid h-12 w-12 place-items-center" style={{animationDelay:`${index*.12}s`}}>{item.sprite ? <Image src={getCartoonSvgDataUri(item.sprite)} alt={item.name} width={56} height={56} unoptimized className="h-12 w-12 object-contain"/> : <span className="text-3xl">{item.emoji}</span>}</div><p className="text-xs font-black text-amber-950">{item.name}</p><p className="mt-1 text-[10px] leading-4 text-slate-600">{item.desc}</p><p className="mt-1 text-[9px] font-bold text-emerald-800">{item.count}</p></div>)}
-            </div></div>
-            <div><h3 className="mb-2 text-sm font-black text-amber-950">النقاط والتحديات والإنجازات</h3><div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">
-              {[{id:'levels-1',name:'أول خطوة'},{id:'choco-25',name:'حلوى البداية'},{id:'score-5k',name:'جامع النقاط'},{id:'levels-5',name:'مغامر ناشئ'},{id:'stars-10',name:'عين على النجوم'},{id:'boss-1',name:'مواجهة الزعيم'},{id:'perfect-1',name:'قلب من حديد'},{id:'final',name:'أسطورة جودي'}].map((badge,index)=><div key={badge.id} className="rounded-xl border border-amber-900/10 bg-white/85 p-2 text-center"><div className="collection-float relative mx-auto mb-1 h-12 w-12" style={{animationDelay:`${index*.13}s`}}><Image src={`/images/achievements/badges/${badge.id}.svg`} alt={badge.name} fill sizes="48px" className="object-contain drop-shadow-md"/></div><p className="text-[10px] font-black text-amber-950">{badge.name}</p><p className="text-[9px] text-amber-800/70">تحدي وإنجاز</p></div>)}
-            </div></div>
-            <div><div className="mb-2 flex items-center justify-between gap-2"><h3 className="text-sm font-black text-amber-950">دليل الوحوش والحراس</h3><span className="text-[10px] font-bold text-amber-900/60">الأسماء والظهور حسب المستوى</span></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-              {[{name:'غيمة العرقلة',emoji:'☁️',sprite:'obstacle',level:1,desc:'عائق يبطّئ جودي ويخصم نقاطًا'},{name:'رامي السهام',emoji:'🏹',sprite:'monster',level:1,desc:'يطلق مقذوفات باتجاه جودي'},{name:'عدّاء البرق',emoji:'🏃',sprite:'runner',level:1,desc:'وحش سريع يطارد جودي'},{name:'الضخم الناري',emoji:'🔥',sprite:'fierceMonster',level:6,desc:'قوي ويسبب خسارة أكبر عند الاصطدام'},{name:'المفجّر',emoji:'💥',sprite:'exploder',level:11,desc:'ينفجر بعد ظهوره؛ ابتعدي عنه'},{name:'الزعيم القرمزي',emoji:'👹',sprite:'boss',level:15,desc:'حارس المواجهة الكبرى'},{name:'صيّاد الظلال',emoji:'🌙',sprite:'shadowHunter',level:16,desc:'رامٍ متخفٍ في مدينة الظلال'},{name:'عدّاء الظلال',emoji:'🌑',sprite:'shadowRunner',level:16,desc:'مطارد سريع من عالم الظلال'},{name:'العملاق الظلي',emoji:'🔥',sprite:'shadowBrute',level:18,desc:'وحش ضخم من مدينة الظلال'},{name:'حارس الظلال',emoji:'👑',sprite:'shadowBoss',level:20,desc:'زعيم الفصل الثاني'},{name:'صيّاد البلورات',emoji:'💎',sprite:'crystalHunter',level:21,desc:'يطلق مقذوفات بلورية'},{name:'عدّاء البلورات',emoji:'⚡',sprite:'crystalRunner',level:21,desc:'مخلوق سريع من الغابة البلورية'},{name:'العملاق البلوري',emoji:'🪨',sprite:'crystalBrute',level:23,desc:'ضخم وقوي الاصطدام'},{name:'حارس الغابة',emoji:'💠',sprite:'crystalBoss',level:25,desc:'زعيم الفصل الثالث'},{name:'صيّاد اللهب',emoji:'🔥',sprite:'emberHunter',level:26,desc:'يطلق نيرانًا باتجاه جودي'},{name:'عدّاء اللهب',emoji:'🌋',sprite:'emberRunner',level:26,desc:'مطارد سريع من القلعة'},{name:'عملاق الحمم',emoji:'🌋',sprite:'emberBrute',level:28,desc:'وحش ناري بالغ القوة'},{name:'ملك القلعة',emoji:'👑',sprite:'emberBoss',level:30,desc:'الزعيم الأخير للمغامرة'}].map((enemy,index)=>{const open=unlockedLevel>=enemy.level;return <div key={enemy.name} className={`relative overflow-hidden rounded-xl border p-3 text-center ${open?'border-amber-900/10 bg-white/90':'border-slate-300/70 bg-slate-200/75'}`}><div className={`relative mx-auto mb-1 grid h-16 w-16 place-items-center ${open?'collection-float':'grayscale opacity-55 animate-pulse'}`} style={{animationDelay:`${index*.08}s`}}><><Image src={getCartoonSvgDataUri(enemy.sprite as CartoonSpriteKind)} alt={enemy.name} width={68} height={68} unoptimized className={`h-16 w-16 object-contain drop-shadow-md transition-all duration-500 ${open?'':'grayscale opacity-40 blur-[1px]'}`}/>{!open&&<span className="absolute inset-0 grid place-items-center rounded-full bg-slate-900/20 text-3xl drop-shadow-[0_2px_4px_rgba(0,0,0,.8)] animate-pulse">🔒</span>}</></div><p className="text-xs font-black text-slate-900">{enemy.name}</p><p className="mt-1 min-h-8 text-[10px] leading-4 text-slate-600">{open?enemy.desc:([15,20,25,30].includes(enemy.level)?`يفتح عند زعيم الفصل ${enemy.level===15?'الأول':enemy.level===20?'الثاني':enemy.level===25?'الثالث':'الرابع'}`:`يفتح عند الوصول للمستوى ${enemy.level}`)}</p><span className={`mt-1 inline-block rounded-full px-2 py-1 text-[9px] font-black ${open?'bg-emerald-100 text-emerald-800':'bg-slate-300 text-slate-700'}`}>{open?'تم اكتشافه':([15,20,25,30].includes(enemy.level)?`الفصل ${enemy.level===15?'1':enemy.level===20?'2':enemy.level===25?'3':'4'}`:`المستوى ${enemy.level}`)}</span></div>})}
-            </div></div>
-          </div>}
 
           {wardrobeOpen && <aside className="flex min-h-0 flex-col gap-3 rounded-[1.6rem] border border-white/60 bg-[#fffaf2]/90 p-3 shadow-lg backdrop-blur-md sm:p-4">
             <div className="flex items-center justify-between"><div><p className="text-xs font-bold text-amber-800">غرفة تغيير الملابس</p><h2 className="text-xl font-black">اختاري إطلالة جودي</h2></div><Shirt className="h-6 w-6 text-amber-800"/></div>

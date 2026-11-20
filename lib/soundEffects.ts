@@ -1,22 +1,6 @@
 'use client';
 
-type CollectibleSoundType =
-  | 'cat'
-  | 'rose'
-  | 'chocolate'
-  | 'coin'
-  | 'shadowHunter'
-  | 'shadowRunner'
-  | 'shadowBrute'
-  | 'shadowBoss'
-  | 'crystalHunter'
-  | 'crystalRunner'
-  | 'crystalBrute'
-  | 'crystalBoss'
-  | 'emberHunter'
-  | 'emberRunner'
-  | 'emberBrute'
-  | 'emberBoss';
+type CollectibleSoundType = 'cat' | 'rose' | 'chocolate';
 
 class MagicalSoundEngine {
   private ctx: AudioContext | null = null;
@@ -24,9 +8,6 @@ class MagicalSoundEngine {
   private musicEnabled = true;
   private musicTimer: number | null = null;
   private musicStep = 0;
-  private backgroundSuspended = false;
-  private wheelSources: AudioBufferSourceNode[] = [];
-  private wheelGains: GainNode[] = [];
 
   // Gentle C-major pentatonic music-box melody (Hz)
   private readonly melodyNotes = [
@@ -45,33 +26,10 @@ class MagicalSoundEngine {
     if (!this.ctx) {
       this.ctx = new AudioCtx();
     }
-    if (this.ctx.state === 'suspended' && !this.backgroundSuspended) {
+    if (this.ctx.state === 'suspended') {
       void this.ctx.resume();
     }
     return this.ctx;
-  }
-
-  public suspendForBackground() {
-    this.backgroundSuspended = true;
-    this.stopBackgroundMusic();
-    if (this.ctx && this.ctx.state === 'running') void this.ctx.suspend().catch(() => undefined);
-  }
-
-  public resumeAfterUserGesture() {
-    this.backgroundSuspended = false;
-    if (this.ctx && this.ctx.state === 'suspended') void this.ctx.resume().catch(() => undefined);
-  }
-
-  public playLocked() {
-    if (!this.sfxEnabled) return;
-    this.playTone(240, 0.13, { type: 'triangle', volume: 0.10, slideToFreq: 175 });
-    this.playTone(185, 0.16, { type: 'sine', volume: 0.075, delay: 0.07, slideToFreq: 130 });
-  }
-
-  public playPurchase() {
-    if (!this.sfxEnabled) return;
-    [659.25, 830.61, 987.77, 1318.51].forEach((frequency, index) => this.playTone(frequency, 0.19, { type: 'triangle', volume: 0.13, delay: index * 0.065 }));
-    this.playTone(1567.98, 0.32, { type: 'sine', volume: 0.09, delay: 0.28 });
   }
 
   public setSfxEnabled(enabled: boolean) {
@@ -164,12 +122,6 @@ class MagicalSoundEngine {
     osc.stop(start + duration + 0.02);
   }
 
-  public playButtonClick() {
-    if (!this.sfxEnabled) return;
-    this.playTone(740, 0.055, { type: 'sine', volume: 0.055 });
-    this.playTone(988, 0.045, { type: 'triangle', volume: 0.035, delay: 0.025 });
-  }
-
   public playStartAdventure() {
     if (!this.sfxEnabled) return;
     const notes = [523.25, 659.25, 783.99, 1046.5];
@@ -200,10 +152,6 @@ class MagicalSoundEngine {
       this.playTone(659.25 * comboBoost, 0.15, { type: 'sine', volume: 0.13 });
       this.playTone(880 * comboBoost, 0.18, { type: 'sine', volume: 0.13, delay: 0.055 });
       this.playTone(1174.66 * comboBoost, 0.22, { type: 'triangle', volume: 0.1, delay: 0.11 });
-    } else if (itemType === 'coin') {
-      // Bright coin pickup chime
-      this.playTone(987.77 * comboBoost, 0.09, { type: 'triangle', volume: 0.13 });
-      this.playTone(1318.5 * comboBoost, 0.16, { type: 'sine', volume: 0.14, delay: 0.055 });
     } else {
       // Warm sweet chocolate marimba pop (+10)
       this.playTone(523.25 * comboBoost, 0.12, { type: 'triangle', volume: 0.14 });
@@ -240,58 +188,6 @@ class MagicalSoundEngine {
     });
   }
 
-  public playHeartCollect() {
-    if (!this.sfxEnabled) return;
-    [659.25, 880, 1174.66, 1567.98].forEach((frequency, index) => {
-      this.playTone(frequency, 0.2, { type: 'sine', volume: 0.13, delay: index * 0.055 });
-    });
-  }
-
-  public playThunder() {
-    if (!this.sfxEnabled) return;
-    const ctx = this.ensureContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    const rumble = ctx.createOscillator();
-    const rumbleGain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
-    rumble.type = 'triangle';
-    rumble.frequency.setValueAtTime(88, now);
-    rumble.frequency.exponentialRampToValueAtTime(38, now + 1.15);
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(260, now);
-    filter.frequency.exponentialRampToValueAtTime(95, now + 1.2);
-    rumbleGain.gain.setValueAtTime(0.0001, now);
-    rumbleGain.gain.linearRampToValueAtTime(0.16, now + 0.035);
-    rumbleGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.25);
-    rumble.connect(filter);
-    filter.connect(rumbleGain);
-    rumbleGain.connect(ctx.destination);
-    rumble.start(now);
-    rumble.stop(now + 1.28);
-
-    // Short filtered noise adds the crack of the lightning without a harsh peak.
-    const length = Math.floor(ctx.sampleRate * 0.42);
-    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
-    const channel = buffer.getChannelData(0);
-    for (let i = 0; i < length; i++) channel[i] = (Math.random() * 2 - 1) * (1 - i / length) * 0.55;
-    const noise = ctx.createBufferSource();
-    const noiseFilter = ctx.createBiquadFilter();
-    const noiseGain = ctx.createGain();
-    noise.buffer = buffer;
-    noiseFilter.type = 'lowpass';
-    noiseFilter.frequency.value = 900;
-    noiseGain.gain.setValueAtTime(0.0001, now);
-    noiseGain.gain.linearRampToValueAtTime(0.12, now + 0.012);
-    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
-    noise.connect(noiseFilter);
-    noiseFilter.connect(noiseGain);
-    noiseGain.connect(ctx.destination);
-    noise.start(now);
-    noise.stop(now + 0.44);
-  }
-
   private engineOsc: OscillatorNode | null = null;
   private engineGain: GainNode | null = null;
   private engineFilter: BiquadFilterNode | null = null;
@@ -314,74 +210,6 @@ class MagicalSoundEngine {
         delay: n.t,
       });
     });
-  }
-
-  public startWheelSpin() {
-    if (!this.sfxEnabled || this.wheelSources.length) return;
-    const ctx = this.ensureContext();
-    if (!ctx) return;
-
-    // Mechanical ratchet: short filtered noise clicks, like a real prize wheel
-    // passing over its spring-loaded pointer. Clicks slow down with the wheel.
-    const duration = 5.4;
-    const sampleRate = ctx.sampleRate;
-    const buffer = ctx.createBuffer(1, Math.ceil(sampleRate * 0.075), sampleRate);
-    const samples = buffer.getChannelData(0);
-    for (let i = 0; i < samples.length; i += 1) {
-      const envelope = Math.pow(1 - i / samples.length, 2.4);
-      samples[i] = (Math.random() * 2 - 1) * envelope;
-    }
-
-    const now = ctx.currentTime;
-    let elapsed = 0;
-    let tick = 0;
-    while (elapsed < duration - 0.08) {
-      const source = ctx.createBufferSource();
-      const filter = ctx.createBiquadFilter();
-      const gain = ctx.createGain();
-      source.buffer = buffer;
-      filter.type = 'bandpass';
-      filter.frequency.value = 1450 + Math.min(900, tick * 22);
-      filter.Q.value = 0.85;
-      gain.gain.setValueAtTime(0.0001, now + elapsed);
-      gain.gain.exponentialRampToValueAtTime(0.12, now + elapsed + 0.006);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + elapsed + 0.065);
-      source.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-      source.start(now + elapsed);
-      source.stop(now + elapsed + 0.076);
-      this.wheelSources.push(source);
-      this.wheelGains.push(gain);
-      source.onended = () => {
-        this.wheelSources = this.wheelSources.filter((item) => item !== source);
-        this.wheelGains = this.wheelGains.filter((item) => item !== gain);
-      };
-      tick += 1;
-      elapsed += 0.105 + (elapsed / duration) * 0.19;
-    }
-  }
-
-  public stopWheelSpin() {
-    // Stop any remaining scheduled clicks immediately when the wheel lands.
-    this.wheelSources.forEach((source) => {
-      try { source.stop(); } catch { /* source may already have ended */ }
-    });
-    this.wheelSources = [];
-    this.wheelGains = [];
-  }
-
-  public playWheelWin() {
-    if (!this.sfxEnabled) return;
-    const notes = [659.25, 830.61, 987.77, 1318.51, 1567.98];
-    notes.forEach((frequency, index) => this.playTone(frequency, index === 4 ? 0.48 : 0.2, { type: 'triangle', volume: 0.17, delay: index * 0.105 }));
-    this.playTone(1975.53, 0.34, { type: 'sine', volume: 0.1, delay: 0.58 });
-  }
-
-  public playAchievementWin() {
-    if (!this.sfxEnabled) return;
-    const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51];
-    notes.forEach((frequency, index) => this.playTone(frequency, index === 4 ? 0.62 : 0.17, { type: 'sine', volume: 0.13, delay: index * 0.13 }));
   }
 
   public playDialoguePop() {

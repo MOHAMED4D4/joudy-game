@@ -1,5 +1,4 @@
 export type WorldParticleMode = 'petals' | 'fireflies' | 'stars';
-export type LevelWeatherMode = 'clear' | 'winter-storm';
 
 export interface WorldTheme {
   id: number;
@@ -28,15 +27,13 @@ export interface LevelConfig {
   obstacleChance: number;
   windStrength: number;
   secretNote: string;
-  timeOfDayPhase: number;
-  weatherMode: LevelWeatherMode;
 }
 
 export const WORLD_THEMES: WorldTheme[] = [
   {
     id: 1,
     name: 'الحدائق المفتوحة',
-    subtitle: 'المستويات 1–5 · بداية المغامرة',
+    subtitle: 'المستويات 1 – 5 · المستويات 1–5 · تحديات البداية',
     bgImage: '/images/anime-meadow.jpg',
     tintOverlay: 'rgba(255, 245, 250, 0.22)',
     isNight: false,
@@ -48,7 +45,7 @@ export const WORLD_THEMES: WorldTheme[] = [
   {
     id: 2,
     name: 'غابة الزمرد',
-    subtitle: 'المستويات 6–10 · مسارات الغابة',
+    subtitle: 'المستويات 6 – 10 · المستويات 6–10 · مسارات الغابة',
     bgImage: '/images/anime-forest.jpg',
     tintOverlay: 'rgba(236, 253, 245, 0.16)',
     isNight: false,
@@ -59,8 +56,8 @@ export const WORLD_THEMES: WorldTheme[] = [
   },
   {
     id: 3,
-    name: 'وادي مواجهة الزعيم',
-    subtitle: 'المستويات 11–15 · الطريق إلى المواجهة الكبرى',
+    name: 'الوادي الذهبي',
+    subtitle: 'المستويات 11 – 15 · المستويات 11–15 · مسارات الوادي',
     bgImage: '/images/anime-meadow.jpg',
     tintOverlay: 'rgba(254, 215, 170, 0.28)',
     isNight: false,
@@ -71,67 +68,41 @@ export const WORLD_THEMES: WorldTheme[] = [
   },
   {
     id: 4,
-    name: 'مدينة الظلال',
-    subtitle: 'المستويات 16–20 · مدينة الظلال',
-    bgImage: '/images/anime-night.jpg',
-    tintOverlay: 'rgba(15, 23, 42, 0.58)',
-    isNight: true,
-    particleMode: 'stars',
-    accentHex: '#8B5CF6',
-    cardBgClass: 'from-[#17152D] to-[#090D1B]',
-    borderClass: 'border-violet-300/30',
+    name: 'المدينة الساحلية',
+    subtitle: 'المستويات 16 – 20 · المستويات 16–20 · طرق الساحل',
+    bgImage: '/images/anime-sunset.jpg',
+    tintOverlay: 'rgba(251, 113, 133, 0.14)',
+    isNight: false,
+    particleMode: 'petals',
+    accentHex: '#DB2777',
+    cardBgClass: 'from-[#FFF1F5] to-[#FFF3EB]',
+    borderClass: 'border-pink-200',
   },
   {
     id: 5,
-    name: 'غابة الكائنات الغريبة',
-    subtitle: 'المستويات 21–25 · الفصل الثالث · كائنات الغابة',
-    bgImage: '/images/anime-forest.jpg',
-    tintOverlay: 'rgba(8, 19, 31, 0.72)',
+    name: 'المنطقة الجبلية',
+    subtitle: 'المستويات 21 – 25 · المستويات 21–25 · تضاريس مرتفعة',
+    bgImage: '/images/anime-sunset.jpg',
+    tintOverlay: 'rgba(76, 29, 149, 0.34)',
     isNight: true,
-    particleMode: 'fireflies',
-    accentHex: '#22D3EE',
-    cardBgClass: 'from-[#0C2630] to-[#0B1320]',
-    borderClass: 'border-cyan-300/25',
+    particleMode: 'stars',
+    accentHex: '#7C3AED',
+    cardBgClass: 'from-[#F5F3FF] to-[#FAF5FF]',
+    borderClass: 'border-violet-200',
   },
   {
     id: 6,
-    name: 'قلعة الزعيم الأخير',
-    subtitle: 'المستويات 26–30 · الفصل الرابع · القلعة الأخيرة',
+    name: 'المركز الحضري الليلي',
+    subtitle: 'المستويات 26 – 30 · المستويات 26–30 · التحدي النهائي',
     bgImage: '/images/anime-night.jpg',
-    tintOverlay: 'rgba(4, 7, 18, 0.78)',
+    tintOverlay: 'rgba(15, 23, 42, 0.18)',
     isNight: true,
     particleMode: 'stars',
-    accentHex: '#F43F5E',
-    cardBgClass: 'from-[#220F24] to-[#080B16]',
-    borderClass: 'border-rose-300/30',
+    accentHex: '#4F46E5',
+    cardBgClass: 'from-[#EEF2FF] to-[#F5F3FF]',
+    borderClass: 'border-indigo-200',
   },
 ];
-
-
-// Backdrops rotate at every level so consecutive stages feel like new places.
-// The art files are reused with distinct colour grading because the project
-// currently ships four painted world panoramas.
-const LEVEL_BACKDROPS = [
-  '/images/anime-meadow.jpg', '/images/anime-sunset.jpg', '/images/anime-forest.jpg', '/images/anime-night.jpg',
-  '/images/anime-meadow.jpg', '/images/anime-forest.jpg', '/images/anime-sunset.jpg', '/images/anime-night.jpg',
-  '/images/anime-forest.jpg', '/images/anime-meadow.jpg', '/images/anime-night.jpg', '/images/anime-sunset.jpg',
-  '/images/anime-meadow.jpg', '/images/anime-forest.jpg', '/images/anime-night.jpg',
-  '/images/anime-night.jpg', '/images/anime-sunset.jpg', '/images/anime-forest.jpg', '/images/anime-night.jpg',
-  '/images/anime-meadow.jpg', '/images/anime-forest.jpg', '/images/anime-sunset.jpg', '/images/anime-night.jpg',
-  '/images/anime-forest.jpg', '/images/anime-meadow.jpg', '/images/anime-night.jpg', '/images/anime-sunset.jpg',
-  '/images/anime-forest.jpg', '/images/anime-night.jpg', '/images/anime-night.jpg',
-] as const;
-
-const LEVEL_TINTS = [
-  'rgba(255, 226, 235, .18)', 'rgba(255, 190, 156, .18)', 'rgba(120, 210, 167, .16)', 'rgba(50, 72, 125, .20)',
-  'rgba(255, 240, 192, .16)', 'rgba(18, 105, 81, .22)', 'rgba(255, 174, 126, .18)', 'rgba(24, 34, 82, .26)',
-  'rgba(62, 120, 96, .18)', 'rgba(255, 226, 170, .19)', 'rgba(22, 28, 67, .32)', 'rgba(170, 104, 91, .20)',
-  'rgba(255, 203, 184, .18)', 'rgba(34, 73, 92, .22)', 'rgba(120, 154, 190, .43)',
-  'rgba(35, 29, 85, .42)', 'rgba(154, 82, 91, .24)', 'rgba(21, 77, 78, .30)', 'rgba(25, 26, 73, .42)',
-  'rgba(255, 224, 176, .16)', 'rgba(22, 78, 78, .31)', 'rgba(170, 93, 77, .24)', 'rgba(19, 30, 84, .40)',
-  'rgba(16, 73, 75, .34)', 'rgba(255, 222, 160, .16)', 'rgba(26, 21, 70, .44)', 'rgba(145, 77, 95, .26)',
-  'rgba(18, 68, 74, .34)', 'rgba(20, 22, 67, .48)', 'rgba(5, 8, 28, .58)',
-] as const;
 
 const SECRET_NOTES = [
   'بداية موفقة يا جودي. واصلي التقدم خطوةً بعد أخرى.',
@@ -149,82 +120,51 @@ const SECRET_NOTES = [
   'تستحق كل خطوة ناجحة تقديراً يليق بمجهودكِ.',
   'توازنين بين السرعة والدقة بصورة أفضل مع كل مرحلة.',
   'اجتزتِ نصف الطريق. تابعي بالمستوى نفسه من الانتباه.',
-  'مرحباً بكِ في مدينة الظلال. راقبي الحراس المتخفّين واستفيدي من الدرع الدائري عند اقترابهم.',
+  'مرحباً بكِ في عالم غروب الأفق. استكشفي تفاصيله بعناية.',
   'كل نقطة تجمعينها تقرّبكِ من إنجاز جديد.',
   'تستمتع القطط بوقتها في المملكة بفضل اهتمام جودي بها.',
   'يقدم هذا المستوى تحدياً جديداً. ثقي بقدرتكِ على تجاوزه.',
   'أكملتِ عشرين مستوى. هذا تقدم ملحوظ يستحق الاحتفاء.',
-  'دخلتِ غابة الكائنات الغريبة. راقبي المخلوقات البلورية التي تتحرك بطرق غير متوقعة.',
-  'تتألق البلورات حولكِ، لكن بعض المخلوقات أسرع مما تبدو عليه. تحركي بذكاء.',
-  'تقتربين من حارس الغابة. احتفظي بأدواتكِ للمواجهة الحاسمة.',
-  'أكملتِ الفصل الثالث. أبواب القلعة النارية أصبحت أمامكِ.',
+  'فُتحت أبواب المنطقة الجبلية. تابعي رحلتكِ.',
+  'أداؤكِ ثابت تحت أضواء الشفق. اقتربتِ من المرحلة التالية.',
+  'تجاوزتِ مستوى صعباً بتركيز جيد وقدرة على اتخاذ القرار.',
+  'تقتربين من المفاجأة الختامية. واصلي التقدم.',
   'أكملتِ خمسةً وعشرين مستوى. لم يتبقَّ سوى خمس مراحل.',
-  'مرحباً بكِ في القلعة النارية. الوحوش هنا تحمل أشكالاً وقوى مختلفة.',
-  'تزداد حراسة القلعة كثافة. استفيدي من المغناطيس لجمع الأدوات بسرعة.',
-  'لم يتبقَّ سوى مستويين على المواجهة الأخيرة. وزّعي أدوات الحماية بحكمة.',
+  'وصلتِ إلى المرحلة الأخيرة: المركز الحضري الليلي.',
+  'اقتربتِ من نهاية الرحلة. بقيت خطوات قليلة على الإنجاز.',
+  'لم يتبقَّ سوى مستويين للوصول إلى التتويج. واصلي بثبات.',
   'اكتمل المستوى قبل الأخير. استعدي للمرحلة النهائية.',
   'أكملتِ المستويات الثلاثين بنجاح. إنجاز مميز يا جودي.',
 ];
 
-// هدف الفوز موحّد لكل المستويات: رقم المستوى × 500 نقطة.
-const getTargetScore = (level: number): number => level * 500;
+const TARGET_SCORES = [
+  300, 330, 360, 390, 420,
+  450, 480, 510, 540, 570,
+  600, 630, 660, 690, 720,
+  750, 780, 810, 840, 870,
+  900, 930, 960, 990, 1020,
+  1050, 1080, 1110, 1150, 1200,
+];
 
 export const LEVELS: LevelConfig[] = Array.from({ length: 30 }, (_, idx) => {
   const level = idx + 1;
   const worldIndex = Math.floor(idx / 5);
   const world = WORLD_THEMES[worldIndex];
-  const firstSeasonProgress = Math.max(0, Math.min(1, (level - 1) / 13));
-  const secondSeasonProgress = Math.max(0, Math.min(1, (level - 16) / 13));
-  const isFirstBoss = level === 15;
-  const isFinalBoss = level === 30;
-
-  // The first chapter ramps firmly from stage 1. Stage 15 is a distinct boss wall;
-  // chapter two starts harder and stage 30 is intentionally the toughest encounter.
-  const speedMultiplier = level <= 14
-    ? 1.12 + firstSeasonProgress * 0.56
-    : isFirstBoss
-      ? 2.05
-      : isFinalBoss
-        ? 4.0
-        : 2.20 + secondSeasonProgress * 0.75;
-  const spawnIntervalSec = level <= 14
-    ? 0.92 - firstSeasonProgress * 0.38
-    : isFirstBoss
-      ? 0.30
-      : isFinalBoss
-        ? 0.13
-        : 0.28 - secondSeasonProgress * 0.10;
-  const obstacleChance = level === 1
-    ? 0.16
-    : isFirstBoss
-      ? 0.54
-      : isFinalBoss
-        ? 0.68
-        : level < 5
-          ? 0.14 + ((level - 2) / 2) * 0.06
-          : level < 15
-            ? 0.24 + ((level - 5) / 9) * 0.20
-            : 0.56 + secondSeasonProgress * 0.08;
-
-  const timeOfDayPhase = level === 15 ? 0.91 : Number(((level * 0.317 + (level % 4) * 0.083) % 1).toFixed(3));
-  const isNight = timeOfDayPhase < 0.13 || timeOfDayPhase > 0.87;
-  const environmentIndex = idx;
+  const progress = idx / 29; // 0 to 1
 
   return {
     level,
     worldId: world.id,
     worldName: world.name,
-    bgImage: LEVEL_BACKDROPS[environmentIndex],
-    tintOverlay: LEVEL_TINTS[environmentIndex],
-    isNight,
-    particleMode: level === 15 ? 'stars' : world.particleMode,
-    timeOfDayPhase,
-    weatherMode: level === 15 ? 'winter-storm' : 'clear',
-    targetScore: getTargetScore(level),
-    speedMultiplier: Number(speedMultiplier.toFixed(2)),
-    spawnIntervalSec: Number(spawnIntervalSec.toFixed(2)),
-    obstacleChance: Number(obstacleChance.toFixed(3)),
-    windStrength: Number((level <= 14 ? 10 + firstSeasonProgress * 34 : isFirstBoss ? 52 : isFinalBoss ? 105 : 58 + secondSeasonProgress * 42).toFixed(1)),
+    bgImage: world.bgImage,
+    tintOverlay: world.tintOverlay,
+    isNight: world.isNight,
+    particleMode: world.particleMode,
+    targetScore: TARGET_SCORES[idx],
+    speedMultiplier: Number((1.15 + progress * 1.05).toFixed(2)),
+    spawnIntervalSec: Number((0.56 - progress * 0.28).toFixed(2)),
+    obstacleChance: Number((0.22 + progress * 0.18).toFixed(2)),
+    windStrength: Number((12 + progress * 48).toFixed(1)),
     secretNote: SECRET_NOTES[idx],
   };
 });

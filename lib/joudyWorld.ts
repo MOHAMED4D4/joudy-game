@@ -16,20 +16,6 @@ export interface WorldSave {
   reviveCountsByLevel: Record<number, number>;
   petsOwned: string[];
   equippedPet: string;
-  coastalRegionUnlocked: boolean;
-  thirdChapterUnlocked: boolean;
-  fourthChapterUnlocked: boolean;
-  finalBossRewardClaimed: boolean;
-  totalChocolates: number;
-  totalScore: number;
-  perfectRuns: number;
-  totalBosses: number;
-  extraHearts: number;
-  shieldCharges: number;
-  magnetCharges: number;
-  slowMonsterCharges: number;
-  shieldFreeGranted: boolean;
-  claimedAchievementRewards: string[];
 }
 
 const KEY = 'joudy_world_save_v1';
@@ -47,20 +33,6 @@ const DEFAULT_SAVE: WorldSave = {
   reviveCountsByLevel: {},
   petsOwned: ['moon-cat'],
   equippedPet: 'moon-cat',
-  coastalRegionUnlocked: false,
-  thirdChapterUnlocked: false,
-  fourthChapterUnlocked: false,
-  finalBossRewardClaimed: false,
-  totalChocolates: 0,
-  totalScore: 0,
-  perfectRuns: 0,
-  totalBosses: 0,
-  extraHearts: 0,
-  shieldCharges: 0,
-  magnetCharges: 0,
-  slowMonsterCharges: 0,
-  shieldFreeGranted: false,
-  claimedAchievementRewards: [],
 };
 
 export interface ShopItem {
@@ -140,20 +112,6 @@ function parse(raw: string | null): WorldSave {
       reviveCountsByLevel: value.reviveCountsByLevel && typeof value.reviveCountsByLevel === 'object' ? value.reviveCountsByLevel : {},
       petsOwned: Array.isArray(value.petsOwned) ? value.petsOwned : DEFAULT_SAVE.petsOwned,
       equippedPet: typeof value.equippedPet === 'string' ? value.equippedPet : DEFAULT_SAVE.equippedPet,
-      coastalRegionUnlocked: value.coastalRegionUnlocked === true,
-      thirdChapterUnlocked: value.thirdChapterUnlocked === true,
-      fourthChapterUnlocked: value.fourthChapterUnlocked === true,
-      finalBossRewardClaimed: value.finalBossRewardClaimed === true,
-      totalChocolates: Math.max(0, Number(value.totalChocolates ?? 0) || 0),
-      totalScore: Math.max(0, Number(value.totalScore ?? 0) || 0),
-      perfectRuns: Math.max(0, Number(value.perfectRuns ?? 0) || 0),
-      totalBosses: Math.max(0, Number(value.totalBosses ?? 0) || 0),
-      extraHearts: Math.max(0, Number(value.extraHearts ?? 0) || 0),
-      shieldCharges: Math.max(0, Number(value.shieldCharges ?? 0) || 0),
-      magnetCharges: Math.max(0, Number(value.magnetCharges ?? 0) || 0),
-      slowMonsterCharges: Math.max(0, Number(value.slowMonsterCharges ?? 0) || 0),
-      shieldFreeGranted: value.shieldFreeGranted === true,
-      claimedAchievementRewards: Array.isArray(value.claimedAchievementRewards) ? value.claimedAchievementRewards.filter((id): id is string => typeof id === 'string') : [],
     };
   } catch {
     return DEFAULT_SAVE;
