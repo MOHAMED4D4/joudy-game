@@ -7,6 +7,6 @@ Joudy Game V4.2.9 — First-party Game Analytics
 - Session-scoped random ID only (no cross-session persistent player identifier).
 - Coarse device/browser category, language/timezone, screen dimensions, orientation, DPR, referrer host/UTM source, load time.
 - Events: session start/end, level start, wins/losses, score updates, aggregate control labels, tab visibility, idle state and JS errors.
-- No IP/location storage, GPS, precise touch coordinates, battery access, device fingerprinting or VPN inference.
+- Private test build only: IP is stored for sessions using the matching private test token; ordinary visits are not recorded. No GPS, precise touch coordinates, battery access, device fingerprinting or VPN inference.
 - Private dashboard URL: https://YOUR-DOMAIN/panel-k9x2m7p4.html (password required). The URL is not a replacement for authentication.
 - Admin reads/deletes are server-side; the Supabase service-role key stays in Vercel environment variables.

@@ -1,5 +1,5 @@
-/* Privacy-conscious first-party game analytics. No precise location, IP, touch coordinates,
-   battery, device fingerprinting, or cross-site identifiers are collected. */
+/* Private-test analytics. The server stores connection IP and ordinary User-Agent for session starts.
+   No precise location, touch coordinates, battery, device fingerprint, or cross-site identifiers are collected. */
 const TRACK_ENDPOINT = '/api/game';
 const IDLE_THRESHOLD_MS = 60_000;
 const SESSION_KEY = 'joudy_analytics_session_v1';

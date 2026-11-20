@@ -1,4 +1,14 @@
+const net = require('net');
+
 const allowedEvents = new Set(['session_start','session_end','level_start','game_win','game_loss','score_update','control_click','tab_hidden','tab_visible','idle','js_error']);
+
+function requestIp(req) {
+  // Vercel supplies the forwarding header for the incoming client connection.
+  const forwarded = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || '';
+  const candidate = String(forwarded).split(',')[0].trim().replace(/^\[|\]$/g, '');
+  return net.isIP(candidate) ? candidate : null;
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control','no-store');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -11,7 +21,16 @@ module.exports = async (req, res) => {
   const base = NEXT_PUBLIC_SUPABASE_URL.replace(/\/$/,'');
   const headers = { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type':'application/json', Prefer:'return=minimal' };
   try {
-    const session = await fetch(`${base}/rest/v1/game_sessions?on_conflict=session_id`, { method:'POST', headers:{...headers, Prefer:'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify({ session_id:body.sessionId, player_id:body.playerId, last_seen_at:new Date().toISOString(), device:safe.device, browser:safe.browser, language:safe.language, timezone:safe.timezone, screen:safe.screen, orientation:safe.orientation, dpr:safe.dpr, referrer_host:safe.referrerHost, utm_source:safe.utmSource, load_ms:safe.loadMs }) });
+    const sessionRow = { session_id:body.sessionId, player_id:body.playerId, last_seen_at:new Date().toISOString(), device:safe.device, browser:safe.browser, language:safe.language, timezone:safe.timezone, screen:safe.screen, orientation:safe.orientation, dpr:safe.dpr, referrer_host:safe.referrerHost, utm_source:safe.utmSource, load_ms:safe.loadMs };
+    // Dedicated private-test project: record connection IP and the browser's ordinary User-Agent
+    // on session start. Share this test deployment only with informed testers.
+    if (body.event === 'session_start') {
+      const ip = requestIp(req);
+      const userAgent = String(req.headers['user-agent'] || '').slice(0, 512);
+      if (ip) sessionRow.ip_address = ip;
+      if (userAgent) sessionRow.user_agent = userAgent;
+    }
+    const session = await fetch(`${base}/rest/v1/game_sessions?on_conflict=session_id`, { method:'POST', headers:{...headers, Prefer:'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(sessionRow) });
     if (!session.ok) throw new Error(await session.text());
     const event = await fetch(`${base}/rest/v1/player_events`, { method:'POST', headers, body:JSON.stringify({ session_id:body.sessionId, player_id:body.playerId, event_type:body.event, payload:safe, occurred_at:body.at || new Date().toISOString() }) });
     if (!event.ok) throw new Error(await event.text());
