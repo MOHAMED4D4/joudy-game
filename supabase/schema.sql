@@ -3,9 +3,7 @@ create table if not exists public.game_sessions (
  id uuid primary key default gen_random_uuid(), session_id text unique not null, player_id text not null,
  first_seen_at timestamptz not null default now(), last_seen_at timestamptz not null default now(),
  device text, browser text, language text, timezone text, screen text, orientation text,
- dpr numeric, referrer_host text, utm_source text, load_ms integer,
- manufacturer text, model text, os_name text, os_version text, device_type text,
- platform_version text, ui_skin text, model_source text
+ dpr numeric, referrer_host text, utm_source text, load_ms integer
 );
 create index if not exists game_sessions_player_id_idx on public.game_sessions(player_id);
 create index if not exists game_sessions_last_seen_idx on public.game_sessions(last_seen_at desc);
@@ -23,13 +21,3 @@ grant all on public.game_sessions, public.player_events to service_role;
 -- Dashboard query indexes (safe to run on an existing installation).
 create index if not exists player_events_occurred_at_idx on public.player_events(occurred_at desc);
 create index if not exists player_events_type_time_idx on public.player_events(event_type, occurred_at desc);
-
--- Device details enrichment (safe to run on an existing installation).
-alter table public.game_sessions add column if not exists manufacturer text;
-alter table public.game_sessions add column if not exists model text;
-alter table public.game_sessions add column if not exists os_name text;
-alter table public.game_sessions add column if not exists os_version text;
-alter table public.game_sessions add column if not exists device_type text;
-alter table public.game_sessions add column if not exists platform_version text;
-alter table public.game_sessions add column if not exists ui_skin text;
-alter table public.game_sessions add column if not exists model_source text;

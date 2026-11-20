@@ -3,6 +3,7 @@
 const TRACK_ENDPOINT = '/api/game';
 const IDLE_THRESHOLD_MS = 60_000;
 const SESSION_KEY = 'joudy_analytics_session_v1';
+const DEVICE_KEY = 'joudy_analytics_device_v1';
 const CONSENT_KEY = 'joudy_analytics_consent_v1';
 function hasAnalyticsConsent() {
   try { return typeof window !== 'undefined' && window.localStorage.getItem(CONSENT_KEY) === 'granted'; }
@@ -10,6 +11,11 @@ function hasAnalyticsConsent() {
 }
 const uuid = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 let playerId = '';
+let memoryDeviceId = '';
+function stableDeviceId() {
+  try { let id = localStorage.getItem(DEVICE_KEY); if (!id) { id = memoryDeviceId || `JDG-${uuid()}`; localStorage.setItem(DEVICE_KEY, id); } memoryDeviceId = id; return id; }
+  catch { memoryDeviceId ||= `JDG-${uuid()}`; return memoryDeviceId; }
+}
 let sessionId = '';
 let startedAt = 0;
 let lastActivity = 0;
@@ -20,10 +26,11 @@ let lastEvent = 'session_start';
 let clickCounts: Record<string, number> = {};
 function ids() {
   if (typeof window === 'undefined') return null;
-  // Session-scoped pseudonymous ID only; it is not persisted across browser sessions.
+  // Random first-party browser identifier, stored locally only after analytics consent.
+  // It groups sessions in this browser; it does not identify a person or physical device.
   sessionId = sessionStorage.getItem(SESSION_KEY) || uuid();
   sessionStorage.setItem(SESSION_KEY, sessionId);
-  playerId = sessionId;
+  playerId = stableDeviceId();
   return { playerId, sessionId };
 }
 async function send(event: string, data: Record<string, unknown> = {}) {
@@ -94,43 +101,16 @@ export const telemetry = {
       : browserName === 'Safari' ? version(/Version\/([\d.]+)/) : '';
     const device = `${manufacturer === 'غير معروف' ? (model || (deviceType === 'Phone' ? 'هاتف Android' : deviceType === 'Tablet' ? 'جهاز لوحي' : 'كمبيوتر')) : manufacturer}${model ? ` ${model}` : ''} · ${osName}${osVersion ? ` ${osVersion}` : ''}`;
     const browser = `${browserName}${browserVersion ? ` ${browserVersion}` : ''}`;
-    void send('session_start', { device, browser, manufacturer: manufacturer === 'غير معروف' ? 'غير متاح من المتصفح' : manufacturer, model: model || 'غير متاح من المتصفح', osName, osVersion: osVersion || 'غير متاح من المتصفح', browserVersion, deviceType, language: navigator.language, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, screen: `${screen.width}x${screen.height}`, orientation: screen.orientation?.type ?? 'unknown', dpr: window.devicePixelRatio, loadMs: Math.round(nav?.loadEventEnd ?? 0), referrerHost: document.referrer ? (() => { try { return new URL(document.referrer).hostname; } catch { return ''; } })() : 'direct', utmSource: new URLSearchParams(location.search).get('utm_source'), uiSkin: 'غير متاح من المتصفح', modelSource: 'User-Agent' });
-    // Enhanced Client Hints are optional and browser-controlled. They may expose a model
-    // and platform version on some Android Chromium browsers; never guess vendor UI skins.
-    void (async () => {
-      const uaData = (navigator as Navigator & { userAgentData?: { getHighEntropyValues?: (hints: string[]) => Promise<Record<string, unknown>> } }).userAgentData;
-      if (!uaData?.getHighEntropyValues) return;
-      try {
-        const hints = await uaData.getHighEntropyValues(['model', 'platformVersion', 'platform', 'architecture', 'bitness']);
-        const hintedModel = typeof hints.model === 'string' ? hints.model.trim().slice(0, 80) : '';
-        const hintedPlatform = typeof hints.platform === 'string' ? hints.platform : osName;
-        const platformVersion = typeof hints.platformVersion === 'string' ? hints.platformVersion.slice(0, 32) : '';
-        let hintedManufacturer = manufacturer === 'غير معروف' ? 'غير متاح من المتصفح' : manufacturer;
-        if (hintedModel) {
-          if (/^(SM-|Samsung)/i.test(hintedModel)) hintedManufacturer = 'Samsung';
-          else if (/^(Redmi|POCO|Mi\s)/i.test(hintedModel)) hintedManufacturer = 'Xiaomi';
-          else if (/^Pixel/i.test(hintedModel)) hintedManufacturer = 'Google';
-          else if (/^CPH/i.test(hintedModel)) hintedManufacturer = 'OPPO';
-          else if (/^V[0-9]{4}/i.test(hintedModel)) hintedManufacturer = 'vivo';
-        }
-        const enrichedOsVersion = platformVersion || osVersion || 'غير متاح من المتصفح';
-        await send('device_details', {
-          device: `${hintedManufacturer === 'غير متاح من المتصفح' ? 'جهاز' : hintedManufacturer} ${hintedModel || model || 'موديل غير معلن'} · ${hintedPlatform || osName} ${enrichedOsVersion}`,
-          manufacturer: hintedManufacturer,
-          model: hintedModel || model || 'غير متاح من المتصفح',
-          osName: hintedPlatform || osName,
-          osVersion: enrichedOsVersion,
-          platformVersion: platformVersion || 'غير متاح من المتصفح',
-          architecture: typeof hints.architecture === 'string' ? hints.architecture : 'غير متاح من المتصفح',
-          bitness: typeof hints.bitness === 'string' ? hints.bitness : 'غير متاح من المتصفح',
-          modelSource: hintedModel ? 'User-Agent Client Hints' : 'غير متاح من المتصفح',
-          uiSkin: 'غير متاح من المتصفح',
-          deviceType
-        });
-      } catch { /* Client Hints are optional; baseline analytics remain available. */ }
-    })();
+    const conn = (navigator as Navigator & { connection?: { effectiveType?: string; downlink?: number; saveData?: boolean } }).connection;
+    const detail = { colorScheme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light', reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, viewport: `${innerWidth}x${innerHeight}`, cores: navigator.hardwareConcurrency || null, memoryGb: (navigator as Navigator & { deviceMemory?: number }).deviceMemory || null, touchPoints: navigator.maxTouchPoints || 0, inputCapabilities: ('ontouchstart' in window ? 'touch' : 'mouse-or-unknown'), networkType: conn?.effectiveType || 'غير متاح', downlinkMbps: conn?.downlink ?? null, dataSaver: conn?.saveData ?? null, online: navigator.onLine, storage: 'localStorage' in window, cookiesEnabled: navigator.cookieEnabled };
+    void send('session_start', { ...detail, device, browser, manufacturer, model: model || 'غير معلن من المتصفح', osName, osVersion, browserVersion, deviceType, language: navigator.language, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, screen: `${screen.width}x${screen.height}`, orientation: screen.orientation?.type ?? 'unknown', dpr: window.devicePixelRatio, loadMs: Math.round(nav?.loadEventEnd ?? 0), referrerHost: document.referrer ? (() => { try { return new URL(document.referrer).hostname; } catch { return ''; } })() : 'direct', utmSource: new URLSearchParams(location.search).get('utm_source') });
     const activity = () => { lastActivity = performance.now(); idleSent = false; };
+    let orientationChanges = 0; screen.orientation?.addEventListener?.('change', () => { orientationChanges++; void send('screen_change', { orientation: screen.orientation?.type || 'unknown', count: orientationChanges }); });
+    let fpsFrames = 0, fpsStart = performance.now(); const sampleFps = (now: number) => { fpsFrames++; if (now - fpsStart >= 5000) { void send('performance_sample', { fps: Math.round(fpsFrames * 1000 / (now - fpsStart)), sampleMs: Math.round(now - fpsStart) }); fpsFrames = 0; fpsStart = now; } if (!document.hidden) requestAnimationFrame(sampleFps); }; requestAnimationFrame(sampleFps);
+    window.addEventListener('online', () => { void send('network_change', { online: true }); }); window.addEventListener('offline', () => { void send('network_change', { online: false }); });
     ['pointerdown','keydown','scroll','touchstart'].forEach(name => window.addEventListener(name, activity, { passive: true }));
+    const pointerTypes: Record<string, number> = {}; document.addEventListener('pointerdown', e => { pointerTypes[e.pointerType || 'unknown'] = (pointerTypes[e.pointerType || 'unknown'] || 0) + 1; if (pointerTypes[e.pointerType || 'unknown'] % 10 === 1) void send('input_sample', { pointerType: e.pointerType || 'unknown', count: pointerTypes[e.pointerType || 'unknown'] }); }, { passive: true });
+    let scrollCount = 0; window.addEventListener('scroll', () => { scrollCount++; if (scrollCount % 10 === 0) void send('scroll_sample', { count: scrollCount }); }, { passive: true });
     document.addEventListener('visibilitychange', () => { void send(document.hidden ? 'tab_hidden' : 'tab_visible'); });
     window.addEventListener('error', e => { void send('js_error', { message: String(e.message).slice(0,160) }); });
     window.addEventListener('pagehide', () => { void send('session_end', { durationMs: Math.round(performance.now() - startedAt), lastEvent, level: currentLevel }); });
