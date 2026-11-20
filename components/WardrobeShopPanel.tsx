@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, Coins, Footprints, Shirt, X } from 'lucide-react';
 import { SHOP_ITEMS, saveWorld, useWorldSave, type ShopItem } from '@/lib/joudyWorld';
+import { soundEngine } from '@/lib/soundEffects';
 
 type Category = 'outfit' | 'shoes';
 
@@ -80,6 +81,7 @@ export default function WardrobeShopPanel({ onClose }: Props) {
   const save = useWorldSave();
   const [category, setCategory] = useState<Category>('outfit');
   const [selectedId, setSelectedId] = useState(save.equippedOutfit);
+  const [purchaseFlash, setPurchaseFlash] = useState(false);
   const selected = useMemo(() => SHOP_ITEMS.find((item) => item.id === selectedId) ?? SHOP_ITEMS[0], [selectedId]);
   useEffect(() => {
     setSelectedId(category === 'outfit' ? save.equippedOutfit : save.equippedShoes);
@@ -95,8 +97,9 @@ export default function WardrobeShopPanel({ onClose }: Props) {
   };
 
   const purchaseOrEquip = () => {
-    if (!isOwned && save.coins < selected.price) return;
+    if (!isOwned && save.coins < selected.price) { soundEngine.playLocked(); return; }
     const equippedPatch = category === 'outfit' ? { equippedOutfit: selected.id } : { equippedShoes: selected.id };
+    if (!isOwned) { soundEngine.playPurchase(); setPurchaseFlash(true); window.setTimeout(() => setPurchaseFlash(false), 1100); } else soundEngine.playOutfitChange();
     saveWorld((current) => ({
       ...current,
       ...equippedPatch,
@@ -136,7 +139,7 @@ export default function WardrobeShopPanel({ onClose }: Props) {
               <div className="absolute right-0 top-[18%] z-20 w-[34%] rounded-2xl border border-white/60 bg-white/90 p-2 shadow-xl backdrop-blur sm:p-3">
                 <p className="text-[11px] font-black leading-snug text-slate-900 sm:text-sm">{selected.name}</p>
                 <p className="mt-1 text-[9px] font-semibold text-slate-500 sm:text-[10px]">{selected.price === 0 ? 'مجانية' : `${selected.price} عملة`} · {selected.rarity}</p>
-                <button type="button" onClick={purchaseOrEquip} disabled={currentlyEquipped || (!isOwned && save.coins < selected.price)} className="mt-2 w-full rounded-xl bg-gradient-to-l from-amber-800 to-orange-700 px-2 py-2.5 text-[10px] font-black leading-tight text-white shadow-md transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45 sm:px-3 sm:text-xs">
+                <button type="button" onClick={purchaseOrEquip} disabled={currentlyEquipped} className="mt-2 w-full rounded-xl bg-gradient-to-l from-amber-800 to-orange-700 px-2 py-2.5 text-[10px] font-black leading-tight text-white shadow-md transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45 sm:px-3 sm:text-xs">
                   {currentlyEquipped ? 'مُجهّز بالفعل' : isOwned ? 'تجهيز القطعة' : save.coins < selected.price ? 'العملات غير كافية' : 'شراء وتجهيز'}
                 </button>
               </div>
@@ -146,6 +149,7 @@ export default function WardrobeShopPanel({ onClose }: Props) {
           </div>
 
           <div className="order-2 flex min-h-0 flex-col p-3 sm:p-5">
+            {purchaseFlash && <motion.div initial={{opacity:0,y:-12,scale:.94}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0}} className="mb-3 rounded-xl border border-emerald-300/40 bg-emerald-100 px-3 py-2 text-center text-xs font-black text-emerald-900 shadow-lg">✨ تم الشراء بنجاح! أُضيفت القطعة إلى خزانتك</motion.div>}
             <div className="mb-3 flex items-center justify-between gap-2">
               <div><p className="text-xs font-bold text-amber-800">متجر الإطلالات</p><h3 className="text-xl font-black sm:text-2xl">الملابس والأحذية</h3></div>
               <button type="button" onClick={onClose} aria-label="إغلاق المتجر" className="rounded-xl border border-slate-300 bg-white p-2.5 text-slate-700 hover:bg-slate-100"><X className="h-5 w-5" /></button>

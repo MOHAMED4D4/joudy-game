@@ -17,20 +17,27 @@ const elMessiri = El_Messiri({
 });
 
 export const metadata: Metadata = {
-  title: 'مغامرة التجميع السريعة',
-  description:
-    'لعبة أركيد عربية تضم 30 مستوى ومتجرًا للملابس والأحذية مرتبطًا باللعب والعملات.',
+  title: 'joudy game',
+  description: 'لعبة أركيد عربية تضم 30 مستوى ومتجرًا ومغامرة متكاملة.',
+  manifest: '/manifest.webmanifest',
+  applicationName: 'joudy game',
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'joudy game' },
+  icons: {
+    icon: [
+      { url: '/icons/joudy-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/joudy-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/icons/joudy-192.png',
+  },
   openGraph: {
-    title: 'مغامرة التجميع السريعة',
-    description:
-      'لعبة أركيد عربية تضم 30 مستوى ومتجرًا للملابس والأحذية مرتبطًا باللعب والعملات.',
+    title: 'joudy game',
+    description: 'لعبة أركيد عربية تضم 30 مستوى ومتجرًا ومغامرة متكاملة.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'مغامرة التجميع السريعة',
-    description:
-      'لعبة أركيد عربية تضم 30 مستوى ومتجرًا للملابس والأحذية مرتبطًا باللعب والعملات.',
+    title: 'joudy game',
+    description: 'لعبة أركيد عربية تضم 30 مستوى ومتجرًا ومغامرة متكاملة.',
   },
 };
 

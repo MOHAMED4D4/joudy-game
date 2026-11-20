@@ -22,6 +22,7 @@ interface VictoryScreenProps {
   realImageSrc: string;
   animeImageSrc: string;
   stats: GameRunStats;
+  rewardCoins: number;
   highScore: number;
   isNewHighScore: boolean;
   onNextLevel: () => void;
@@ -34,6 +35,7 @@ export default function VictoryScreen({
   realImageSrc,
   animeImageSrc,
   stats,
+  rewardCoins,
   highScore,
   isNewHighScore,
   onNextLevel,
@@ -44,6 +46,7 @@ export default function VictoryScreen({
   const [transparentAnimeSrc, setTransparentAnimeSrc] = useState<string>(animeImageSrc);
 
   const isGrandFinale = levelConfig.level === 30;
+  const isFirstCityBoss = levelConfig.level === 15;
   const starsEarned = computeLevelStars(stats.obstaclesHit);
 
   useEffect(() => {
@@ -237,7 +240,9 @@ export default function VictoryScreen({
             <span>
               {isGrandFinale
                 ? 'التتويج الأسطوري — اجتزتِ كل المستويات الـ 30!'
-                : `اكتمل المستوى ${levelConfig.level} بنجاح!`}
+                : isFirstCityBoss
+                  ? 'انتصار بطولي — هزمتِ زعيم المدينة الأولى!'
+                  : `اكتمل المستوى ${levelConfig.level} بنجاح!`}
             </span>
           </div>
           <h1
@@ -246,7 +251,9 @@ export default function VictoryScreen({
           >
             {isGrandFinale
               ? 'اكتملت المغامرة'
-              : 'تم اجتياز المرحلة'}
+              : isFirstCityBoss
+                ? 'انتصار جودي العظيم'
+                : 'تم اجتياز المرحلة'}
           </h1>
         </motion.div>
 
@@ -313,15 +320,21 @@ export default function VictoryScreen({
               {/* Main Message */}
               <p className="text-base sm:text-xl font-bold text-slate-100 leading-relaxed">
                 {isGrandFinale
-                  ? 'تم إنهاء جميع المستويات الثلاثين.'
-                  : `تم إنهاء المستوى ${levelConfig.level} — ${levelConfig.worldName}. النتيجة: ${stats.score} نقطة.`}
+                  ? rewardCoins > 0
+                    ? `تم إنهاء جميع المستويات الثلاثين وهزيمة الزعيم الأخير. حصلتِ على مكافأة ${rewardCoins.toLocaleString('ar-EG')} عملة ذهبية!`
+                    : 'تم إنهاء جميع المستويات الثلاثين وهزيمة الزعيم الأخير. سبق استلام مكافأة الزعيم.'
+                  : isFirstCityBoss
+                    ? `تمت هزيمة زعيم المدينة الأولى بعد جمع ${stats.score.toLocaleString('ar-EG')} نقطة. مدينة الظلال تنتظركِ، وفتح الفصل الثاني يحتاج 40,000 نقطة من رصيدكِ الإجمالي.`
+                    : `تم إنهاء المستوى ${levelConfig.level} — ${levelConfig.worldName}. النتيجة: ${stats.score.toLocaleString('ar-EG')} نقطة.`}
               </p>
 
               {/* Run Summary */}
               <div className="pt-3 border-t border-white/10 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm font-semibold text-slate-300 tabular-nums">
-                <span className="text-rose-700 font-extrabold">النقاط: {stats.score}</span>
+                <span className="text-rose-200 font-extrabold">النقاط: {stats.score.toLocaleString('ar-EG')}</span>
                 <span aria-hidden="true">·</span>
-                <span className="text-amber-700 font-bold">
+                {isGrandFinale && rewardCoins > 0 && <span className="rounded-lg border border-amber-300/30 bg-amber-300/10 px-2 py-1 font-black text-amber-200">+{rewardCoins.toLocaleString('ar-EG')} 🪙</span>}
+                {isGrandFinale && rewardCoins > 0 && <span aria-hidden="true">·</span>}
+                <span className="text-amber-200 font-bold">
                   الرقم القياسي لجودي: {highScore}
                   {isNewHighScore ? ' (جديد!)' : ''}
                 </span>
@@ -341,7 +354,7 @@ export default function VictoryScreen({
                 onClick={onNextLevel}
                 className="flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-l from-rose-500 via-pink-500 to-rose-600 text-white font-bold text-base sm:text-lg shadow-[0_10px_28px_-6px_rgba(244,63,94,0.5)] hover:shadow-[0_14px_34px_-6px_rgba(244,63,94,0.65)] transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
               >
-                <span>المستوى التالي ({levelConfig.level + 1})</span>
+                <span>{isFirstCityBoss ? 'انتقلي لفتح المدينة الثانية' : `المستوى التالي (${levelConfig.level + 1})`}</span>
                 <ArrowLeft className="w-5 h-5" />
               </motion.button>
             ) : (

@@ -45,10 +45,18 @@ export default function RewardsHub({ progress, page, onBack }: { progress: Joudy
   const [failedShopImages, setFailedShopImages] = useState<Record<string, boolean>>({});
   const achievements = useMemo<Achievement[]>(() => {
     const completed = Object.keys(progress.completedLevels).length;
-    const chocolates = save.totalChocolates ?? 0;
-    const score = save.totalScore ?? 0;
-    const perfect = save.perfectRuns ?? 0;
-    const defeated = save.totalBosses ?? 0;
+    // Keep RewardsHub compatible with older WorldSave typings in cached/deployed branches.
+    // These counters are optional for older saved games and safely default to zero.
+    const stats = save as typeof save & Partial<{
+      totalChocolates: number;
+      totalScore: number;
+      perfectRuns: number;
+      totalBosses: number;
+    }>;
+    const chocolates = stats.totalChocolates ?? 0;
+    const score = stats.totalScore ?? 0;
+    const perfect = stats.perfectRuns ?? 0;
+    const defeated = stats.totalBosses ?? 0;
     const stars = Object.values(progress.completedLevels).reduce((sum, record) => sum + record.stars, 0);
     const threeStarLevels = Object.values(progress.completedLevels).filter((record) => record.stars === 3).length;
     const highScores = Object.values(progress.completedLevels).filter((record) => record.bestScore >= 1800).length;
