@@ -3,10 +3,8 @@ create table if not exists public.game_sessions (
  id uuid primary key default gen_random_uuid(), session_id text unique not null, player_id text not null,
  first_seen_at timestamptz not null default now(), last_seen_at timestamptz not null default now(),
  device text, browser text, language text, timezone text, screen text, orientation text,
- dpr numeric, referrer_host text, utm_source text, load_ms integer, ip_address text, user_agent text
+ dpr numeric, referrer_host text, utm_source text, load_ms integer
 );
-alter table public.game_sessions add column if not exists ip_address text;
-alter table public.game_sessions add column if not exists user_agent text;
 create index if not exists game_sessions_player_id_idx on public.game_sessions(player_id);
 create index if not exists game_sessions_last_seen_idx on public.game_sessions(last_seen_at desc);
 create table if not exists public.player_events (
